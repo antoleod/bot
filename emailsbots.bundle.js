@@ -5993,6 +5993,9 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return state.ui.settingsDraft;
   }
+  function setSettingsDraft(state, draft) {
+    state.ui.settingsDraft = deepClone(draft);
+  }
   function openSettings(state, mandatory = false) {
     state.ui.settingsOpen = true;
     state.ui.settingsMandatory = mandatory || state.ui.settingsMandatory;
@@ -6018,6 +6021,7 @@ Asset tag: ${item.equipmentAssetTag}`;
   }
 
   // Assistant/core/storage.js
+  var TEMP_WORKSPACE = "temp/sn-assistant";
   var STORAGE_PREFIX = "sn_assistant_";
   var STORAGE_KEYS = {
     settings: `${STORAGE_PREFIX}temp_workspace_v3/settings`,
@@ -6273,6 +6277,21 @@ Asset tag: ${item.equipmentAssetTag}`;
       safeSettings.officeProfile && safeSettings.officeName && safeSettings.officeRoom && safeSettings.officeLabel && safeSettings.defaultLanguage
     );
   }
+  function applyOfficePreset(profile, baseSettings = getDefaultSettings()) {
+    const safeBase = sanitizeSettings(baseSettings);
+    const normalizedProfile = cleanText(profile).toLowerCase();
+    const preset = OFFICE_PRESETS[normalizedProfile];
+    if (!preset || preset.id === "custom") {
+      return sanitizeSettings({ ...safeBase, officeProfile: normalizedProfile || "custom" });
+    }
+    return sanitizeSettings({
+      ...safeBase,
+      officeProfile: preset.id,
+      officeName: cleanText(preset.officeName) || safeBase.officeName,
+      officeRoom: cleanText(preset.officeRoom) || safeBase.officeRoom,
+      officeLabel: cleanText(preset.officeLabel) || safeBase.officeLabel
+    });
+  }
   function loadSettings(rootWindow, logger) {
     const storage = getPersistentStorage(rootWindow);
     if (!storage) {
@@ -6291,6 +6310,9 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     storage.setItem(STORAGE_KEYS.settings, JSON.stringify(safeSettings));
     return safeSettings;
+  }
+  function cloneSettings(settings) {
+    return deepClone(sanitizeSettings(settings));
   }
   function normalizeWorkNoteTemplateUsage(rawValue) {
     const usage = rawValue && typeof rawValue === "object" ? rawValue : {};
@@ -6386,6 +6408,63 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return normalized;
   }
+  function buildPackageFilename() {
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    return `sn-assistant-templates-${stamp}.json`;
+  }
+  function buildSettingsPackage(settings) {
+    return {
+      schema: "sn-assistant-template-package",
+      version: 1,
+      workspace: TEMP_WORKSPACE,
+      exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      settings: sanitizeSettings(settings)
+    };
+  }
+  async function tryWritePackageToTempFolder(rootWindow, fileName, payloadText) {
+    if (typeof rootWindow?.showDirectoryPicker !== "function") return null;
+    const baseDirectoryHandle = await rootWindow.showDirectoryPicker({ mode: "readwrite" });
+    const tempDirectoryHandle = await baseDirectoryHandle.getDirectoryHandle("temp", { create: true });
+    const assistantDirectoryHandle = await tempDirectoryHandle.getDirectoryHandle("sn-assistant", { create: true });
+    const fileHandle = await assistantDirectoryHandle.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(payloadText);
+    await writable.close();
+    return { mode: "filesystem", fileName, path: `${TEMP_WORKSPACE}/${fileName}` };
+  }
+  function downloadPackage(rootWindow, fileName, payloadText) {
+    const blob = new Blob([payloadText], { type: "application/json" });
+    const objectUrl = rootWindow.URL.createObjectURL(blob);
+    const anchor = rootWindow.document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.style.display = "none";
+    (rootWindow.document.body || rootWindow.document.documentElement).appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    rootWindow.setTimeout(() => rootWindow.URL.revokeObjectURL(objectUrl), 0);
+    return { mode: "download", fileName };
+  }
+  async function exportSettingsPackage(rootWindow, settings) {
+    const fileName = buildPackageFilename();
+    const payloadText = JSON.stringify(buildSettingsPackage(settings), null, 2);
+    if (typeof rootWindow?.showDirectoryPicker === "function") {
+      try {
+        const fileResult = await tryWritePackageToTempFolder(rootWindow, fileName, payloadText);
+        if (fileResult) return { ok: true, ...fileResult };
+      } catch (error2) {
+        if (error2?.name === "AbortError") return { ok: false, canceled: true };
+      }
+    }
+    return { ok: true, ...downloadPackage(rootWindow, fileName, payloadText) };
+  }
+  async function importSettingsPackage(file) {
+    if (!file) throw new Error("No file selected");
+    const parsed = parseJson(await file.text(), null);
+    if (!parsed || typeof parsed !== "object") throw new Error("Invalid settings file");
+    const rawSettings = parsed.settings && typeof parsed.settings === "object" ? parsed.settings : parsed;
+    return sanitizeSettings(rawSettings);
+  }
   var MAX_RECENT_TICKETS = 5;
   function normalizeRecentTicket(entry) {
     if (!entry || typeof entry !== "object") return null;
@@ -6439,6 +6518,19 @@ Asset tag: ${item.equipmentAssetTag}`;
     } catch {
       return [];
     }
+  }
+  function toggleFavoriteTemplate(rootWindow, templateId, category) {
+    if (!templateId || !category) return [];
+    const storage = getLocalStorage(rootWindow);
+    if (!storage) return [];
+    const current = loadFavoriteTemplates(rootWindow);
+    const exists = current.some((t) => t.templateId === templateId && t.category === category);
+    const updated = exists ? current.filter((t) => !(t.templateId === templateId && t.category === category)) : [...current, normalizeFavoriteTemplate({ templateId, category })].slice(0, MAX_FAVORITE_TEMPLATES);
+    try {
+      storage.setItem(STORAGE_KEYS.favoriteTemplates, JSON.stringify(updated));
+    } catch {
+    }
+    return updated;
   }
   function normalizeUserGroup(entry) {
     if (!entry || typeof entry !== "object") return null;
@@ -9892,6 +9984,9 @@ ${configurationItemLine}`,
   }
   function getTemplatesForCategory(category, settings) {
     return getTemplateGroups(settings)[category] || [];
+  }
+  function getTemplate(category, templateId, settings) {
+    return getTemplatesForCategory(category, settings).find((template) => template.id === templateId) || null;
   }
   function getFirstTemplateId(category, settings) {
     return getTemplatesForCategory(category, settings)[0]?.id || "";
@@ -36077,8 +36172,23 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       state.ui.assistantHidden = false;
     }
   }
+  function setSettingsSection(state, section) {
+    state.ui.settingsSection = section;
+  }
+  function setActiveCategory2(state, category) {
+    state.ui.activeCategory = category;
+  }
   function setSelectedTemplate2(state, { category, templateId }) {
     state.ui.selectedTemplates[category] = templateId;
+  }
+  function setEditingTemplate(state, { category, templateId }) {
+    state.ui.editingTemplate = { category, templateId };
+  }
+  function clearEditingTemplate(state) {
+    state.ui.editingTemplate = { category: "", templateId: "" };
+  }
+  function setTemplateManagerCategory(state, category) {
+    state.ui.templateManagerCategory = category;
   }
   function openWorkNotes(state, { templateId, draftText, generatedTemplateId }) {
     state.ui.panelOpen = false;
@@ -36218,6 +36328,18 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   }
   function setWorkNotesRecentPhrasesReset(state, value2 = true) {
     state.ui.workNotesRecentPhrasesReset = Boolean(value2);
+  }
+  function setSettingsDraft2(state, draft) {
+    state.ui.settingsDraft = draft;
+  }
+  function closeSettingsModal(state) {
+    state.ui.settingsOpen = false;
+    state.ui.settingsMandatory = false;
+    state.ui.settingsDraft = null;
+    state.ui.assistantHidden = false;
+  }
+  function setFavoriteTemplates(state, list) {
+    state.ui.favoriteTemplates = Array.isArray(list) ? list : null;
   }
   function patchContext(state, patch) {
     state.context = { ...state.context || {}, ...patch || {} };
@@ -38024,8 +38146,382 @@ ${text2}` : text2;
     };
   }
 
+  // Assistant/application/templates/custom-templates.js
+  function createCustomTemplateId(category) {
+    return `custom_${cleanText(category || "email")}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function looksGeneratedCustomId(value2 = "") {
+    return /^custom_(?:email|reminder|close_note|work_note|appointment)_[a-z0-9]+_[a-z0-9]+$/i.test(cleanText(value2));
+  }
+  function templateFingerprint(template = {}) {
+    return JSON.stringify([
+      cleanText(template.category),
+      cleanText(template.label),
+      cleanText(template.target),
+      cleanText(template.subject),
+      String(template.body || ""),
+      cleanText(template.paragraphSpacing || "standard")
+    ]);
+  }
+  function getDefaultCustomTemplate(category) {
+    const rawCategory = cleanText(category);
+    const safeCategory = ["email", "reminder", "close_note", "work_note", "appointment"].includes(rawCategory) ? rawCategory : rawCategory === "resolution" ? "close_note" : rawCategory === "internal" ? "work_note" : "email";
+    if (safeCategory === "reminder") {
+      return {
+        id: createCustomTemplateId(safeCategory),
+        category: safeCategory,
+        label: "New reminder template",
+        target: "comments",
+        subject: "Reminder: {{ticket_number}}",
+        body: "Dear {{user_name}},\n\nReminder regarding ticket {{ticket_number}}.\n\nWe are following up on the previous message and kindly ask you to confirm your availability or share the missing details.\n\nKind regards,\n{{agent_name}}",
+        isCustom: true
+      };
+    }
+    if (safeCategory === "work_note") {
+      return {
+        id: createCustomTemplateId(safeCategory),
+        category: safeCategory,
+        label: "New work note template",
+        target: "work_notes",
+        body: "Write your work note here.\nYou can use placeholders like {{ticket_number}} and {{user_name}}.",
+        isCustom: true
+      };
+    }
+    if (safeCategory === "appointment") {
+      return {
+        id: createCustomTemplateId(safeCategory),
+        category: safeCategory,
+        label: "New appointment template",
+        target: "comments",
+        subject: "Appointment confirmation - {{ticket_number}}",
+        body: "Dear {{user_name}},\n\nWe confirm your appointment on {{appointment_date}} at {{appointment_time}}.\n\nLocation: {{office_location}}\n\nKind regards,\n{{agent_name}}",
+        isCustom: true
+      };
+    }
+    if (safeCategory === "close_note") {
+      return {
+        id: createCustomTemplateId(safeCategory),
+        category: safeCategory,
+        label: "New close note template",
+        target: "close_notes",
+        subject: "",
+        body: "Dear {{user_name}},\n\nWe would like to inform you that your incident {{ticket_number}} has been successfully resolved.\n\n{{dynamic_resolution}}\n\nIf you continue to experience any issues or require further assistance, please do not hesitate to contact us.\n\nKind regards,\nIT Support Team",
+        isCustom: true
+      };
+    }
+    return {
+      id: createCustomTemplateId(safeCategory),
+      category: safeCategory,
+      label: "New email template",
+      target: "comments",
+      subject: "Follow-up on {{ticket_number}}",
+      body: "Dear {{user_name}},\n\nWe are contacting you regarding ticket {{ticket_number}}.\n\nPlease share any additional details so we can proceed.\n\nKind regards,\n{{agent_name}}",
+      isCustom: true
+    };
+  }
+  function duplicateTemplateAsCustom(category, templateId, settings) {
+    const rawCategory = cleanText(category);
+    const safeCategory = ["email", "reminder", "close_note", "work_note", "appointment"].includes(rawCategory) ? rawCategory : rawCategory === "resolution" ? "close_note" : rawCategory === "internal" ? "work_note" : "email";
+    const sourceTemplate = getTemplate(safeCategory, templateId, settings);
+    if (!sourceTemplate) {
+      return getDefaultCustomTemplate(safeCategory);
+    }
+    return {
+      ...sourceTemplate,
+      id: createCustomTemplateId(safeCategory),
+      category: safeCategory,
+      label: `${cleanText(sourceTemplate.label) || "New template"} Copy`,
+      isCustom: true
+    };
+  }
+  function upsertCustomTemplate(draft, template, { previousId = "" } = {}) {
+    const next = Array.isArray(draft.customTemplates) ? [...draft.customTemplates] : [];
+    const normalizedTemplate = { ...template, id: cleanText(template?.id) };
+    if (!normalizedTemplate.id) return;
+    let index = next.findIndex((item) => item.id === normalizedTemplate.id);
+    if (index < 0 && cleanText(previousId)) {
+      index = next.findIndex((item) => item.id === cleanText(previousId));
+    }
+    if (index < 0 && normalizedTemplate.isCustom && !looksGeneratedCustomId(normalizedTemplate.id)) {
+      const fingerprint = templateFingerprint(normalizedTemplate);
+      const matches = next.map((item, candidateIndex) => ({ item, candidateIndex })).filter(({ item }) => item?.isCustom && templateFingerprint(item) === fingerprint);
+      if (matches.length === 1) index = matches[0].candidateIndex;
+    }
+    if (index >= 0) {
+      next[index] = normalizedTemplate;
+    } else {
+      next.push(normalizedTemplate);
+    }
+    draft.customTemplates = next;
+  }
+
   // Assistant/handlers/settings.js
-  __PLACEHOLDER__;
+  var DEFAULT_BUTTON_COLOR = "#2563eb";
+  var LAUNCHER_COLOR_PALETTES = {
+    ocean: { "quick-draft": "#2563eb", "open-work-notes": "#0f766e", "open-reminder": "#d97706", "incident-resolution-notes": "#b45309", "open-ep-links": "#0d9488", "create-calendar-event": "#0284c7", "open-pdf": "#7c3aed", "open-settings": "#475569", "force-close": "#dc2626" },
+    pastel: { "quick-draft": "#60a5fa", "open-work-notes": "#5eead4", "open-reminder": "#fbbf24", "incident-resolution-notes": "#fb923c", "open-ep-links": "#2dd4bf", "create-calendar-event": "#38bdf8", "open-pdf": "#a78bfa", "open-settings": "#94a3b8", "force-close": "#f87171" }
+  };
+  function normalizeCustomTemplateId(value2 = "", fallback = "") {
+    const normalized = cleanText(value2).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80);
+    return normalized || cleanText(fallback);
+  }
+  function applyDraftFieldChange(state, name, value2) {
+    const draft = cloneSettings(ensureSettingsDraft(state));
+    if (name === "officeProfile") {
+      setSettingsDraft(state, applyOfficePreset(value2, draft));
+      return { rerender: true };
+    }
+    if (name === "templateSearch") {
+      const category = state.ui.templateManagerCategory || "email";
+      state.ui.templateSearch[category] = String(value2 || "");
+      return { rerender: true };
+    }
+    if (name === "templateSubcategory") {
+      const category = state.ui.templateManagerCategory || "email";
+      state.ui.templateSubcategory[category] = cleanText(value2 || "all").toLowerCase() || "all";
+      return { rerender: true };
+    }
+    if (name === "autoHideAssistantDelay") {
+      draft.autoHideAssistantDelay = String(value2 || "off");
+      setSettingsDraft(state, sanitizeSettings(draft));
+      return { rerender: false };
+    }
+    if (name === "buttonOpacity") {
+      draft.buttonOpacity = Math.min(1, Math.max(0, Number(value2) || 1));
+      setSettingsDraft(state, sanitizeSettings(draft));
+      return { rerender: true };
+    }
+    if (name.startsWith("toggle:")) {
+      draft.toggles[name.split(":")[1]] = Boolean(value2);
+      setSettingsDraft(state, sanitizeSettings(draft));
+      return { rerender: false };
+    }
+    if (name.startsWith("btnColor:")) {
+      const id = name.split(":")[1];
+      const colors = typeof draft.buttonColors === "object" ? { ...draft.buttonColors } : {};
+      const safe3 = cleanText(value2);
+      if (safe3 && safe3 !== DEFAULT_BUTTON_COLOR) colors[id] = safe3;
+      else delete colors[id];
+      draft.buttonColors = colors;
+      setSettingsDraft(state, sanitizeSettings(draft));
+      return { rerender: false };
+    }
+    if (name.startsWith("launcherBtn:")) {
+      const id = name.split(":")[1];
+      const hidden = Array.isArray(draft.hiddenButtons) ? draft.hiddenButtons : [];
+      if (value2) draft.hiddenButtons = hidden.filter((x) => x !== id);
+      else if (!hidden.includes(id)) draft.hiddenButtons = [...hidden, id];
+      setSettingsDraft(state, sanitizeSettings(draft));
+      return { rerender: false };
+    }
+    if (name.startsWith("customLink:")) {
+      const [, id, field] = name.split(":");
+      const links = Array.isArray(draft.customLinks) ? draft.customLinks : [];
+      const idx4 = links.findIndex((l) => l.id === id);
+      if (idx4 >= 0) {
+        const next = [...links];
+        next[idx4] = { ...links[idx4], [field]: cleanText(value2) };
+        draft.customLinks = next;
+        setSettingsDraft(state, sanitizeSettings(draft));
+      }
+      return { rerender: false };
+    }
+    if (name.startsWith("cannedPhrase:")) {
+      const idx4 = parseInt(name.split(":")[1], 10);
+      const arr = Array.isArray(draft.cannedPhrases) ? [...draft.cannedPhrases] : [];
+      if (!isNaN(idx4) && idx4 >= 0 && idx4 < arr.length) {
+        arr[idx4] = cleanText(value2);
+        draft.cannedPhrases = arr;
+        setSettingsDraft(state, sanitizeSettings(draft));
+      }
+      return { rerender: false };
+    }
+    if (name.startsWith("tpl:")) {
+      const [, category, templateId, fieldName] = name.split(":");
+      const custom = (draft.customTemplates || []).find((t) => t.id === templateId);
+      if (custom) {
+        const updated = { ...custom };
+        if (fieldName === "id") {
+          const nextId = normalizeCustomTemplateId(value2, templateId);
+          if ((draft.customTemplates || []).some((t) => t.id === nextId && t.id !== templateId)) return { rerender: true, error: `Template ID already exists: ${nextId}` };
+          updated.id = nextId;
+          upsertCustomTemplate(draft, updated, { previousId: templateId });
+          setSettingsDraft(state, sanitizeSettings(draft));
+          setSelectedTemplate(state, category, nextId);
+          if (state.ui.editingTemplate?.category === category && state.ui.editingTemplate?.templateId === templateId) state.ui.editingTemplate = { category, templateId: nextId };
+          return { rerender: true, renamedTemplateId: nextId };
+        }
+        updated[fieldName] = String(value2 || "");
+        upsertCustomTemplate(draft, updated);
+        setSettingsDraft(state, sanitizeSettings(draft));
+        return { rerender: false };
+      }
+      draft.templateOverrides[category] = draft.templateOverrides[category] || {};
+      draft.templateOverrides[category][templateId] = draft.templateOverrides[category][templateId] || {};
+      draft.templateOverrides[category][templateId][fieldName] = String(value2 || "");
+      setSettingsDraft(state, sanitizeSettings(draft));
+      return { rerender: false };
+    }
+    if (["officeName", "officeRoom", "officeLabel"].includes(name)) draft.officeProfile = "custom";
+    draft[name] = String(value2 || "");
+    setSettingsDraft(state, sanitizeSettings(draft));
+    return { rerender: false };
+  }
+  function createSettingsHandlers({ state, store, logger, rootWindow, scheduleRecovery, scheduleAutoHideTimer }) {
+    const persist = (settings) => {
+      const saved = saveSettings(rootWindow, sanitizeSettings(settings), logger);
+      setSettings(state, saved);
+      return saved;
+    };
+    return {
+      onOpenSettings() {
+        openSettings(state, false);
+        scheduleAutoHideTimer();
+        scheduleRecovery("settings-open", 0);
+      },
+      onCloseSettings() {
+        const d = state.ui.settingsDraft;
+        if (d && JSON.stringify(state.settings) !== JSON.stringify(d)) showToast(state.host.document, { message: "Unsaved changes discarded.", tone: "info" });
+        store.dispatch(closeSettingsModal);
+        scheduleAutoHideTimer();
+        scheduleRecovery("settings-close", 0);
+      },
+      onSettingsSection(section) {
+        store.dispatch(setSettingsSection, SETTINGS_SECTIONS.includes(section) ? section : "templates");
+        scheduleRecovery("settings-section", 0);
+      },
+      onSelectCategory(category) {
+        store.dispatch(setActiveCategory2, category);
+        scheduleRecovery("template-category", 0);
+      },
+      onSelectTemplate(templateId) {
+        store.dispatch(setSelectedTemplate2, { category: state.ui.activeCategory, templateId });
+        scheduleRecovery("template-select", 0);
+      },
+      onFieldChange(name, value2) {
+        const result = applyDraftFieldChange(state, name, value2);
+        const draft = sanitizeSettings(state.ui.settingsDraft || state.settings);
+        if (result.error) showToast(state.host.document, { message: result.error, tone: "error" });
+        if (name === "theme" || name === "enableThemeSkin") {
+          applyThemeToAll(rootWindow, draft.theme, draft.enableThemeSkin);
+          scheduleRecovery("settings-theme-preview", TIMING.themePreviewMs);
+          return;
+        }
+        if (result.rerender) scheduleRecovery("settings-field-change", 0);
+      },
+      onSaveSettings() {
+        const saved = persist(state.ui.settingsDraft || state.settings);
+        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        showToast(state.host.document, { message: "Settings saved", tone: "success" });
+        scheduleRecovery("settings-save", 0);
+      },
+      onTemplateManagerCategory(category) {
+        store.dispatch(setTemplateManagerCategory, category);
+        state.ui.templateSearch[category] = "";
+        state.ui.templateSubcategory[category] = "all";
+        scheduleRecovery("settings-template-category", 0);
+      },
+      onSelectSettingsTemplate(category, templateId) {
+        store.dispatch(setSelectedTemplate2, { category, templateId });
+        store.dispatch(setActiveCategory2, category);
+        scheduleRecovery("settings-template-selected", 0);
+      },
+      onEditTemplate(category, templateId) {
+        store.dispatch(setSelectedTemplate2, { category, templateId });
+        store.dispatch(setActiveCategory2, category);
+        store.dispatch(setTemplateManagerCategory, category);
+        store.dispatch(setEditingTemplate, { category, templateId });
+        scheduleRecovery("settings-template-edit", 0);
+      },
+      onCloseTemplateEditor() {
+        store.dispatch(clearEditingTemplate);
+        scheduleRecovery("settings-template-edit-close", 0);
+      },
+      onNewCustomTemplate(category) {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        const template = getDefaultCustomTemplate(category || state.ui.templateManagerCategory || "email");
+        upsertCustomTemplate(draft, template);
+        const saved = persist(draft);
+        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        store.dispatch(setActiveCategory2, template.category);
+        store.dispatch(setTemplateManagerCategory, template.category);
+        store.dispatch(setSelectedTemplate2, { category: template.category, templateId: template.id });
+        store.dispatch(setEditingTemplate, { category: template.category, templateId: template.id });
+        showToast(state.host.document, { message: `New template created: ${template.label}`, tone: "info" });
+        scheduleRecovery("settings-template-created", 0);
+      },
+      onDuplicateTemplate(category, templateId) {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        const cat = category || state.ui.templateManagerCategory || "email";
+        const id = templateId || state.ui.selectedTemplates?.[cat] || "";
+        const template = duplicateTemplateAsCustom(cat, id, draft);
+        upsertCustomTemplate(draft, template);
+        const saved = persist(draft);
+        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        store.dispatch(setEditingTemplate, { category: template.category, templateId: template.id });
+        scheduleRecovery("settings-template-duplicated", 0);
+      },
+      onDeleteCustomTemplate(category, templateId) {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        draft.customTemplates = (draft.customTemplates || []).filter((t) => t.id !== templateId);
+        const saved = persist(draft);
+        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        if (state.ui.selectedTemplates?.[category] === templateId) store.dispatch(setSelectedTemplate2, { category, templateId: getFirstTemplateId(category, saved) });
+        store.dispatch(clearEditingTemplate);
+        scheduleRecovery("settings-template-deleted", 0);
+      },
+      onToggleFavorite(category, templateId) {
+        const favorites = toggleFavoriteTemplate(rootWindow, category, templateId, logger);
+        store.dispatch(setFavoriteTemplates, favorites);
+        scheduleRecovery("settings-favorite", 0);
+      },
+      onResetSettings() {
+        const saved = persist(getDefaultSettings());
+        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        scheduleRecovery("settings-reset", 0);
+      },
+      onExportSettings() {
+        return exportSettingsPackage(state.settings);
+      },
+      onImportSettings(payload) {
+        const imported = importSettingsPackage(rootWindow, payload, logger);
+        if (imported) {
+          setSettings(state, imported);
+          store.dispatch(setSettingsDraft2, cloneSettings(imported));
+          scheduleRecovery("settings-import", 0);
+        }
+        return imported;
+      },
+      onApplyOfficePreset(profile) {
+        const draft = applyOfficePreset(profile, cloneSettings(ensureSettingsDraft(state)));
+        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
+        scheduleRecovery("settings-office-preset", 0);
+      },
+      onValidateSettings() {
+        return hasRequiredSettings(state.ui.settingsDraft || state.settings);
+      },
+      onSetButtonColor(buttonId, color) {
+        const draft = cloneSettings(state.settings);
+        draft.buttonColors = { ...draft.buttonColors || {}, [cleanText(buttonId)]: cleanText(color) };
+        persist(draft);
+        scheduleRecovery("launcher-button-color-inline", 0);
+      },
+      onResetButtonColor(buttonId) {
+        const draft = cloneSettings(state.settings);
+        if (draft.buttonColors) delete draft.buttonColors[cleanText(buttonId)];
+        persist(draft);
+        scheduleRecovery("launcher-button-color-reset", 0);
+      },
+      onApplyLauncherPalette(name) {
+        const palette = LAUNCHER_COLOR_PALETTES[name];
+        if (!palette) return;
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        draft.buttonColors = { ...draft.buttonColors || {}, ...palette };
+        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
+        scheduleRecovery("launcher-palette", 0);
+      }
+    };
+  }
 
   // Assistant/handlers/panel.js
   function createPanelHandlers({ store, scheduleRecovery, api }) {
@@ -38986,7 +39482,7 @@ ${text2}` : text2;
       {},
       createPanelHandlers(handlerDeps),
       createLauncherHandlers(handlerDeps),
-      (void 0)(handlerDeps),
+      createSettingsHandlers(handlerDeps),
       createEpLinksHandlers(handlerDeps),
       createCalendarHandlers(handlerDeps),
       createPdfHandlers(handlerDeps),
