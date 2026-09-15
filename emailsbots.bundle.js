@@ -6,7 +6,11 @@
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __commonJS = (cb, mod) => function __require() {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    try {
+      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    } catch (e) {
+      throw mod = 0, e;
+    }
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
@@ -62,26 +66,26 @@
         return buf;
       };
       var fnTyped = {
-        arraySet: function(dest, src, src_offs, len, dest_offs) {
+        arraySet: function(dest, src, src_offs, len3, dest_offs) {
           if (src.subarray && dest.subarray) {
-            dest.set(src.subarray(src_offs, src_offs + len), dest_offs);
+            dest.set(src.subarray(src_offs, src_offs + len3), dest_offs);
             return;
           }
-          for (var i = 0; i < len; i++) {
-            dest[dest_offs + i] = src[src_offs + i];
+          for (var i3 = 0; i3 < len3; i3++) {
+            dest[dest_offs + i3] = src[src_offs + i3];
           }
         },
         // Join array of chunks to single array.
         flattenChunks: function(chunks) {
-          var i, l, len, pos, chunk, result;
-          len = 0;
-          for (i = 0, l = chunks.length; i < l; i++) {
-            len += chunks[i].length;
+          var i3, l, len3, pos, chunk, result;
+          len3 = 0;
+          for (i3 = 0, l = chunks.length; i3 < l; i3++) {
+            len3 += chunks[i3].length;
           }
-          result = new Uint8Array(len);
+          result = new Uint8Array(len3);
           pos = 0;
-          for (i = 0, l = chunks.length; i < l; i++) {
-            chunk = chunks[i];
+          for (i3 = 0, l = chunks.length; i3 < l; i3++) {
+            chunk = chunks[i3];
             result.set(chunk, pos);
             pos += chunk.length;
           }
@@ -89,9 +93,9 @@
         }
       };
       var fnUntyped = {
-        arraySet: function(dest, src, src_offs, len, dest_offs) {
-          for (var i = 0; i < len; i++) {
-            dest[dest_offs + i] = src[src_offs + i];
+        arraySet: function(dest, src, src_offs, len3, dest_offs) {
+          for (var i3 = 0; i3 < len3; i3++) {
+            dest[dest_offs + i3] = src[src_offs + i3];
           }
         },
         // Join array of chunks to single array.
@@ -126,9 +130,9 @@
       var Z_TEXT = 1;
       var Z_UNKNOWN = 2;
       function zero(buf) {
-        var len = buf.length;
-        while (--len >= 0) {
-          buf[len] = 0;
+        var len3 = buf.length;
+        while (--len3 >= 0) {
+          buf[len3] = 0;
         }
       }
       var STORED_BLOCK = 0;
@@ -217,13 +221,13 @@
           /*.Len*/
         );
       }
-      function bi_reverse(code, len) {
+      function bi_reverse(code, len3) {
         var res = 0;
         do {
           res |= code & 1;
           code >>>= 1;
           res <<= 1;
-        } while (--len > 0);
+        } while (--len3 > 0);
         return res >>> 1;
       }
       function bi_flush(s) {
@@ -314,11 +318,11 @@
           next_code[bits] = code = code + bl_count[bits - 1] << 1;
         }
         for (n = 0; n <= max_code; n++) {
-          var len = tree[n * 2 + 1];
-          if (len === 0) {
+          var len3 = tree[n * 2 + 1];
+          if (len3 === 0) {
             continue;
           }
-          tree[n * 2] = bi_reverse(next_code[len]++, len);
+          tree[n * 2] = bi_reverse(next_code[len3]++, len3);
         }
       }
       function tr_static_init() {
@@ -407,14 +411,14 @@
         s.bi_buf = 0;
         s.bi_valid = 0;
       }
-      function copy_block(s, buf, len, header) {
+      function copy_block(s, buf, len3, header) {
         bi_windup(s);
         if (header) {
-          put_short(s, len);
-          put_short(s, ~len);
+          put_short(s, len3);
+          put_short(s, ~len3);
         }
-        utils.arraySet(s.pending_buf, s.window, buf, len, s.pending);
-        s.pending += len;
+        utils.arraySet(s.pending_buf, s.window, buf, len3, s.pending);
+        s.pending += len3;
       }
       function smaller(tree, n, m, depth) {
         var _n2 = n * 2;
@@ -762,11 +766,11 @@
   var require_adler32 = __commonJS({
     "node_modules/pako/lib/zlib/adler32.js"(exports, module) {
       "use strict";
-      function adler32(adler, buf, len, pos) {
+      function adler32(adler, buf, len3, pos) {
         var s1 = adler & 65535 | 0, s2 = adler >>> 16 & 65535 | 0, n = 0;
-        while (len !== 0) {
-          n = len > 2e3 ? 2e3 : len;
-          len -= n;
+        while (len3 !== 0) {
+          n = len3 > 2e3 ? 2e3 : len3;
+          len3 -= n;
           do {
             s1 = s1 + buf[pos++] | 0;
             s2 = s2 + s1 | 0;
@@ -796,11 +800,11 @@
         return table;
       }
       var crcTable = makeTable();
-      function crc32(crc, buf, len, pos) {
-        var t = crcTable, end = pos + len;
+      function crc32(crc, buf, len3, pos) {
+        var t = crcTable, end = pos + len3;
         crc ^= -1;
-        for (var i = pos; i < end; i++) {
-          crc = crc >>> 8 ^ t[(crc ^ buf[i]) & 255];
+        for (var i3 = pos; i3 < end; i3++) {
+          crc = crc >>> 8 ^ t[(crc ^ buf[i3]) & 255];
         }
         return crc ^ -1;
       }
@@ -896,26 +900,26 @@
         return (f << 1) - (f > 4 ? 9 : 0);
       }
       function zero(buf) {
-        var len = buf.length;
-        while (--len >= 0) {
-          buf[len] = 0;
+        var len3 = buf.length;
+        while (--len3 >= 0) {
+          buf[len3] = 0;
         }
       }
       function flush_pending(strm) {
         var s = strm.state;
-        var len = s.pending;
-        if (len > strm.avail_out) {
-          len = strm.avail_out;
+        var len3 = s.pending;
+        if (len3 > strm.avail_out) {
+          len3 = strm.avail_out;
         }
-        if (len === 0) {
+        if (len3 === 0) {
           return;
         }
-        utils.arraySet(strm.output, s.pending_buf, s.pending_out, len, strm.next_out);
-        strm.next_out += len;
-        s.pending_out += len;
-        strm.total_out += len;
-        strm.avail_out -= len;
-        s.pending -= len;
+        utils.arraySet(strm.output, s.pending_buf, s.pending_out, len3, strm.next_out);
+        strm.next_out += len3;
+        s.pending_out += len3;
+        strm.total_out += len3;
+        strm.avail_out -= len3;
+        s.pending -= len3;
         if (s.pending === 0) {
           s.pending_out = 0;
         }
@@ -933,29 +937,29 @@
         s.pending_buf[s.pending++] = b & 255;
       }
       function read_buf(strm, buf, start, size) {
-        var len = strm.avail_in;
-        if (len > size) {
-          len = size;
+        var len3 = strm.avail_in;
+        if (len3 > size) {
+          len3 = size;
         }
-        if (len === 0) {
+        if (len3 === 0) {
           return 0;
         }
-        strm.avail_in -= len;
-        utils.arraySet(buf, strm.input, strm.next_in, len, start);
+        strm.avail_in -= len3;
+        utils.arraySet(buf, strm.input, strm.next_in, len3, start);
         if (strm.state.wrap === 1) {
-          strm.adler = adler32(strm.adler, buf, len, start);
+          strm.adler = adler32(strm.adler, buf, len3, start);
         } else if (strm.state.wrap === 2) {
-          strm.adler = crc32(strm.adler, buf, len, start);
+          strm.adler = crc32(strm.adler, buf, len3, start);
         }
-        strm.next_in += len;
-        strm.total_in += len;
-        return len;
+        strm.next_in += len3;
+        strm.total_in += len3;
+        return len3;
       }
       function longest_match(s, cur_match) {
         var chain_length = s.max_chain_length;
         var scan = s.strstart;
         var match;
-        var len;
+        var len3;
         var best_len = s.prev_length;
         var nice_match = s.nice_match;
         var limit = s.strstart > s.w_size - MIN_LOOKAHEAD ? s.strstart - (s.w_size - MIN_LOOKAHEAD) : 0;
@@ -980,12 +984,12 @@
           match++;
           do {
           } while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && scan < strend);
-          len = MAX_MATCH - (strend - scan);
+          len3 = MAX_MATCH - (strend - scan);
           scan = strend - MAX_MATCH;
-          if (len > best_len) {
+          if (len3 > best_len) {
             s.match_start = cur_match;
-            best_len = len;
-            if (len >= nice_match) {
+            best_len = len3;
+            if (len3 >= nice_match) {
               break;
             }
             scan_end1 = _win[scan + best_len - 1];
@@ -1908,7 +1912,7 @@
       var q;
       _utf8len[254] = _utf8len[254] = 1;
       exports.string2buf = function(str) {
-        var buf, c, c2, m_pos, i, str_len = str.length, buf_len = 0;
+        var buf, c, c2, m_pos, i3, str_len = str.length, buf_len = 0;
         for (m_pos = 0; m_pos < str_len; m_pos++) {
           c = str.charCodeAt(m_pos);
           if ((c & 64512) === 55296 && m_pos + 1 < str_len) {
@@ -1921,7 +1925,7 @@
           buf_len += c < 128 ? 1 : c < 2048 ? 2 : c < 65536 ? 3 : 4;
         }
         buf = new utils.Buf8(buf_len);
-        for (i = 0, m_pos = 0; i < buf_len; m_pos++) {
+        for (i3 = 0, m_pos = 0; i3 < buf_len; m_pos++) {
           c = str.charCodeAt(m_pos);
           if ((c & 64512) === 55296 && m_pos + 1 < str_len) {
             c2 = str.charCodeAt(m_pos + 1);
@@ -1931,32 +1935,32 @@
             }
           }
           if (c < 128) {
-            buf[i++] = c;
+            buf[i3++] = c;
           } else if (c < 2048) {
-            buf[i++] = 192 | c >>> 6;
-            buf[i++] = 128 | c & 63;
+            buf[i3++] = 192 | c >>> 6;
+            buf[i3++] = 128 | c & 63;
           } else if (c < 65536) {
-            buf[i++] = 224 | c >>> 12;
-            buf[i++] = 128 | c >>> 6 & 63;
-            buf[i++] = 128 | c & 63;
+            buf[i3++] = 224 | c >>> 12;
+            buf[i3++] = 128 | c >>> 6 & 63;
+            buf[i3++] = 128 | c & 63;
           } else {
-            buf[i++] = 240 | c >>> 18;
-            buf[i++] = 128 | c >>> 12 & 63;
-            buf[i++] = 128 | c >>> 6 & 63;
-            buf[i++] = 128 | c & 63;
+            buf[i3++] = 240 | c >>> 18;
+            buf[i3++] = 128 | c >>> 12 & 63;
+            buf[i3++] = 128 | c >>> 6 & 63;
+            buf[i3++] = 128 | c & 63;
           }
         }
         return buf;
       };
-      function buf2binstring(buf, len) {
-        if (len < 65534) {
+      function buf2binstring(buf, len3) {
+        if (len3 < 65534) {
           if (buf.subarray && STR_APPLY_UIA_OK || !buf.subarray && STR_APPLY_OK) {
-            return String.fromCharCode.apply(null, utils.shrinkBuf(buf, len));
+            return String.fromCharCode.apply(null, utils.shrinkBuf(buf, len3));
           }
         }
         var result = "";
-        for (var i = 0; i < len; i++) {
-          result += String.fromCharCode(buf[i]);
+        for (var i3 = 0; i3 < len3; i3++) {
+          result += String.fromCharCode(buf[i3]);
         }
         return result;
       }
@@ -1965,17 +1969,17 @@
       };
       exports.binstring2buf = function(str) {
         var buf = new utils.Buf8(str.length);
-        for (var i = 0, len = buf.length; i < len; i++) {
-          buf[i] = str.charCodeAt(i);
+        for (var i3 = 0, len3 = buf.length; i3 < len3; i3++) {
+          buf[i3] = str.charCodeAt(i3);
         }
         return buf;
       };
       exports.buf2string = function(buf, max) {
-        var i, out, c, c_len;
-        var len = max || buf.length;
-        var utf16buf = new Array(len * 2);
-        for (out = 0, i = 0; i < len; ) {
-          c = buf[i++];
+        var i3, out, c, c_len;
+        var len3 = max || buf.length;
+        var utf16buf = new Array(len3 * 2);
+        for (out = 0, i3 = 0; i3 < len3; ) {
+          c = buf[i3++];
           if (c < 128) {
             utf16buf[out++] = c;
             continue;
@@ -1983,12 +1987,12 @@
           c_len = _utf8len[c];
           if (c_len > 4) {
             utf16buf[out++] = 65533;
-            i += c_len - 1;
+            i3 += c_len - 1;
             continue;
           }
           c &= c_len === 2 ? 31 : c_len === 3 ? 15 : 7;
-          while (c_len > 1 && i < len) {
-            c = c << 6 | buf[i++] & 63;
+          while (c_len > 1 && i3 < len3) {
+            c = c << 6 | buf[i3++] & 63;
             c_len--;
           }
           if (c_len > 1) {
@@ -2235,7 +2239,7 @@
         var dmask;
         var here;
         var op;
-        var len;
+        var len3;
         var dist;
         var from;
         var from_source;
@@ -2277,14 +2281,14 @@
                 if (op === 0) {
                   output[_out++] = here & 65535;
                 } else if (op & 16) {
-                  len = here & 65535;
+                  len3 = here & 65535;
                   op &= 15;
                   if (op) {
                     if (bits < op) {
                       hold += input[_in++] << bits;
                       bits += 8;
                     }
-                    len += hold & (1 << op) - 1;
+                    len3 += hold & (1 << op) - 1;
                     hold >>>= op;
                     bits -= op;
                   }
@@ -2334,8 +2338,8 @@
                           from_source = s_window;
                           if (wnext === 0) {
                             from += wsize - op;
-                            if (op < len) {
-                              len -= op;
+                            if (op < len3) {
+                              len3 -= op;
                               do {
                                 output[_out++] = s_window[from++];
                               } while (--op);
@@ -2345,15 +2349,15 @@
                           } else if (wnext < op) {
                             from += wsize + wnext - op;
                             op -= wnext;
-                            if (op < len) {
-                              len -= op;
+                            if (op < len3) {
+                              len3 -= op;
                               do {
                                 output[_out++] = s_window[from++];
                               } while (--op);
                               from = 0;
-                              if (wnext < len) {
+                              if (wnext < len3) {
                                 op = wnext;
-                                len -= op;
+                                len3 -= op;
                                 do {
                                   output[_out++] = s_window[from++];
                                 } while (--op);
@@ -2363,8 +2367,8 @@
                             }
                           } else {
                             from += wnext - op;
-                            if (op < len) {
-                              len -= op;
+                            if (op < len3) {
+                              len3 -= op;
                               do {
                                 output[_out++] = s_window[from++];
                               } while (--op);
@@ -2372,15 +2376,15 @@
                               from_source = output;
                             }
                           }
-                          while (len > 2) {
+                          while (len3 > 2) {
                             output[_out++] = from_source[from++];
                             output[_out++] = from_source[from++];
                             output[_out++] = from_source[from++];
-                            len -= 3;
+                            len3 -= 3;
                           }
-                          if (len) {
+                          if (len3) {
                             output[_out++] = from_source[from++];
-                            if (len > 1) {
+                            if (len3 > 1) {
                               output[_out++] = from_source[from++];
                             }
                           }
@@ -2390,11 +2394,11 @@
                             output[_out++] = output[from++];
                             output[_out++] = output[from++];
                             output[_out++] = output[from++];
-                            len -= 3;
-                          } while (len > 2);
-                          if (len) {
+                            len3 -= 3;
+                          } while (len3 > 2);
+                          if (len3) {
                             output[_out++] = output[from++];
-                            if (len > 1) {
+                            if (len3 > 1) {
                               output[_out++] = output[from++];
                             }
                           }
@@ -2423,9 +2427,9 @@
                 break;
               }
           } while (_in < last2 && _out < end);
-        len = bits >> 3;
-        _in -= len;
-        bits -= len << 3;
+        len3 = bits >> 3;
+        _in -= len3;
+        bits -= len3 << 3;
         hold &= (1 << bits) - 1;
         strm.next_in = _in;
         strm.next_out = _out;
@@ -2589,7 +2593,7 @@
       ];
       module.exports = function inflate_table(type, lens, lens_index, codes, table, table_index, work, opts) {
         var bits = opts.bits;
-        var len = 0;
+        var len3 = 0;
         var sym = 0;
         var min = 0, max = 0;
         var root = 0;
@@ -2611,8 +2615,8 @@
         var extra = null;
         var extra_index = 0;
         var here_bits, here_op, here_val;
-        for (len = 0; len <= MAXBITS; len++) {
-          count[len] = 0;
+        for (len3 = 0; len3 <= MAXBITS; len3++) {
+          count[len3] = 0;
         }
         for (sym = 0; sym < codes; sym++) {
           count[lens[lens_index + sym]]++;
@@ -2641,9 +2645,9 @@
           root = min;
         }
         left = 1;
-        for (len = 1; len <= MAXBITS; len++) {
+        for (len3 = 1; len3 <= MAXBITS; len3++) {
           left <<= 1;
-          left -= count[len];
+          left -= count[len3];
           if (left < 0) {
             return -1;
           }
@@ -2652,8 +2656,8 @@
           return -1;
         }
         offs[1] = 0;
-        for (len = 1; len < MAXBITS; len++) {
-          offs[len + 1] = offs[len] + count[len];
+        for (len3 = 1; len3 < MAXBITS; len3++) {
+          offs[len3 + 1] = offs[len3] + count[len3];
         }
         for (sym = 0; sym < codes; sym++) {
           if (lens[lens_index + sym] !== 0) {
@@ -2676,7 +2680,7 @@
         }
         huff = 0;
         sym = 0;
-        len = min;
+        len3 = min;
         next = table_index;
         curr = root;
         drop = 0;
@@ -2687,7 +2691,7 @@
           return 1;
         }
         for (; ; ) {
-          here_bits = len - drop;
+          here_bits = len3 - drop;
           if (work[sym] < end) {
             here_op = 0;
             here_val = work[sym];
@@ -2698,14 +2702,14 @@
             here_op = 32 + 64;
             here_val = 0;
           }
-          incr = 1 << len - drop;
+          incr = 1 << len3 - drop;
           fill2 = 1 << curr;
           min = fill2;
           do {
             fill2 -= incr;
             table[next + (huff >> drop) + fill2] = here_bits << 24 | here_op << 16 | here_val | 0;
           } while (fill2 !== 0);
-          incr = 1 << len - 1;
+          incr = 1 << len3 - 1;
           while (huff & incr) {
             incr >>= 1;
           }
@@ -2716,18 +2720,18 @@
             huff = 0;
           }
           sym++;
-          if (--count[len] === 0) {
-            if (len === max) {
+          if (--count[len3] === 0) {
+            if (len3 === max) {
               break;
             }
-            len = lens[lens_index + work[sym]];
+            len3 = lens[lens_index + work[sym]];
           }
-          if (len > root && (huff & mask) !== low) {
+          if (len3 > root && (huff & mask) !== low) {
             if (drop === 0) {
               drop = root;
             }
             next += min;
-            curr = len - drop;
+            curr = len3 - drop;
             left = 1 << curr;
             while (curr + drop < max) {
               left -= count[curr + drop];
@@ -2746,7 +2750,7 @@
           }
         }
         if (huff !== 0) {
-          table[next + huff] = len - drop << 24 | 64 << 16 | 0;
+          table[next + huff] = len3 - drop << 24 | 64 << 16 | 0;
         }
         opts.bits = root;
         return 0;
@@ -3017,7 +3021,7 @@
         var here = 0;
         var here_bits, here_op, here_val;
         var last_bits, last_op, last_val;
-        var len;
+        var len3;
         var ret;
         var hbuf = new utils.Buf8(4);
         var opts;
@@ -3087,15 +3091,15 @@
                 }
                 hold >>>= 4;
                 bits -= 4;
-                len = (hold & 15) + 8;
+                len3 = (hold & 15) + 8;
                 if (state.wbits === 0) {
-                  state.wbits = len;
-                } else if (len > state.wbits) {
+                  state.wbits = len3;
+                } else if (len3 > state.wbits) {
                   strm.msg = "invalid window size";
                   state.mode = BAD;
                   break;
                 }
-                state.dmax = 1 << len;
+                state.dmax = 1 << len3;
                 strm.adler = state.check = 1;
                 state.mode = hold & 512 ? DICTID : TYPE;
                 hold = 0;
@@ -3212,7 +3216,7 @@
                   }
                   if (copy) {
                     if (state.head) {
-                      len = state.head.extra_len - state.length;
+                      len3 = state.head.extra_len - state.length;
                       if (!state.head.extra) {
                         state.head.extra = new Array(state.head.extra_len);
                       }
@@ -3224,7 +3228,7 @@
                         // - no need for additional size check
                         copy,
                         /*len + copy > state.head.extra_max - len ? state.head.extra_max : copy,*/
-                        len
+                        len3
                       );
                     }
                     if (state.flags & 512) {
@@ -3248,17 +3252,17 @@
                   }
                   copy = 0;
                   do {
-                    len = input[next + copy++];
-                    if (state.head && len && state.length < 65536) {
-                      state.head.name += String.fromCharCode(len);
+                    len3 = input[next + copy++];
+                    if (state.head && len3 && state.length < 65536) {
+                      state.head.name += String.fromCharCode(len3);
                     }
-                  } while (len && copy < have);
+                  } while (len3 && copy < have);
                   if (state.flags & 512) {
                     state.check = crc32(state.check, input, copy, next);
                   }
                   have -= copy;
                   next += copy;
-                  if (len) {
+                  if (len3) {
                     break inf_leave;
                   }
                 } else if (state.head) {
@@ -3274,17 +3278,17 @@
                   }
                   copy = 0;
                   do {
-                    len = input[next + copy++];
-                    if (state.head && len && state.length < 65536) {
-                      state.head.comment += String.fromCharCode(len);
+                    len3 = input[next + copy++];
+                    if (state.head && len3 && state.length < 65536) {
+                      state.head.comment += String.fromCharCode(len3);
                     }
-                  } while (len && copy < have);
+                  } while (len3 && copy < have);
                   if (state.flags & 512) {
                     state.check = crc32(state.check, input, copy, next);
                   }
                   have -= copy;
                   next += copy;
-                  if (len) {
+                  if (len3) {
                     break inf_leave;
                   }
                 } else if (state.head) {
@@ -3534,7 +3538,7 @@
                         state.mode = BAD;
                         break;
                       }
-                      len = state.lens[state.have - 1];
+                      len3 = state.lens[state.have - 1];
                       copy = 3 + (hold & 3);
                       hold >>>= 2;
                       bits -= 2;
@@ -3550,7 +3554,7 @@
                       }
                       hold >>>= here_bits;
                       bits -= here_bits;
-                      len = 0;
+                      len3 = 0;
                       copy = 3 + (hold & 7);
                       hold >>>= 3;
                       bits -= 3;
@@ -3566,7 +3570,7 @@
                       }
                       hold >>>= here_bits;
                       bits -= here_bits;
-                      len = 0;
+                      len3 = 0;
                       copy = 11 + (hold & 127);
                       hold >>>= 7;
                       bits -= 7;
@@ -3577,7 +3581,7 @@
                       break;
                     }
                     while (copy--) {
-                      state.lens[state.have++] = len;
+                      state.lens[state.have++] = len3;
                     }
                   }
                 }
@@ -5492,7 +5496,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     const validTicketNumber = customerTicketNumber || ticketNumber;
     const sysId = detectSysId(rootWindow);
     const pageKey = detectPageKey(rootWindow);
-    const recordKey = createRecordKey({ table, sysId, ticketNumber });
+    const recordKey2 = createRecordKey({ table, sysId, ticketNumber });
     const supported = isSupportedTable(table);
     const user = resolveUserFromForm(table, rootWindow);
     const currentCmdbCi = getCurrentCmdbCi(rootWindow);
@@ -5549,7 +5553,7 @@ Asset tag: ${item.equipmentAssetTag}`;
       tableConfig: getTableConfig(table),
       sysId,
       pageKey,
-      recordKey,
+      recordKey: recordKey2,
       ticketNumber,
       recordNumber: ticketNumber,
       sourceTaskNumber: table === "sc_task" ? cleanText(rawTicketNumber) : "",
@@ -5989,9 +5993,6 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return state.ui.settingsDraft;
   }
-  function setSettingsDraft(state, draft) {
-    state.ui.settingsDraft = deepClone(draft);
-  }
   function openSettings(state, mandatory = false) {
     state.ui.settingsOpen = true;
     state.ui.settingsMandatory = mandatory || state.ui.settingsMandatory;
@@ -6017,7 +6018,6 @@ Asset tag: ${item.equipmentAssetTag}`;
   }
 
   // Assistant/core/storage.js
-  var TEMP_WORKSPACE = "temp/sn-assistant";
   var STORAGE_PREFIX = "sn_assistant_";
   var STORAGE_KEYS = {
     settings: `${STORAGE_PREFIX}temp_workspace_v3/settings`,
@@ -6273,21 +6273,6 @@ Asset tag: ${item.equipmentAssetTag}`;
       safeSettings.officeProfile && safeSettings.officeName && safeSettings.officeRoom && safeSettings.officeLabel && safeSettings.defaultLanguage
     );
   }
-  function applyOfficePreset(profile, baseSettings = getDefaultSettings()) {
-    const safeBase = sanitizeSettings(baseSettings);
-    const normalizedProfile = cleanText(profile).toLowerCase();
-    const preset = OFFICE_PRESETS[normalizedProfile];
-    if (!preset || preset.id === "custom") {
-      return sanitizeSettings({ ...safeBase, officeProfile: normalizedProfile || "custom" });
-    }
-    return sanitizeSettings({
-      ...safeBase,
-      officeProfile: preset.id,
-      officeName: cleanText(preset.officeName) || safeBase.officeName,
-      officeRoom: cleanText(preset.officeRoom) || safeBase.officeRoom,
-      officeLabel: cleanText(preset.officeLabel) || safeBase.officeLabel
-    });
-  }
   function loadSettings(rootWindow, logger) {
     const storage = getPersistentStorage(rootWindow);
     if (!storage) {
@@ -6306,9 +6291,6 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     storage.setItem(STORAGE_KEYS.settings, JSON.stringify(safeSettings));
     return safeSettings;
-  }
-  function cloneSettings(settings) {
-    return deepClone(sanitizeSettings(settings));
   }
   function normalizeWorkNoteTemplateUsage(rawValue) {
     const usage = rawValue && typeof rawValue === "object" ? rawValue : {};
@@ -6404,63 +6386,6 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return normalized;
   }
-  function buildPackageFilename() {
-    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-    return `sn-assistant-templates-${stamp}.json`;
-  }
-  function buildSettingsPackage(settings) {
-    return {
-      schema: "sn-assistant-template-package",
-      version: 1,
-      workspace: TEMP_WORKSPACE,
-      exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      settings: sanitizeSettings(settings)
-    };
-  }
-  async function tryWritePackageToTempFolder(rootWindow, fileName, payloadText) {
-    if (typeof rootWindow?.showDirectoryPicker !== "function") return null;
-    const baseDirectoryHandle = await rootWindow.showDirectoryPicker({ mode: "readwrite" });
-    const tempDirectoryHandle = await baseDirectoryHandle.getDirectoryHandle("temp", { create: true });
-    const assistantDirectoryHandle = await tempDirectoryHandle.getDirectoryHandle("sn-assistant", { create: true });
-    const fileHandle = await assistantDirectoryHandle.getFileHandle(fileName, { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(payloadText);
-    await writable.close();
-    return { mode: "filesystem", fileName, path: `${TEMP_WORKSPACE}/${fileName}` };
-  }
-  function downloadPackage(rootWindow, fileName, payloadText) {
-    const blob = new Blob([payloadText], { type: "application/json" });
-    const objectUrl = rootWindow.URL.createObjectURL(blob);
-    const anchor = rootWindow.document.createElement("a");
-    anchor.href = objectUrl;
-    anchor.download = fileName;
-    anchor.style.display = "none";
-    (rootWindow.document.body || rootWindow.document.documentElement).appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    rootWindow.setTimeout(() => rootWindow.URL.revokeObjectURL(objectUrl), 0);
-    return { mode: "download", fileName };
-  }
-  async function exportSettingsPackage(rootWindow, settings) {
-    const fileName = buildPackageFilename();
-    const payloadText = JSON.stringify(buildSettingsPackage(settings), null, 2);
-    if (typeof rootWindow?.showDirectoryPicker === "function") {
-      try {
-        const fileResult = await tryWritePackageToTempFolder(rootWindow, fileName, payloadText);
-        if (fileResult) return { ok: true, ...fileResult };
-      } catch (error2) {
-        if (error2?.name === "AbortError") return { ok: false, canceled: true };
-      }
-    }
-    return { ok: true, ...downloadPackage(rootWindow, fileName, payloadText) };
-  }
-  async function importSettingsPackage(file) {
-    if (!file) throw new Error("No file selected");
-    const parsed = parseJson(await file.text(), null);
-    if (!parsed || typeof parsed !== "object") throw new Error("Invalid settings file");
-    const rawSettings = parsed.settings && typeof parsed.settings === "object" ? parsed.settings : parsed;
-    return sanitizeSettings(rawSettings);
-  }
   var MAX_RECENT_TICKETS = 5;
   function normalizeRecentTicket(entry) {
     if (!entry || typeof entry !== "object") return null;
@@ -6514,19 +6439,6 @@ Asset tag: ${item.equipmentAssetTag}`;
     } catch {
       return [];
     }
-  }
-  function toggleFavoriteTemplate(rootWindow, templateId, category) {
-    if (!templateId || !category) return [];
-    const storage = getLocalStorage(rootWindow);
-    if (!storage) return [];
-    const current = loadFavoriteTemplates(rootWindow);
-    const exists = current.some((t) => t.templateId === templateId && t.category === category);
-    const updated = exists ? current.filter((t) => !(t.templateId === templateId && t.category === category)) : [...current, normalizeFavoriteTemplate({ templateId, category })].slice(0, MAX_FAVORITE_TEMPLATES);
-    try {
-      storage.setItem(STORAGE_KEYS.favoriteTemplates, JSON.stringify(updated));
-    } catch {
-    }
-    return updated;
   }
   function normalizeUserGroup(entry) {
     if (!entry || typeof entry !== "object") return null;
@@ -8922,6 +8834,14 @@ ${configurationItemLine}`,
       body: "Equipment has been prepared for {{requested_for}}.\nAsset: {{configuration_item}}.\nThe device has been configured according to standard procedures and is ready for delivery or collection."
     },
     {
+      id: "worknote_tpm",
+      category: "work_note",
+      label: "TPM",
+      target: "work_notes",
+      keywords: ["tpm", "device", "pickup", "welcome desk", "spinelli"],
+      body: "Please take care of the device. It is available for pickup at the Welcome Desk, SPINELLI 01E035."
+    },
+    {
       id: "worknote_device_delivered",
       category: "work_note",
       label: "Device Delivered",
@@ -9972,9 +9892,6 @@ ${configurationItemLine}`,
   }
   function getTemplatesForCategory(category, settings) {
     return getTemplateGroups(settings)[category] || [];
-  }
-  function getTemplate(category, templateId, settings) {
-    return getTemplatesForCategory(category, settings).find((template) => template.id === templateId) || null;
   }
   function getFirstTemplateId(category, settings) {
     return getTemplatesForCategory(category, settings)[0]?.id || "";
@@ -11850,12 +11767,15 @@ ${value2}` : value2;
 ${value2}`) || existing.endsWith(`
 ${value2}`)));
   }
+  function containsWrittenValue(actual, expected, append) {
+    const a = cleanText(actual);
+    const e = cleanText(expected);
+    return append ? Boolean(a && (a === e || a.endsWith(e))) : a === e;
+  }
   function dispatchWorkNoteEvents(field) {
     const EventCtor = field?.ownerDocument?.defaultView?.Event || globalThis.Event;
     if (typeof EventCtor !== "function") return;
-    ["input", "change"].forEach((eventName) => {
-      field.dispatchEvent(new EventCtor(eventName, { bubbles: true }));
-    });
+    ["input", "change", "blur"].forEach((name) => field.dispatchEvent(new EventCtor(name, { bubbles: true })));
   }
   function writeWorkNoteToDom(value2, { append = true } = {}) {
     let documents = [];
@@ -11869,50 +11789,42 @@ ${value2}`)));
         const field = documentRef.querySelector('textarea[aria-label="Work notes"]') || documentRef.querySelector('textarea[name="work_notes"]') || documentRef.querySelector("#work_notes") || documentRef.querySelector("#activity-stream-textarea");
         if (!field) continue;
         const existing = append ? cleanText(field.value || "") : "";
-        if (append && isDuplicateAppend(existing, value2)) {
-          return { ok: true, targetField: "work_notes", appended: false, skipped: true, source: "dom" };
-        }
-        field.value = existing ? `${existing}
+        if (append && isDuplicateAppend(existing, value2)) return { ok: true, verified: true, targetField: "work_notes", appended: false, skipped: true, source: "dom" };
+        const nextValue = existing ? `${existing}
 
 ${value2}` : value2;
+        field.value = nextValue;
         dispatchWorkNoteEvents(field);
-        return {
-          ok: true,
-          targetField: field.name || field.id || "work_notes",
-          appended: Boolean(existing && append),
-          source: "dom"
-        };
+        const verified = containsWrittenValue(field.value, value2, append);
+        return { ok: verified, verified, targetField: field.name || field.id || "work_notes", appended: Boolean(existing && append), source: "dom", beforeLength: existing.length, afterLength: cleanText(field.value).length };
       } catch {
       }
     }
-    return { ok: false, targetField: "" };
+    return { ok: false, verified: false, targetField: "", source: "dom" };
   }
   function writeWorkNoteToField(text2, context = {}, { append = true } = {}) {
     const value2 = cleanText(text2);
-    if (!value2) {
-      return { ok: false, targetField: "" };
-    }
+    if (!value2) return { ok: false, verified: false, targetField: "", kind: "empty" };
     const bestGForm = getBestGForm();
     try {
       if (bestGForm?.gForm?.setValue) {
         const existing = append && typeof bestGForm.gForm.getValue === "function" ? cleanText(bestGForm.gForm.getValue("work_notes")) : "";
-        if (append && isDuplicateAppend(existing, value2)) {
-          return { ok: true, targetField: "work_notes", appended: false, skipped: true, source: "g_form" };
-        }
+        if (append && isDuplicateAppend(existing, value2)) return { ok: true, verified: true, targetField: "work_notes", appended: false, skipped: true, source: "g_form" };
         const nextValue = existing ? `${existing}
 
 ${value2}` : value2;
         bestGForm.gForm.setValue("work_notes", nextValue);
-        return { ok: true, targetField: "work_notes", appended: Boolean(existing && append), source: "g_form" };
+        const after = typeof bestGForm.gForm.getValue === "function" ? cleanText(bestGForm.gForm.getValue("work_notes")) : nextValue;
+        const verified = containsWrittenValue(after, value2, append);
+        if (verified) return { ok: true, verified: true, targetField: "work_notes", appended: Boolean(existing && append), source: "g_form", beforeLength: existing.length, afterLength: after.length };
       }
     } catch {
     }
     const domResult = writeWorkNoteToDom(value2, { append });
     if (domResult.ok) return domResult;
-    if (!append) {
-      return { ok: false, targetField: "", replaceUnsupported: true };
-    }
-    return insertWorkNote(value2, context);
+    if (!append) return { ok: false, verified: false, targetField: "", replaceUnsupported: true };
+    const legacy = insertWorkNote(value2, context);
+    return { ...legacy, verified: Boolean(legacy?.ok), source: legacy?.source || "legacy" };
   }
 
   // Assistant/ui/workNotes.js
@@ -12804,7 +12716,7 @@ ${value2}` : value2;
     const sorted = sortForContext(rows, context), hidden = Math.max(0, sorted.length - SECTION_PREVIEW_LIMIT);
     return `<section class="sn-assistant-all-hierarchy__section ${hidden ? "has-more-items" : ""}" data-preview-section>
     <div class="sn-assistant-all-hierarchy__label">${escapeHtml(label)} <span>${rows.length}</span></div>
-    ${sorted.map((r, i) => renderCard(r, context, { closed, previewHidden: i >= SECTION_PREVIEW_LIMIT })).join("")}
+    ${sorted.map((r, i3) => renderCard(r, context, { closed, previewHidden: i3 >= SECTION_PREVIEW_LIMIT })).join("")}
     ${hidden ? `<button type="button" class="sn-assistant-section-more" data-action="user-tickets-section-more" data-hidden-count="${hidden}" aria-expanded="false">View ${hidden} more</button>` : ""}
   </section>`;
   }
@@ -12834,13 +12746,13 @@ ${value2}` : value2;
     const groups = groupTasks(tasks, allRows), current = currentNumber(context);
     groups.sort((a, b) => (a.number === current ? -1 : b.number === current ? 1 : 0) || Math.max(...b.tasks.map(updatedMs), 0) - Math.max(...a.tasks.map(updatedMs), 0));
     return groups.map((g, gi) => {
-      const sorted = sortForContext(g.tasks, context), ci = sorted.findIndex((t) => value(t.number) === current), visible = new Set(sorted.slice(0, TASK_PREVIEW_LIMIT).map((_, i) => i));
+      const sorted = sortForContext(g.tasks, context), ci = sorted.findIndex((t) => value(t.number) === current), visible = new Set(sorted.slice(0, TASK_PREVIEW_LIMIT).map((_, i3) => i3));
       if (ci >= 0) visible.add(ci);
       const hidden = sorted.length - visible.size, expanded = groups.length === 1 || gi === 0 || ci >= 0, id = `ritm-${String(g.sysId || g.number).replace(/[^a-z0-9_-]/gi, "-")}`;
       return `<section class="sn-assistant-ritm-branch ${expanded ? "is-expanded" : "is-collapsed"} ${hidden ? "has-more-tasks" : ""}" data-ritm-group>
       <div class="sn-assistant-ritm-branch__head"><button type="button" class="sn-assistant-ritm-branch__toggle" data-action="user-tickets-toggle-ritm" aria-expanded="${expanded}" aria-controls="${escapeHtml(id)}"><span class="sn-assistant-ritm-branch__chevron"></span></button><span class="sn-assistant-ritm-branch__node sn-assistant-ritm-branch__node--parent"></span><div class="sn-assistant-ritm-branch__identity">${g.sysId && g.number !== "Other SCTASKs" ? `<button type="button" class="sn-assistant-ritm-branch__number" data-action="user-tickets-open" data-table="sc_req_item" data-sys-id="${escapeHtml(g.sysId)}">${escapeHtml(g.number)}</button>` : `<span class="sn-assistant-ritm-branch__number is-static">${escapeHtml(g.number)}</span>`}${compactDescription(g.desc) ? `<span class="sn-assistant-ritm-branch__description">${escapeHtml(compactDescription(g.desc))}</span>` : ""}</div><span class="sn-assistant-ritm-branch__summary">${escapeHtml(taskSummary(sorted))}</span></div>
-      <div class="sn-assistant-ritm-branch__children" id="${escapeHtml(id)}">${sorted.map((t, i) => {
-        const number = value(t.number), desc = value(t.shortDesc ?? t.short_description), isCurrent = number === current, hiddenRow = !visible.has(i), last2 = i === sorted.length - 1;
+      <div class="sn-assistant-ritm-branch__children" id="${escapeHtml(id)}">${sorted.map((t, i3) => {
+        const number = value(t.number), desc = value(t.shortDesc ?? t.short_description), isCurrent = number === current, hiddenRow = !visible.has(i3), last2 = i3 === sorted.length - 1;
         return `<div class="sn-assistant-sctask-tree-row ${isCurrent ? "is-current" : ""} ${hiddenRow ? "is-preview-hidden" : ""} ${last2 ? "is-last" : ""}"><span class="sn-assistant-sctask-tree-row__branch"></span><span class="sn-assistant-ritm-branch__node sn-assistant-ritm-branch__node--child"></span><button type="button" class="sn-assistant-sctask-tree-row__content" data-action="user-tickets-open" data-table="sc_task" data-sys-id="${escapeHtml(value(t.sysId ?? t.sys_id))}"><span class="sn-assistant-sctask-tree-row__body"><span class="sn-assistant-sctask-tree-row__topline"><strong class="sn-assistant-sctask-tree-row__number">${escapeHtml(number)}</strong>${renderState(t.state)}</span>${desc ? `<span class="sn-assistant-sctask-tree-row__description">${escapeHtml(desc)}</span>` : ""}<span class="sn-assistant-sctask-tree-row__meta"><span>${escapeHtml(assigned(t))}</span><span>${escapeHtml(ticketDate(t, closed) || "-")}</span></span></span></button><div class="sn-assistant-ticket-card-actions"><button type="button" data-action="user-tickets-copy-number" data-number="${escapeHtml(number)}" title="Copy ${escapeHtml(number)}">\u29C9</button></div></div>`;
       }).join("")}${hidden ? `<button type="button" class="sn-assistant-ritm-branch__more" data-action="user-tickets-toggle-more" data-hidden-count="${hidden}" aria-expanded="false"><span>View ${hidden} more task${hidden === 1 ? "" : "s"}</span><span class="sn-assistant-ritm-branch__more-chevron"></span></button>` : ""}</div>
     </section>`;
@@ -13401,7 +13313,7 @@ ${value2}` : value2;
     root.addEventListener("pointerup", clearAssignPressTimer);
     root.addEventListener("pointerleave", clearAssignPressTimer);
     root.addEventListener("pointercancel", clearAssignPressTimer);
-    const persistLauncherOrder = () => {
+    const persistLauncherOrder2 = () => {
       const actions = root.querySelector(".sn-ep__actions");
       if (!actions) return;
       const nextOrder = Array.from(actions.querySelectorAll(".sn-ep-editable-wrap[data-button-id]")).map((item) => item.dataset.buttonId || "").filter((buttonId) => buttonId && buttonId !== LAUNCHER_BUTTON_IDS.openReminder);
@@ -13433,7 +13345,7 @@ ${value2}` : value2;
       const target = event.target.closest(".sn-ep-editable-wrap[data-button-id]");
       if (!target || !draggedButtonId) return;
       event.preventDefault();
-      persistLauncherOrder();
+      persistLauncherOrder2();
     });
     root.addEventListener("dragend", () => {
       root.querySelectorAll(".sn-ep-editable-wrap.is-dragging").forEach((item) => item.classList.remove("is-dragging"));
@@ -14134,14 +14046,14 @@ ${value2}` : value2;
   function showTopTemplatesModal(hostDocument, templates = []) {
     return new Promise((resolve) => {
       const modalId = `sn-assistant-top-templates-${Date.now()}`;
-      const cards = (Array.isArray(templates) ? templates : []).slice(0, 3).map((t, idx) => {
-        const title = t?.label || t?.id || `Template ${idx + 1}`;
+      const cards = (Array.isArray(templates) ? templates : []).slice(0, 3).map((t, idx4) => {
+        const title = t?.label || t?.id || `Template ${idx4 + 1}`;
         const subject = String(t?.subject || "").trim() || "(No subject)";
         const body = String(t?.body || "").trim().slice(0, 220) || "(No preview)";
-        const rankLabel = idx === 0 ? "Best match" : `Option ${idx + 1}`;
-        const toneClass = idx === 0 ? "is-green" : idx === 1 ? "is-amber" : "is-red";
+        const rankLabel = idx4 === 0 ? "Best match" : `Option ${idx4 + 1}`;
+        const toneClass = idx4 === 0 ? "is-green" : idx4 === 1 ? "is-amber" : "is-red";
         return `
-        <button type="button" class="sn-assistant-toptpl__card ${idx === 0 ? "is-best" : ""}" data-action="pick-template" data-template-id="${escapeHtml(t?.id || "")}">
+        <button type="button" class="sn-assistant-toptpl__card ${idx4 === 0 ? "is-best" : ""}" data-action="pick-template" data-template-id="${escapeHtml(t?.id || "")}">
           <span class="sn-assistant-toptpl__rank ${toneClass}">${escapeHtml(rankLabel)}</span>
           <strong class="sn-assistant-toptpl__title">${escapeHtml(title)}</strong>
           <span class="sn-assistant-toptpl__subject">${escapeHtml(subject)}</span>
@@ -14195,9 +14107,9 @@ ${value2}` : value2;
       const modalId = `sn-assistant-group-picker-${Date.now()}`;
       const list = Array.isArray(groups) ? groups : [];
       const options = list.map(
-        (group, idx) => `
-        <button type="button" class="sn-assistant-button sn-assistant-button--secondary sn-assistant-group-picker__option" data-action="pick-group" data-group-index="${idx}">
-          ${escapeHtml(group?.name || `Group ${idx + 1}`)}
+        (group, idx4) => `
+        <button type="button" class="sn-assistant-button sn-assistant-button--secondary sn-assistant-group-picker__option" data-action="pick-group" data-group-index="${idx4}">
+          ${escapeHtml(group?.name || `Group ${idx4 + 1}`)}
         </button>
       `
       ).join("");
@@ -14236,8 +14148,8 @@ ${value2}` : value2;
       root.addEventListener("click", (event) => {
         const btn = event.target.closest('[data-action="pick-group"]');
         if (!btn) return;
-        const idx = Number(btn.getAttribute("data-group-index"));
-        cleanup(list[idx] || null);
+        const idx4 = Number(btn.getAttribute("data-group-index"));
+        cleanup(list[idx4] || null);
       });
       cancelBtn?.addEventListener("click", () => cleanup(null));
       backdrop?.addEventListener("click", () => cleanup(null));
@@ -14526,8 +14438,8 @@ ${value2}` : value2;
       </label>
     `;
     }).join("");
-    const linkRows = customLinks.map((link, idx) => `
-    <div class="sn-assistant-custom-link-row" data-link-idx="${idx}">
+    const linkRows = customLinks.map((link, idx4) => `
+    <div class="sn-assistant-custom-link-row" data-link-idx="${idx4}">
       <input
         class="sn-assistant-input"
         name="customLink:${escapeHtml(link.id)}:label"
@@ -14552,11 +14464,11 @@ ${value2}` : value2;
     </div>
   `).join("");
     const cannedPhrases = Array.isArray(draftSettings.cannedPhrases) ? draftSettings.cannedPhrases : [];
-    const cannedPhraseRows = cannedPhrases.map((phrase, idx) => `
-    <div class="sn-assistant-custom-link-row" data-canned-idx="${idx}">
+    const cannedPhraseRows = cannedPhrases.map((phrase, idx4) => `
+    <div class="sn-assistant-custom-link-row" data-canned-idx="${idx4}">
       <input
         class="sn-assistant-input"
-        name="cannedPhrase:${idx}"
+        name="cannedPhrase:${idx4}"
         value="${escapeHtml(phrase)}"
         placeholder="Quick phrase\u2026"
         style="flex:1; min-width:0;"
@@ -14565,7 +14477,7 @@ ${value2}` : value2;
         type="button"
         class="sn-assistant-mini-button sn-assistant-mini-button--danger"
         data-action="remove-canned-phrase"
-        data-canned-idx="${idx}"
+        data-canned-idx="${idx4}"
         title="Remove phrase"
       >\xD7</button>
     </div>
@@ -15860,7 +15772,7 @@ ${value2}` : value2;
     const bodyHtml = s.body ? `<p class="sn-ob__body">${escapeHtml(s.body)}</p>` : "";
     const dotsHtml = Array.from(
       { length: ONBOARDING_TOTAL_STEPS },
-      (_, i) => `<span class="sn-ob__dot${i === stepIndex ? " sn-ob__dot--active" : ""}" aria-hidden="true"></span>`
+      (_, i3) => `<span class="sn-ob__dot${i3 === stepIndex ? " sn-ob__dot--active" : ""}" aria-hidden="true"></span>`
     ).join("");
     return `
     <div class="sn-ob__card" role="dialog" aria-modal="true" aria-label="${escapeHtml(s.title)}">
@@ -16674,11 +16586,27 @@ ${value2}` : value2;
     "incident_hardware_issue",
     "incident_connectivity_issue"
   ]);
+  var SHORT_DESCRIPTION_PREFIXES = [
+    /^access\s+(?:and\s*\/\s*or|and|or|&)\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i,
+    /^access\s+and\/or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i,
+    /^access\s+or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i,
+    /^application\s*\/\s*software\s*(?:access|update|access\s+and\/or\s+update)\s*[:\-–—]\s*/i,
+    /^request\s+(?:for\s+)?(?:access|installation|install|update)\s+(?:to|of)\s+application\s*\/\s*software\s*[:\-–—]\s*/i
+  ];
   function normalize2(value2 = "") {
     return cleanText(value2).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
   }
-  function sentenceTopic(value2 = "") {
-    const text2 = cleanText(value2).replace(/[.?!]+$/g, "").trim();
+  function humanizeShortDescription(value2 = "") {
+    let text2 = cleanText(value2).replace(/[.?!]+$/g, "").trim();
+    if (!text2) return "the issue you reported";
+    text2 = text2.replace(/^(?:\[[A-Z0-9][A-Z0-9 _.-]{1,18}\]\s*)+/i, "").trim();
+    for (const pattern of SHORT_DESCRIPTION_PREFIXES) {
+      const cleaned = text2.replace(pattern, "").trim();
+      if (cleaned !== text2) {
+        text2 = cleaned;
+        break;
+      }
+    }
     return text2 || "the issue you reported";
   }
   function getTicketNumber2(context = {}) {
@@ -16711,6 +16639,8 @@ ${agentName}`
     const application = cleanText(context.applicationSoftware || context.application || context.businessApplication);
     const state = normalize2(context.state);
     const onHoldReason = normalize2(context.onHoldReason || context.on_hold_reason);
+    const shortText = normalize2(shortDescription);
+    const descriptionText = normalize2(description);
     const text2 = normalize2([shortDescription, description, category, subcategory, application].filter(Boolean).join(" "));
     if (/awaiting vendor|waiting vendor|vendor/.test(onHoldReason) && /on hold|hold|pending/.test(state)) {
       return { family: "waiting-vendor", confidence: 0.98 };
@@ -16720,6 +16650,9 @@ ${agentName}`
     }
     if (/\b(scenario unavailable|unavailable|service down|application unavailable|system unavailable|isalive)\b/.test(text2)) {
       return { family: "application-unavailable", confidence: 0.94 };
+    }
+    if (/^access\s+(?:and\s*\/\s*or|and\/or|and|or|&)\s+update\s+to\s+application\s*\/\s*software\b/.test(shortText) || /^access\s+or\s+update\s+to\s+application\s*\/\s*software\b/.test(shortText) || /\b(?:permission|requesting permission|require access|need access|software request)\b/.test(descriptionText) && /\b(?:software|application|program|reprogram)\b/.test(text2)) {
+      return { family: "software-access-request", confidence: 0.96 };
     }
     if (/\b(permission denied|access denied|cannot access|unable to access|access issue)\b/.test(text2)) {
       return { family: "access", confidence: 0.9 };
@@ -16735,18 +16668,18 @@ ${agentName}`
     if (family === "device-performance") {
       if (/\b(reboot|restart|restarted|rebooted)\b/.test(description)) facts.push("you have already restarted the device");
       if (/\b(best performance|performance setting|performance mode)\b/.test(description)) facts.push("the performance settings have already been adjusted");
-      if (/\b(wifi|wi-fi|network)\b/.test(description) && /\b(not the problem|confirmed|speed test|tested)\b/.test(description)) facts.push("the network connection has already been checked");
+      if (/\b(wifi|wi-fi|network|connection|line)\b/.test(description) && /\b(not the problem|confirmed|speed test|tested)\b/.test(description)) facts.push("the network connection has already been checked");
       if (/\boutlook\b/.test(description) && /\bword\b/.test(description)) facts.push("the slowdown affects multiple applications");
     }
     return facts;
   }
   function composeForFamily(context = {}, family = "generic-follow-up") {
     const ticket = getTicketNumber2(context);
-    const shortDescription = sentenceTopic(context.shortDescription || context.short_description);
+    const shortDescription = humanizeShortDescription(context.shortDescription || context.short_description);
     const application = cleanText(context.applicationSoftware || context.application || context.businessApplication);
     const userName = getUserName(context);
     const agentName = getAgentName2(context);
-    const intro = ticket ? `I am following up regarding ticket ${ticket} and the issue you reported with ${shortDescription}.` : `I am following up regarding the issue you reported with ${shortDescription}.`;
+    const intro = ticket ? `I am following up regarding ticket ${ticket} concerning ${shortDescription}.` : `I am following up regarding ${shortDescription}.`;
     if (family === "waiting-vendor") {
       return {
         subject: ticket ? `${ticket} - Status update` : "Status update",
@@ -16794,6 +16727,22 @@ ${agentName}`
           ]
         }),
         reason: "Application/service unavailable intent detected."
+      };
+    }
+    if (family === "software-access-request") {
+      return {
+        subject: ticket ? `${ticket} - Software request follow-up` : "Software request follow-up",
+        body: buildEmail2({
+          userName,
+          agentName,
+          paragraphs: [
+            intro,
+            "Could you please confirm whether you still require assistance with this software request?",
+            "If assistance is still required, we can arrange an intervention, either on-site or remotely, to review the request and proceed with the appropriate next step.",
+            "Please let us know your availability, including a few dates and time slots that would suit you best, so that we can schedule this accordingly."
+          ]
+        }),
+        reason: "Software access/update request detected; troubleshooting questions intentionally avoided."
       };
     }
     if (family === "access") {
@@ -19480,8 +19429,8 @@ Are you sure you want to download this calendar event?`
   }
   var __assign = function() {
     __assign = Object.assign || function __assign2(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
+      for (var s, i3 = 1, n = arguments.length; i3 < n; i3++) {
+        s = arguments[i3];
         for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
       }
       return t;
@@ -19493,9 +19442,9 @@ Are you sure you want to download this calendar event?`
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
       t[p] = s[p];
     if (s != null && typeof Object.getOwnPropertySymbols === "function")
-      for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-        if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-          t[p[i]] = s[p[i]];
+      for (var i3 = 0, p = Object.getOwnPropertySymbols(s); i3 < p.length; i3++) {
+        if (e.indexOf(p[i3]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i3]))
+          t[p[i3]] = s[p[i3]];
       }
     return t;
   }
@@ -19596,9 +19545,9 @@ Are you sure you want to download this calendar event?`
     }
   }
   function __spreadArrays() {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-      for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+    for (var s = 0, i3 = 0, il = arguments.length; i3 < il; i3++) s += arguments[i3].length;
+    for (var r = Array(s), k = 0, i3 = 0; i3 < il; i3++)
+      for (var a = arguments[i3], j = 0, jl = a.length; j < jl; j++, k++)
         r[k] = a[j];
     return r;
   }
@@ -19612,24 +19561,24 @@ Are you sure you want to download this calendar event?`
   var i;
   var encodeToBase64 = function(bytes) {
     var base64 = "";
-    var len = bytes.length;
-    for (var i = 0; i < len; i += 3) {
-      base64 += chars[bytes[i] >> 2];
-      base64 += chars[(bytes[i] & 3) << 4 | bytes[i + 1] >> 4];
-      base64 += chars[(bytes[i + 1] & 15) << 2 | bytes[i + 2] >> 6];
-      base64 += chars[bytes[i + 2] & 63];
+    var len3 = bytes.length;
+    for (var i3 = 0; i3 < len3; i3 += 3) {
+      base64 += chars[bytes[i3] >> 2];
+      base64 += chars[(bytes[i3] & 3) << 4 | bytes[i3 + 1] >> 4];
+      base64 += chars[(bytes[i3 + 1] & 15) << 2 | bytes[i3 + 2] >> 6];
+      base64 += chars[bytes[i3 + 2] & 63];
     }
-    if (len % 3 === 2) {
+    if (len3 % 3 === 2) {
       base64 = base64.substring(0, base64.length - 1) + "=";
-    } else if (len % 3 === 1) {
+    } else if (len3 % 3 === 1) {
       base64 = base64.substring(0, base64.length - 2) + "==";
     }
     return base64;
   };
   var decodeFromBase64 = function(base64) {
     var bufferLength = base64.length * 0.75;
-    var len = base64.length;
-    var i;
+    var len3 = base64.length;
+    var i3;
     var p = 0;
     var encoded1;
     var encoded2;
@@ -19642,11 +19591,11 @@ Are you sure you want to download this calendar event?`
       }
     }
     var bytes = new Uint8Array(bufferLength);
-    for (i = 0; i < len; i += 4) {
-      encoded1 = lookup[base64.charCodeAt(i)];
-      encoded2 = lookup[base64.charCodeAt(i + 1)];
-      encoded3 = lookup[base64.charCodeAt(i + 2)];
-      encoded4 = lookup[base64.charCodeAt(i + 3)];
+    for (i3 = 0; i3 < len3; i3 += 4) {
+      encoded1 = lookup[base64.charCodeAt(i3)];
+      encoded2 = lookup[base64.charCodeAt(i3 + 1)];
+      encoded3 = lookup[base64.charCodeAt(i3 + 2)];
+      encoded4 = lookup[base64.charCodeAt(i3 + 3)];
       bytes[p++] = encoded1 << 2 | encoded2 >> 4;
       bytes[p++] = (encoded2 & 15) << 4 | encoded3 >> 2;
       bytes[p++] = (encoded3 & 3) << 6 | encoded4 & 63;
@@ -19686,15 +19635,15 @@ Are you sure you want to download this calendar event?`
   };
   var padStart = function(value2, length, padChar) {
     var padding = "";
-    for (var idx = 0, len = length - value2.length; idx < len; idx++) {
+    for (var idx4 = 0, len3 = length - value2.length; idx4 < len3; idx4++) {
       padding += padChar;
     }
     return padding + value2;
   };
   var copyStringIntoBuffer = function(str, buffer, offset) {
     var length = str.length;
-    for (var idx = 0; idx < length; idx++) {
-      buffer[offset++] = str.charCodeAt(idx);
+    for (var idx4 = 0; idx4 < length; idx4++) {
+      buffer[offset++] = str.charCodeAt(idx4);
     }
     return length;
   };
@@ -19732,18 +19681,18 @@ Are you sure you want to download this calendar event?`
   };
   var charSplit = function(text2) {
     var chars3 = [];
-    for (var idx = 0, len = text2.length; idx < len; ) {
-      var _a = charAtIndex(text2, idx), c = _a[0], cLen = _a[1];
+    for (var idx4 = 0, len3 = text2.length; idx4 < len3; ) {
+      var _a = charAtIndex(text2, idx4), c = _a[0], cLen = _a[1];
       chars3.push(c);
-      idx += cLen;
+      idx4 += cLen;
     }
     return chars3;
   };
   var buildWordBreakRegex = function(wordBreaks) {
     var newlineCharUnion = escapedNewlineChars.join("|");
     var escapedRules = ["$"];
-    for (var idx = 0, len = wordBreaks.length; idx < len; idx++) {
-      var wordBreak = wordBreaks[idx];
+    for (var idx4 = 0, len3 = wordBreaks.length; idx4 < len3; idx4++) {
+      var wordBreak = wordBreaks[idx4];
       if (isNewlineChar(wordBreak)) {
         throw new TypeError("`wordBreak` must not include " + newlineCharUnion);
       }
@@ -19764,8 +19713,8 @@ Are you sure you want to download this calendar event?`
       currLine = "";
       currWidth = 0;
     };
-    for (var idx = 0, len = words.length; idx < len; idx++) {
-      var word = words[idx];
+    for (var idx4 = 0, len3 = words.length; idx4 < len3; idx4++) {
+      var word = words[idx4];
       if (isNewlineChar(word)) {
         pushCurrLine();
       } else {
@@ -19812,8 +19761,8 @@ Are you sure you want to download this calendar event?`
       return value2;
     var length = value2.length;
     var typedArray = new Uint8Array(length);
-    for (var idx = 0; idx < length; idx++) {
-      typedArray[idx] = value2.charCodeAt(idx);
+    for (var idx4 = 0; idx4 < length; idx4++) {
+      typedArray[idx4] = value2.charCodeAt(idx4);
     }
     return typedArray;
   };
@@ -19824,13 +19773,13 @@ Are you sure you want to download this calendar event?`
     }
     var arrayCount = arrays.length;
     var typedArrays = [];
-    for (var idx = 0; idx < arrayCount; idx++) {
-      var element = arrays[idx];
-      typedArrays[idx] = element instanceof Uint8Array ? element : typedArrayFor(element);
+    for (var idx4 = 0; idx4 < arrayCount; idx4++) {
+      var element = arrays[idx4];
+      typedArrays[idx4] = element instanceof Uint8Array ? element : typedArrayFor(element);
     }
     var totalSize = 0;
-    for (var idx = 0; idx < arrayCount; idx++) {
-      totalSize += arrays[idx].length;
+    for (var idx4 = 0; idx4 < arrayCount; idx4++) {
+      totalSize += arrays[idx4].length;
     }
     var merged = new Uint8Array(totalSize);
     var offset = 0;
@@ -19844,13 +19793,13 @@ Are you sure you want to download this calendar event?`
   };
   var mergeUint8Arrays = function(arrays) {
     var totalSize = 0;
-    for (var idx = 0, len = arrays.length; idx < len; idx++) {
-      totalSize += arrays[idx].length;
+    for (var idx4 = 0, len3 = arrays.length; idx4 < len3; idx4++) {
+      totalSize += arrays[idx4].length;
     }
     var mergedBuffer = new Uint8Array(totalSize);
     var offset = 0;
-    for (var idx = 0, len = arrays.length; idx < len; idx++) {
-      var array = arrays[idx];
+    for (var idx4 = 0, len3 = arrays.length; idx4 < len3; idx4++) {
+      var array = arrays[idx4];
       mergedBuffer.set(array, offset);
       offset += array.length;
     }
@@ -19858,8 +19807,8 @@ Are you sure you want to download this calendar event?`
   };
   var arrayAsString = function(array) {
     var str = "";
-    for (var idx = 0, len = array.length; idx < len; idx++) {
-      str += charFromCode(array[idx]);
+    for (var idx4 = 0, len3 = array.length; idx4 < len3; idx4++) {
+      str += charFromCode(array[idx4]);
     }
     return str;
   };
@@ -19868,10 +19817,10 @@ Are you sure you want to download this calendar event?`
   };
   var sortedUniq = function(array, indexer) {
     var uniq = [];
-    for (var idx = 0, len = array.length; idx < len; idx++) {
-      var curr = array[idx];
-      var prev = array[idx - 1];
-      if (idx === 0 || indexer(curr) !== indexer(prev)) {
+    for (var idx4 = 0, len3 = array.length; idx4 < len3; idx4++) {
+      var curr = array[idx4];
+      var prev = array[idx4 - 1];
+      if (idx4 === 0 || indexer(curr) !== indexer(prev)) {
         uniq.push(curr);
       }
     }
@@ -19879,10 +19828,10 @@ Are you sure you want to download this calendar event?`
   };
   var reverseArray = function(array) {
     var arrayLen = array.length;
-    for (var idx = 0, len = Math.floor(arrayLen / 2); idx < len; idx++) {
-      var leftIdx = idx;
-      var rightIdx = arrayLen - idx - 1;
-      var temp = array[idx];
+    for (var idx4 = 0, len3 = Math.floor(arrayLen / 2); idx4 < len3; idx4++) {
+      var leftIdx = idx4;
+      var rightIdx = arrayLen - idx4 - 1;
+      var temp = array[idx4];
       array[leftIdx] = array[rightIdx];
       array[rightIdx] = temp;
     }
@@ -19890,22 +19839,22 @@ Are you sure you want to download this calendar event?`
   };
   var sum = function(array) {
     var total = 0;
-    for (var idx = 0, len = array.length; idx < len; idx++) {
-      total += array[idx];
+    for (var idx4 = 0, len3 = array.length; idx4 < len3; idx4++) {
+      total += array[idx4];
     }
     return total;
   };
   var range = function(start, end) {
     var arr = new Array(end - start);
-    for (var idx = 0, len = arr.length; idx < len; idx++) {
-      arr[idx] = start + idx;
+    for (var idx4 = 0, len3 = arr.length; idx4 < len3; idx4++) {
+      arr[idx4] = start + idx4;
     }
     return arr;
   };
   var pluckIndices = function(arr, indices) {
     var plucked = new Array(indices.length);
-    for (var idx = 0, len = indices.length; idx < len; idx++) {
-      plucked[idx] = arr[indices[idx]];
+    for (var idx4 = 0, len3 = indices.length; idx4 < len3; idx4++) {
+      plucked[idx4] = arr[indices[idx4]];
     }
     return plucked;
   };
@@ -19941,14 +19890,14 @@ Are you sure you want to download this calendar event?`
     var encoded = [];
     if (byteOrderMark)
       encoded.push(65279);
-    for (var idx = 0, len = input.length; idx < len; ) {
-      var codePoint = input.codePointAt(idx);
+    for (var idx4 = 0, len3 = input.length; idx4 < len3; ) {
+      var codePoint = input.codePointAt(idx4);
       if (codePoint < 65536) {
         encoded.push(codePoint);
-        idx += 1;
+        idx4 += 1;
       } else if (codePoint < 1114112) {
         encoded.push(highSurrogate(codePoint), lowSurrogate(codePoint));
-        idx += 2;
+        idx4 += 2;
       } else
         throw new Error("Invalid code point: 0x" + toHexString(codePoint));
     }
@@ -19979,15 +19928,15 @@ Are you sure you want to download this calendar event?`
     if (input.length <= 1)
       return String.fromCodePoint(REPLACEMENT);
     var byteOrder = byteOrderMark ? readBOM(input) : ByteOrder.BigEndian;
-    var idx = byteOrderMark ? 2 : 0;
+    var idx4 = byteOrderMark ? 2 : 0;
     var codePoints = [];
-    while (input.length - idx >= 2) {
-      var first = decodeValues(input[idx++], input[idx++], byteOrder);
+    while (input.length - idx4 >= 2) {
+      var first = decodeValues(input[idx4++], input[idx4++], byteOrder);
       if (isHighSurrogate(first)) {
-        if (input.length - idx < 2) {
+        if (input.length - idx4 < 2) {
           codePoints.push(REPLACEMENT);
         } else {
-          var second = decodeValues(input[idx++], input[idx++], byteOrder);
+          var second = decodeValues(input[idx4++], input[idx4++], byteOrder);
           if (isLowSurrogate(second)) {
             codePoints.push(first, second);
           } else {
@@ -19995,13 +19944,13 @@ Are you sure you want to download this calendar event?`
           }
         }
       } else if (isLowSurrogate(first)) {
-        idx += 2;
+        idx4 += 2;
         codePoints.push(REPLACEMENT);
       } else {
         codePoints.push(first);
       }
     }
-    if (idx < input.length)
+    if (idx4 < input.length)
       codePoints.push(REPLACEMENT);
     return String.fromCodePoint.apply(String, codePoints);
   };
@@ -20060,8 +20009,8 @@ Are you sure you want to download this calendar event?`
   };
   var bytesFor = function(n) {
     var bytes = new Uint8Array(sizeInBytes(n));
-    for (var i = 1; i <= bytes.length; i++) {
-      bytes[i - 1] = n >> (bytes.length - i) * 8;
+    for (var i3 = 1; i3 <= bytes.length; i3++) {
+      bytes[i3 - 1] = n >> (bytes.length - i3) * 8;
     }
     return bytes;
   };
@@ -20075,14 +20024,14 @@ Are you sure you want to download this calendar event?`
   var import_pako = __toESM(require_pako());
   var chars2 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   var lookup2 = new Uint8Array(256);
-  for (i = 0; i < chars2.length; i++) {
-    lookup2[chars2.charCodeAt(i)] = i;
+  for (i2 = 0; i2 < chars2.length; i2++) {
+    lookup2[chars2.charCodeAt(i2)] = i2;
   }
-  var i;
+  var i2;
   var decodeFromBase642 = function(base64) {
     var bufferLength = base64.length * 0.75;
-    var len = base64.length;
-    var i;
+    var len3 = base64.length;
+    var i3;
     var p = 0;
     var encoded1;
     var encoded2;
@@ -20095,11 +20044,11 @@ Are you sure you want to download this calendar event?`
       }
     }
     var bytes = new Uint8Array(bufferLength);
-    for (i = 0; i < len; i += 4) {
-      encoded1 = lookup2[base64.charCodeAt(i)];
-      encoded2 = lookup2[base64.charCodeAt(i + 1)];
-      encoded3 = lookup2[base64.charCodeAt(i + 2)];
-      encoded4 = lookup2[base64.charCodeAt(i + 3)];
+    for (i3 = 0; i3 < len3; i3 += 4) {
+      encoded1 = lookup2[base64.charCodeAt(i3)];
+      encoded2 = lookup2[base64.charCodeAt(i3 + 1)];
+      encoded3 = lookup2[base64.charCodeAt(i3 + 2)];
+      encoded4 = lookup2[base64.charCodeAt(i3 + 3)];
       bytes[p++] = encoded1 << 2 | encoded2 >> 4;
       bytes[p++] = (encoded2 & 15) << 4 | encoded3 >> 2;
       bytes[p++] = (encoded3 & 3) << 6 | encoded4 & 63;
@@ -20108,8 +20057,8 @@ Are you sure you want to download this calendar event?`
   };
   var arrayToString = function(array) {
     var str = "";
-    for (var i = 0; i < array.length; i++) {
-      str += String.fromCharCode(array[i]);
+    for (var i3 = 0; i3 < array.length; i3++) {
+      str += String.fromCharCode(array[i3]);
     }
     return str;
   };
@@ -20118,7 +20067,7 @@ Are you sure you want to download this calendar event?`
   };
   var padStart2 = function(value2, length, padChar) {
     var padding = "";
-    for (var idx = 0, len = length - value2.length; idx < len; idx++) {
+    for (var idx4 = 0, len3 = length - value2.length; idx4 < len3; idx4++) {
       padding += padChar;
     }
     return padding + value2;
@@ -20308,9 +20257,9 @@ Are you sure you want to download this calendar event?`
   };
   var createValueErrorMsg = function(value2, valueName, values2) {
     var allowedValues = new Array(values2.length);
-    for (var idx = 0, len = values2.length; idx < len; idx++) {
-      var v = values2[idx];
-      allowedValues[idx] = formatValue(v);
+    for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+      var v = values2[idx4];
+      allowedValues[idx4] = formatValue(v);
     }
     var joinedValues = allowedValues.join(" or ");
     return backtick(valueName) + " must be one of " + joinedValues + ", but was actually " + formatValue(value2);
@@ -20319,8 +20268,8 @@ Are you sure you want to download this calendar event?`
     if (!Array.isArray(allowedValues)) {
       allowedValues = values(allowedValues);
     }
-    for (var idx = 0, len = allowedValues.length; idx < len; idx++) {
-      if (value2 === allowedValues[idx])
+    for (var idx4 = 0, len3 = allowedValues.length; idx4 < len3; idx4++) {
+      if (value2 === allowedValues[idx4])
         return;
     }
     throw new TypeError(createValueErrorMsg(value2, valueName, allowedValues));
@@ -20335,8 +20284,8 @@ Are you sure you want to download this calendar event?`
     if (!Array.isArray(allowedValues)) {
       allowedValues = values(allowedValues);
     }
-    for (var idx = 0, len = values2.length; idx < len; idx++) {
-      assertIsOneOf(values2[idx], valueName, allowedValues);
+    for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+      assertIsOneOf(values2[idx4], valueName, allowedValues);
     }
   };
   var getType = function(val) {
@@ -20393,37 +20342,37 @@ Are you sure you want to download this calendar event?`
   };
   var createTypeErrorMsg = function(value2, valueName, types) {
     var allowedTypes = new Array(types.length);
-    for (var idx = 0, len = types.length; idx < len; idx++) {
-      var type = types[idx];
+    for (var idx4 = 0, len3 = types.length; idx4 < len3; idx4++) {
+      var type = types[idx4];
       if (type === "null")
-        allowedTypes[idx] = backtick("null");
+        allowedTypes[idx4] = backtick("null");
       if (type === "undefined")
-        allowedTypes[idx] = backtick("undefined");
+        allowedTypes[idx4] = backtick("undefined");
       if (type === "string")
-        allowedTypes[idx] = backtick("string");
+        allowedTypes[idx4] = backtick("string");
       else if (type === "number")
-        allowedTypes[idx] = backtick("number");
+        allowedTypes[idx4] = backtick("number");
       else if (type === "boolean")
-        allowedTypes[idx] = backtick("boolean");
+        allowedTypes[idx4] = backtick("boolean");
       else if (type === "symbol")
-        allowedTypes[idx] = backtick("symbol");
+        allowedTypes[idx4] = backtick("symbol");
       else if (type === "bigint")
-        allowedTypes[idx] = backtick("bigint");
+        allowedTypes[idx4] = backtick("bigint");
       else if (type === Array)
-        allowedTypes[idx] = backtick("Array");
+        allowedTypes[idx4] = backtick("Array");
       else if (type === Uint8Array)
-        allowedTypes[idx] = backtick("Uint8Array");
+        allowedTypes[idx4] = backtick("Uint8Array");
       else if (type === ArrayBuffer)
-        allowedTypes[idx] = backtick("ArrayBuffer");
+        allowedTypes[idx4] = backtick("ArrayBuffer");
       else
-        allowedTypes[idx] = backtick(type[1]);
+        allowedTypes[idx4] = backtick(type[1]);
     }
     var joinedTypes = allowedTypes.join(" or ");
     return backtick(valueName) + " must be of type " + joinedTypes + ", but was actually of type " + backtick(getType(value2));
   };
   var assertIs = function(value2, valueName, types) {
-    for (var idx = 0, len = types.length; idx < len; idx++) {
-      if (isType(value2, types[idx]))
+    for (var idx4 = 0, len3 = types.length; idx4 < len3; idx4++) {
+      if (isType(value2, types[idx4]))
         return;
     }
     throw new TypeError(createTypeErrorMsg(value2, valueName, types));
@@ -20432,8 +20381,8 @@ Are you sure you want to download this calendar event?`
     assertIs(value2, valueName, types.concat("undefined"));
   };
   var assertEachIs = function(values2, valueName, types) {
-    for (var idx = 0, len = values2.length; idx < len; idx++) {
-      assertIs(values2[idx], valueName, types);
+    for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+      assertIs(values2[idx4], valueName, types);
     }
   };
   var assertRange = function(value2, valueName, min, max) {
@@ -20519,8 +20468,8 @@ Are you sure you want to download this calendar event?`
   pdfDocEncodingToUnicode[173] = toCharCode("\uFFFD");
   var pdfDocEncodingDecode = function(bytes) {
     var codePoints = new Array(bytes.length);
-    for (var idx = 0, len = bytes.length; idx < len; idx++) {
-      codePoints[idx] = pdfDocEncodingToUnicode[bytes[idx]];
+    for (var idx4 = 0, len3 = bytes.length; idx4 < len3; idx4++) {
+      codePoints[idx4] = pdfDocEncodingToUnicode[bytes[idx4]];
     }
     return String.fromCodePoint.apply(String, codePoints);
   };
@@ -21121,8 +21070,8 @@ Are you sure you want to download this calendar event?`
       PDFArray2.prototype.remove = function(index) {
         this.array.splice(index, 1);
       };
-      PDFArray2.prototype.set = function(idx, object) {
-        this.array[idx] = object;
+      PDFArray2.prototype.set = function(idx4, object) {
+        this.array[idx4] = object;
       };
       PDFArray2.prototype.get = function(index) {
         return this.array[index];
@@ -21161,15 +21110,15 @@ Are you sure you want to download this calendar event?`
       };
       PDFArray2.prototype.clone = function(context) {
         var clone = PDFArray2.withContext(context || this.context);
-        for (var idx = 0, len = this.size(); idx < len; idx++) {
-          clone.push(this.array[idx]);
+        for (var idx4 = 0, len3 = this.size(); idx4 < len3; idx4++) {
+          clone.push(this.array[idx4]);
         }
         return clone;
       };
       PDFArray2.prototype.toString = function() {
         var arrayString = "[ ";
-        for (var idx = 0, len = this.size(); idx < len; idx++) {
-          arrayString += this.get(idx).toString();
+        for (var idx4 = 0, len3 = this.size(); idx4 < len3; idx4++) {
+          arrayString += this.get(idx4).toString();
           arrayString += " ";
         }
         arrayString += "]";
@@ -21177,8 +21126,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFArray2.prototype.sizeInBytes = function() {
         var size = 3;
-        for (var idx = 0, len = this.size(); idx < len; idx++) {
-          size += this.get(idx).sizeInBytes() + 1;
+        for (var idx4 = 0, len3 = this.size(); idx4 < len3; idx4++) {
+          size += this.get(idx4).sizeInBytes() + 1;
         }
         return size;
       };
@@ -21186,19 +21135,19 @@ Are you sure you want to download this calendar event?`
         var initialOffset = offset;
         buffer[offset++] = CharCodes_default.LeftSquareBracket;
         buffer[offset++] = CharCodes_default.Space;
-        for (var idx = 0, len = this.size(); idx < len; idx++) {
-          offset += this.get(idx).copyBytesInto(buffer, offset);
+        for (var idx4 = 0, len3 = this.size(); idx4 < len3; idx4++) {
+          offset += this.get(idx4).copyBytesInto(buffer, offset);
           buffer[offset++] = CharCodes_default.Space;
         }
         buffer[offset++] = CharCodes_default.RightSquareBracket;
         return offset - initialOffset;
       };
       PDFArray2.prototype.scalePDFNumbers = function(x, y) {
-        for (var idx = 0, len = this.size(); idx < len; idx++) {
-          var el = this.lookup(idx);
+        for (var idx4 = 0, len3 = this.size(); idx4 < len3; idx4++) {
+          var el = this.lookup(idx4);
           if (el instanceof PDFNumber_default) {
-            var factor = idx % 2 === 0 ? x : y;
-            this.set(idx, PDFNumber_default.of(el.asNumber() * factor));
+            var factor = idx4 % 2 === 0 ? x : y;
+            this.set(idx4, PDFNumber_default.of(el.asNumber() * factor));
           }
         }
       };
@@ -21283,10 +21232,10 @@ Are you sure you want to download this calendar event?`
 
   // node_modules/pdf-lib/es/core/syntax/Irregular.js
   var IsIrregular = new Uint8Array(256);
-  for (idx = 0, len = 256; idx < len; idx++) {
-    IsIrregular[idx] = IsWhitespace[idx] || IsDelimiter[idx] ? 1 : 0;
+  for (idx2 = 0, len = 256; idx2 < len; idx2++) {
+    IsIrregular[idx2] = IsWhitespace[idx2] || IsDelimiter[idx2] ? 1 : 0;
   }
-  var idx;
+  var idx2;
   var len;
   IsIrregular[CharCodes_default.Hash] = 1;
 
@@ -21311,8 +21260,8 @@ Are you sure you want to download this calendar event?`
           throw new PrivateConstructorError("PDFName");
         _this = _super.call(this) || this;
         var encodedName = "/";
-        for (var idx = 0, len = name.length; idx < len; idx++) {
-          var character = name[idx];
+        for (var idx4 = 0, len3 = name.length; idx4 < len3; idx4++) {
+          var character = name[idx4];
           var code = toCharCode(character);
           encodedName += isRegularChar(code) ? character : "#" + toHexString(code);
         }
@@ -21328,10 +21277,10 @@ Are you sure you want to download this calendar event?`
             bytes.push(byte2);
           escaped = false;
         };
-        for (var idx = 1, len = this.encodedName.length; idx < len; idx++) {
-          var char = this.encodedName[idx];
+        for (var idx4 = 1, len3 = this.encodedName.length; idx4 < len3; idx4++) {
+          var char = this.encodedName[idx4];
           var byte = toCharCode(char);
-          var nextChar = this.encodedName[idx + 1];
+          var nextChar = this.encodedName[idx4 + 1];
           if (!escaped) {
             if (byte === CharCodes_default.Hash)
               escaped = true;
@@ -21525,8 +21474,8 @@ Are you sure you want to download this calendar event?`
       PDFDict2.prototype.clone = function(context) {
         var clone = PDFDict2.withContext(context || this.context);
         var entries = this.entries();
-        for (var idx = 0, len = entries.length; idx < len; idx++) {
-          var _a = entries[idx], key = _a[0], value2 = _a[1];
+        for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+          var _a = entries[idx4], key = _a[0], value2 = _a[1];
           clone.set(key, value2);
         }
         return clone;
@@ -21534,8 +21483,8 @@ Are you sure you want to download this calendar event?`
       PDFDict2.prototype.toString = function() {
         var dictString = "<<\n";
         var entries = this.entries();
-        for (var idx = 0, len = entries.length; idx < len; idx++) {
-          var _a = entries[idx], key = _a[0], value2 = _a[1];
+        for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+          var _a = entries[idx4], key = _a[0], value2 = _a[1];
           dictString += key.toString() + " " + value2.toString() + "\n";
         }
         dictString += ">>";
@@ -21544,8 +21493,8 @@ Are you sure you want to download this calendar event?`
       PDFDict2.prototype.sizeInBytes = function() {
         var size = 5;
         var entries = this.entries();
-        for (var idx = 0, len = entries.length; idx < len; idx++) {
-          var _a = entries[idx], key = _a[0], value2 = _a[1];
+        for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+          var _a = entries[idx4], key = _a[0], value2 = _a[1];
           size += key.sizeInBytes() + value2.sizeInBytes() + 2;
         }
         return size;
@@ -21556,8 +21505,8 @@ Are you sure you want to download this calendar event?`
         buffer[offset++] = CharCodes_default.LessThan;
         buffer[offset++] = CharCodes_default.Newline;
         var entries = this.entries();
-        for (var idx = 0, len = entries.length; idx < len; idx++) {
-          var _a = entries[idx], key = _a[0], value2 = _a[1];
+        for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+          var _a = entries[idx4], key = _a[0], value2 = _a[1];
           offset += key.copyBytesInto(buffer, offset);
           buffer[offset++] = CharCodes_default.Space;
           offset += value2.copyBytesInto(buffer, offset);
@@ -21629,8 +21578,8 @@ Are you sure you want to download this calendar event?`
         buffer[offset++] = CharCodes_default.m;
         buffer[offset++] = CharCodes_default.Newline;
         var contents = this.getContents();
-        for (var idx = 0, len = contents.length; idx < len; idx++) {
-          buffer[offset++] = contents[idx];
+        for (var idx4 = 0, len3 = contents.length; idx4 < len3; idx4++) {
+          buffer[offset++] = contents[idx4];
         }
         buffer[offset++] = CharCodes_default.Newline;
         buffer[offset++] = CharCodes_default.e;
@@ -21739,24 +21688,24 @@ Are you sure you want to download this calendar event?`
       }
       PDFOperator2.prototype.clone = function(context) {
         var args = new Array(this.args.length);
-        for (var idx = 0, len = args.length; idx < len; idx++) {
-          var arg = this.args[idx];
-          args[idx] = arg instanceof PDFObject_default ? arg.clone(context) : arg;
+        for (var idx4 = 0, len3 = args.length; idx4 < len3; idx4++) {
+          var arg = this.args[idx4];
+          args[idx4] = arg instanceof PDFObject_default ? arg.clone(context) : arg;
         }
         return PDFOperator2.of(this.name, args);
       };
       PDFOperator2.prototype.toString = function() {
         var value2 = "";
-        for (var idx = 0, len = this.args.length; idx < len; idx++) {
-          value2 += String(this.args[idx]) + " ";
+        for (var idx4 = 0, len3 = this.args.length; idx4 < len3; idx4++) {
+          value2 += String(this.args[idx4]) + " ";
         }
         value2 += this.name;
         return value2;
       };
       PDFOperator2.prototype.sizeInBytes = function() {
         var size = 0;
-        for (var idx = 0, len = this.args.length; idx < len; idx++) {
-          var arg = this.args[idx];
+        for (var idx4 = 0, len3 = this.args.length; idx4 < len3; idx4++) {
+          var arg = this.args[idx4];
           size += (arg instanceof PDFObject_default ? arg.sizeInBytes() : arg.length) + 1;
         }
         size += this.name.length;
@@ -21764,8 +21713,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFOperator2.prototype.copyBytesInto = function(buffer, offset) {
         var initialOffset = offset;
-        for (var idx = 0, len = this.args.length; idx < len; idx++) {
-          var arg = this.args[idx];
+        for (var idx4 = 0, len3 = this.args.length; idx4 < len3; idx4++) {
+          var arg = this.args[idx4];
           if (arg instanceof PDFObject_default) {
             offset += arg.copyBytesInto(buffer, offset);
           } else {
@@ -21918,32 +21867,32 @@ Are you sure you want to download this calendar event?`
       };
       PDFContentStream2.prototype.clone = function(context) {
         var operators = new Array(this.operators.length);
-        for (var idx = 0, len = this.operators.length; idx < len; idx++) {
-          operators[idx] = this.operators[idx].clone(context);
+        for (var idx4 = 0, len3 = this.operators.length; idx4 < len3; idx4++) {
+          operators[idx4] = this.operators[idx4].clone(context);
         }
         var _a = this, dict = _a.dict, encode = _a.encode;
         return PDFContentStream2.of(dict.clone(context), operators, encode);
       };
       PDFContentStream2.prototype.getContentsString = function() {
         var value2 = "";
-        for (var idx = 0, len = this.operators.length; idx < len; idx++) {
-          value2 += this.operators[idx] + "\n";
+        for (var idx4 = 0, len3 = this.operators.length; idx4 < len3; idx4++) {
+          value2 += this.operators[idx4] + "\n";
         }
         return value2;
       };
       PDFContentStream2.prototype.getUnencodedContents = function() {
         var buffer = new Uint8Array(this.getUnencodedContentsSize());
         var offset = 0;
-        for (var idx = 0, len = this.operators.length; idx < len; idx++) {
-          offset += this.operators[idx].copyBytesInto(buffer, offset);
+        for (var idx4 = 0, len3 = this.operators.length; idx4 < len3; idx4++) {
+          offset += this.operators[idx4].copyBytesInto(buffer, offset);
           buffer[offset++] = CharCodes_default.Newline;
         }
         return buffer;
       };
       PDFContentStream2.prototype.getUnencodedContentsSize = function() {
         var size = 0;
-        for (var idx = 0, len = this.operators.length; idx < len; idx++) {
-          size += this.operators[idx].sizeInBytes() + 1;
+        for (var idx4 = 0, len3 = this.operators.length; idx4 < len3; idx4++) {
+          size += this.operators[idx4].sizeInBytes() + 1;
         }
         return size;
       };
@@ -22019,8 +21968,8 @@ Are you sure you want to download this calendar event?`
         var result = ref instanceof PDFRef_default ? this.indirectObjects.get(ref) : ref;
         if (!result || result === PDFNull_default && !preservePDFNull)
           return void 0;
-        for (var idx = 0, len = types.length; idx < len; idx++) {
-          var type = types[idx];
+        for (var idx4 = 0, len3 = types.length; idx4 < len3; idx4++) {
+          var type = types[idx4];
           if (type === PDFNull_default) {
             if (result === PDFNull_default)
               return result;
@@ -22039,8 +21988,8 @@ Are you sure you want to download this calendar event?`
         var result = ref instanceof PDFRef_default ? this.indirectObjects.get(ref) : ref;
         if (types.length === 0)
           return result;
-        for (var idx = 0, len = types.length; idx < len; idx++) {
-          var type = types[idx];
+        for (var idx4 = 0, len3 = types.length; idx4 < len3; idx4++) {
+          var type = types[idx4];
           if (type === PDFNull_default) {
             if (result === PDFNull_default)
               return result;
@@ -22053,8 +22002,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFContext2.prototype.getObjectRef = function(pdfObject) {
         var entries = Array.from(this.indirectObjects.entries());
-        for (var idx = 0, len = entries.length; idx < len; idx++) {
-          var _a = entries[idx], ref = _a[0], object = _a[1];
+        for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+          var _a = entries[idx4], ref = _a[0], object = _a[1];
           if (object === pdfObject) {
             return ref;
           }
@@ -22077,15 +22026,15 @@ Are you sure you want to download this calendar event?`
           return literal ? PDFBool_default.True : PDFBool_default.False;
         } else if (Array.isArray(literal)) {
           var array = PDFArray_default.withContext(this);
-          for (var idx = 0, len = literal.length; idx < len; idx++) {
-            array.push(this.obj(literal[idx]));
+          for (var idx4 = 0, len3 = literal.length; idx4 < len3; idx4++) {
+            array.push(this.obj(literal[idx4]));
           }
           return array;
         } else {
           var dict = PDFDict_default.withContext(this);
           var keys = Object.keys(literal);
-          for (var idx = 0, len = keys.length; idx < len; idx++) {
-            var key = keys[idx];
+          for (var idx4 = 0, len3 = keys.length; idx4 < len3; idx4++) {
+            var key = keys[idx4];
             var value2 = literal[key];
             if (value2 !== void 0)
               dict.set(PDFName_default.of(key), this.obj(value2));
@@ -22168,8 +22117,8 @@ Are you sure you want to download this calendar event?`
       PDFPageLeaf2.prototype.clone = function(context) {
         var clone = PDFPageLeaf2.fromMapWithContext(/* @__PURE__ */ new Map(), context || this.context, this.autoNormalizeCTM);
         var entries = this.entries();
-        for (var idx = 0, len = entries.length; idx < len; idx++) {
-          var _a = entries[idx], key = _a[0], value2 = _a[1];
+        for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+          var _a = entries[idx4], key = _a[0], value2 = _a[1];
           clone.set(key, value2);
         }
         return clone;
@@ -22366,8 +22315,8 @@ Are you sure you want to download this calendar event?`
         this.copyPDFPage = function(originalPage) {
           var clonedPage = originalPage.clone();
           var InheritableEntries = PDFPageLeaf_default.InheritableEntries;
-          for (var idx = 0, len = InheritableEntries.length; idx < len; idx++) {
-            var key = PDFName_default.of(InheritableEntries[idx]);
+          for (var idx4 = 0, len3 = InheritableEntries.length; idx4 < len3; idx4++) {
+            var key = PDFName_default.of(InheritableEntries[idx4]);
             var value2 = clonedPage.getInheritableAttribute(key);
             if (!clonedPage.get(key) && value2)
               clonedPage.set(key, value2);
@@ -22382,8 +22331,8 @@ Are you sure you want to download this calendar event?`
           var clonedDict = originalDict.clone(_this.dest);
           _this.traversedObjects.set(originalDict, clonedDict);
           var entries = originalDict.entries();
-          for (var idx = 0, len = entries.length; idx < len; idx++) {
-            var _a = entries[idx], key = _a[0], value2 = _a[1];
+          for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+            var _a = entries[idx4], key = _a[0], value2 = _a[1];
             clonedDict.set(key, _this.copy(value2));
           }
           return clonedDict;
@@ -22394,9 +22343,9 @@ Are you sure you want to download this calendar event?`
           }
           var clonedArray = originalArray.clone(_this.dest);
           _this.traversedObjects.set(originalArray, clonedArray);
-          for (var idx = 0, len = originalArray.size(); idx < len; idx++) {
-            var value2 = originalArray.get(idx);
-            clonedArray.set(idx, _this.copy(value2));
+          for (var idx4 = 0, len3 = originalArray.size(); idx4 < len3; idx4++) {
+            var value2 = originalArray.get(idx4);
+            clonedArray.set(idx4, _this.copy(value2));
           }
           return clonedArray;
         };
@@ -22407,8 +22356,8 @@ Are you sure you want to download this calendar event?`
           var clonedStream = originalStream.clone(_this.dest);
           _this.traversedObjects.set(originalStream, clonedStream);
           var entries = originalStream.dict.entries();
-          for (var idx = 0, len = entries.length; idx < len; idx++) {
-            var _a = entries[idx], key = _a[0], value2 = _a[1];
+          for (var idx4 = 0, len3 = entries.length; idx4 < len3; idx4++) {
+            var _a = entries[idx4], key = _a[0], value2 = _a[1];
             clonedStream.dict.set(key, _this.copy(value2));
           }
           return clonedStream;
@@ -22471,8 +22420,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFCrossRefSection2.prototype.sizeInBytes = function() {
         var size = 5;
-        for (var idx = 0, len = this.subsections.length; idx < len; idx++) {
-          var subsection = this.subsections[idx];
+        for (var idx4 = 0, len3 = this.subsections.length; idx4 < len3; idx4++) {
+          var subsection = this.subsections[idx4];
           var subsectionLength = subsection.length;
           var firstEntry = subsection[0];
           size += 2;
@@ -22495,8 +22444,8 @@ Are you sure you want to download this calendar event?`
       PDFCrossRefSection2.prototype.copySubsectionsIntoBuffer = function(subsections, buffer, offset) {
         var initialOffset = offset;
         var length = subsections.length;
-        for (var idx = 0; idx < length; idx++) {
-          var subsection = this.subsections[idx];
+        for (var idx4 = 0; idx4 < length; idx4++) {
+          var subsection = this.subsections[idx4];
           var firstObjectNumber = String(subsection[0].ref.objectNumber);
           offset += copyStringIntoBuffer(firstObjectNumber, buffer, offset);
           buffer[offset++] = CharCodes_default.Space;
@@ -22509,8 +22458,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFCrossRefSection2.prototype.copyEntriesIntoBuffer = function(entries, buffer, offset) {
         var length = entries.length;
-        for (var idx = 0; idx < length; idx++) {
-          var entry = entries[idx];
+        for (var idx4 = 0; idx4 < length; idx4++) {
+          var entry = entries[idx4];
           var entryOffset = padStart(String(entry.offset), 10, "0");
           offset += copyStringIntoBuffer(entryOffset, buffer, offset);
           buffer[offset++] = CharCodes_default.Space;
@@ -22658,8 +22607,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFObjectStream2.prototype.getContentsString = function() {
         var value2 = this.offsetsString;
-        for (var idx = 0, len = this.objects.length; idx < len; idx++) {
-          var _a = this.objects[idx], object = _a[1];
+        for (var idx4 = 0, len3 = this.objects.length; idx4 < len3; idx4++) {
+          var _a = this.objects[idx4], object = _a[1];
           value2 += object + "\n";
         }
         return value2;
@@ -22667,8 +22616,8 @@ Are you sure you want to download this calendar event?`
       PDFObjectStream2.prototype.getUnencodedContents = function() {
         var buffer = new Uint8Array(this.getUnencodedContentsSize());
         var offset = copyStringIntoBuffer(this.offsetsString, buffer, 0);
-        for (var idx = 0, len = this.objects.length; idx < len; idx++) {
-          var _a = this.objects[idx], object = _a[1];
+        for (var idx4 = 0, len3 = this.objects.length; idx4 < len3; idx4++) {
+          var _a = this.objects[idx4], object = _a[1];
           offset += object.copyBytesInto(buffer, offset);
           buffer[offset++] = CharCodes_default.Newline;
         }
@@ -22679,8 +22628,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFObjectStream2.prototype.computeOffsetsString = function() {
         var offsetsString = "";
-        for (var idx = 0, len = this.offsets.length; idx < len; idx++) {
-          var _a = this.offsets[idx], objectNumber = _a[0], offset = _a[1];
+        for (var idx4 = 0, len3 = this.offsets.length; idx4 < len3; idx4++) {
+          var _a = this.offsets[idx4], objectNumber = _a[0], offset = _a[1];
           offsetsString += objectNumber + " " + offset + " ";
         }
         return offsetsString;
@@ -22688,9 +22637,9 @@ Are you sure you want to download this calendar event?`
       PDFObjectStream2.prototype.computeObjectOffsets = function() {
         var offset = 0;
         var offsets = new Array(this.objects.length);
-        for (var idx = 0, len = this.objects.length; idx < len; idx++) {
-          var _a = this.objects[idx], ref = _a[0], object = _a[1];
-          offsets[idx] = [ref.objectNumber, offset];
+        for (var idx4 = 0, len3 = this.objects.length; idx4 < len3; idx4++) {
+          var _a = this.objects[idx4], ref = _a[0], object = _a[1];
+          offsets[idx4] = [ref.objectNumber, offset];
           offset += object.sizeInBytes() + 1;
         }
         return offsets;
@@ -22722,7 +22671,7 @@ Are you sure you want to download this calendar event?`
       }
       PDFWriter2.prototype.serializeToBuffer = function() {
         return __awaiter(this, void 0, void 0, function() {
-          var _a, size, header, indirectObjects, xref, trailerDict, trailer, offset, buffer, idx, len, _b, ref, object, objectNumber, generationNumber, n;
+          var _a, size, header, indirectObjects, xref, trailerDict, trailer, offset, buffer, idx4, len3, _b, ref, object, objectNumber, generationNumber, n;
           return __generator(this, function(_c) {
             switch (_c.label) {
               case 0:
@@ -22734,11 +22683,11 @@ Are you sure you want to download this calendar event?`
                 offset += header.copyBytesInto(buffer, offset);
                 buffer[offset++] = CharCodes_default.Newline;
                 buffer[offset++] = CharCodes_default.Newline;
-                idx = 0, len = indirectObjects.length;
+                idx4 = 0, len3 = indirectObjects.length;
                 _c.label = 2;
               case 2:
-                if (!(idx < len)) return [3, 5];
-                _b = indirectObjects[idx], ref = _b[0], object = _b[1];
+                if (!(idx4 < len3)) return [3, 5];
+                _b = indirectObjects[idx4], ref = _b[0], object = _b[1];
                 objectNumber = String(ref.objectNumber);
                 offset += copyStringIntoBuffer(objectNumber, buffer, offset);
                 buffer[offset++] = CharCodes_default.Space;
@@ -22766,7 +22715,7 @@ Are you sure you want to download this calendar event?`
                 _c.sent();
                 _c.label = 4;
               case 4:
-                idx++;
+                idx4++;
                 return [3, 2];
               case 5:
                 if (xref) {
@@ -22801,7 +22750,7 @@ Are you sure you want to download this calendar event?`
       };
       PDFWriter2.prototype.computeBufferSize = function() {
         return __awaiter(this, void 0, void 0, function() {
-          var header, size, xref, indirectObjects, idx, len, indirectObject, ref, xrefOffset, trailerDict, trailer;
+          var header, size, xref, indirectObjects, idx4, len3, indirectObject, ref, xrefOffset, trailerDict, trailer;
           return __generator(this, function(_a) {
             switch (_a.label) {
               case 0:
@@ -22809,11 +22758,11 @@ Are you sure you want to download this calendar event?`
                 size = header.sizeInBytes() + 2;
                 xref = PDFCrossRefSection_default.create();
                 indirectObjects = this.context.enumerateIndirectObjects();
-                idx = 0, len = indirectObjects.length;
+                idx4 = 0, len3 = indirectObjects.length;
                 _a.label = 1;
               case 1:
-                if (!(idx < len)) return [3, 4];
-                indirectObject = indirectObjects[idx];
+                if (!(idx4 < len3)) return [3, 4];
+                indirectObject = indirectObjects[idx4];
                 ref = indirectObject[0];
                 xref.addEntry(ref, size);
                 size += this.computeIndirectObjectSize(indirectObject);
@@ -22823,7 +22772,7 @@ Are you sure you want to download this calendar event?`
                 _a.sent();
                 _a.label = 3;
               case 3:
-                idx++;
+                idx4++;
                 return [3, 1];
               case 4:
                 xrefOffset = size;
@@ -22866,8 +22815,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFInvalidObject2.prototype.copyBytesInto = function(buffer, offset) {
         var length = this.data.length;
-        for (var idx = 0; idx < length; idx++) {
-          buffer[offset++] = this.data[idx];
+        for (var idx4 = 0; idx4 < length; idx4++) {
+          buffer[offset++] = this.data[idx4];
         }
         return length;
       };
@@ -22898,10 +22847,10 @@ Are you sure you want to download this calendar event?`
         _this.computeIndex = function() {
           var subsections = [];
           var subsectionLength = 0;
-          for (var idx = 0, len = _this.entries.length; idx < len; idx++) {
-            var currEntry = _this.entries[idx];
-            var prevEntry = _this.entries[idx - 1];
-            if (idx === 0) {
+          for (var idx4 = 0, len3 = _this.entries.length; idx4 < len3; idx4++) {
+            var currEntry = _this.entries[idx4];
+            var prevEntry = _this.entries[idx4 - 1];
+            if (idx4 === 0) {
               subsections.push(currEntry.ref.objectNumber);
             } else if (currEntry.ref.objectNumber - prevEntry.ref.objectNumber > 1) {
               subsections.push(subsectionLength);
@@ -22915,19 +22864,19 @@ Are you sure you want to download this calendar event?`
         };
         _this.computeEntryTuples = function() {
           var entryTuples = new Array(_this.entries.length);
-          for (var idx = 0, len = _this.entries.length; idx < len; idx++) {
-            var entry = _this.entries[idx];
+          for (var idx4 = 0, len3 = _this.entries.length; idx4 < len3; idx4++) {
+            var entry = _this.entries[idx4];
             if (entry.type === EntryType.Deleted) {
               var type = entry.type, nextFreeObjectNumber = entry.nextFreeObjectNumber, ref = entry.ref;
-              entryTuples[idx] = [type, nextFreeObjectNumber, ref.generationNumber];
+              entryTuples[idx4] = [type, nextFreeObjectNumber, ref.generationNumber];
             }
             if (entry.type === EntryType.Uncompressed) {
               var type = entry.type, offset = entry.offset, ref = entry.ref;
-              entryTuples[idx] = [type, offset, ref.generationNumber];
+              entryTuples[idx4] = [type, offset, ref.generationNumber];
             }
             if (entry.type === EntryType.Compressed) {
               var type = entry.type, objectStreamRef = entry.objectStreamRef, index = entry.index;
-              entryTuples[idx] = [type, objectStreamRef.objectNumber, index];
+              entryTuples[idx4] = [type, objectStreamRef.objectNumber, index];
             }
           }
           return entryTuples;
@@ -22935,8 +22884,8 @@ Are you sure you want to download this calendar event?`
         _this.computeMaxEntryByteWidths = function() {
           var entryTuples = _this.entryTuplesCache.access();
           var widths = [0, 0, 0];
-          for (var idx = 0, len = entryTuples.length; idx < len; idx++) {
-            var _a = entryTuples[idx], first = _a[0], second = _a[1], third = _a[2];
+          for (var idx4 = 0, len3 = entryTuples.length; idx4 < len3; idx4++) {
+            var _a = entryTuples[idx4], first = _a[0], second = _a[1], third = _a[2];
             var firstSize = sizeInBytes(first);
             var secondSize = sizeInBytes(second);
             var thirdSize = sizeInBytes(third);
@@ -22993,14 +22942,14 @@ Are you sure you want to download this calendar event?`
           var firstBytes = reverseArray(bytesFor(first));
           var secondBytes = reverseArray(bytesFor(second));
           var thirdBytes = reverseArray(bytesFor(third));
-          for (var idx = byteWidths[0] - 1; idx >= 0; idx--) {
-            value2 += (firstBytes[idx] || 0).toString(2);
+          for (var idx4 = byteWidths[0] - 1; idx4 >= 0; idx4--) {
+            value2 += (firstBytes[idx4] || 0).toString(2);
           }
-          for (var idx = byteWidths[1] - 1; idx >= 0; idx--) {
-            value2 += (secondBytes[idx] || 0).toString(2);
+          for (var idx4 = byteWidths[1] - 1; idx4 >= 0; idx4--) {
+            value2 += (secondBytes[idx4] || 0).toString(2);
           }
-          for (var idx = byteWidths[2] - 1; idx >= 0; idx--) {
-            value2 += (thirdBytes[idx] || 0).toString(2);
+          for (var idx4 = byteWidths[2] - 1; idx4 >= 0; idx4--) {
+            value2 += (thirdBytes[idx4] || 0).toString(2);
           }
         }
         return value2;
@@ -23015,14 +22964,14 @@ Are you sure you want to download this calendar event?`
           var firstBytes = reverseArray(bytesFor(first));
           var secondBytes = reverseArray(bytesFor(second));
           var thirdBytes = reverseArray(bytesFor(third));
-          for (var idx = byteWidths[0] - 1; idx >= 0; idx--) {
-            buffer[offset++] = firstBytes[idx] || 0;
+          for (var idx4 = byteWidths[0] - 1; idx4 >= 0; idx4--) {
+            buffer[offset++] = firstBytes[idx4] || 0;
           }
-          for (var idx = byteWidths[1] - 1; idx >= 0; idx--) {
-            buffer[offset++] = secondBytes[idx] || 0;
+          for (var idx4 = byteWidths[1] - 1; idx4 >= 0; idx4--) {
+            buffer[offset++] = secondBytes[idx4] || 0;
           }
-          for (var idx = byteWidths[2] - 1; idx >= 0; idx--) {
-            buffer[offset++] = thirdBytes[idx] || 0;
+          for (var idx4 = byteWidths[2] - 1; idx4 >= 0; idx4--) {
+            buffer[offset++] = thirdBytes[idx4] || 0;
           }
         }
         return buffer;
@@ -23072,7 +23021,7 @@ Are you sure you want to download this calendar event?`
       }
       PDFStreamWriter2.prototype.computeBufferSize = function() {
         return __awaiter(this, void 0, void 0, function() {
-          var objectNumber, header, size, xrefStream, uncompressedObjects, compressedObjects, objectStreamRefs, indirectObjects, idx, len, indirectObject, ref, object, shouldNotCompress, chunk, objectStreamRef, idx, len, chunk, ref, objectStream, xrefStreamRef, xrefOffset, trailer;
+          var objectNumber, header, size, xrefStream, uncompressedObjects, compressedObjects, objectStreamRefs, indirectObjects, idx4, len3, indirectObject, ref, object, shouldNotCompress, chunk, objectStreamRef, idx4, len3, chunk, ref, objectStream, xrefStreamRef, xrefOffset, trailer;
           return __generator(this, function(_a) {
             switch (_a.label) {
               case 0:
@@ -23084,11 +23033,11 @@ Are you sure you want to download this calendar event?`
                 compressedObjects = [];
                 objectStreamRefs = [];
                 indirectObjects = this.context.enumerateIndirectObjects();
-                idx = 0, len = indirectObjects.length;
+                idx4 = 0, len3 = indirectObjects.length;
                 _a.label = 1;
               case 1:
-                if (!(idx < len)) return [3, 6];
-                indirectObject = indirectObjects[idx];
+                if (!(idx4 < len3)) return [3, 6];
+                indirectObject = indirectObjects[idx4];
                 ref = indirectObject[0], object = indirectObject[1];
                 shouldNotCompress = ref === this.context.trailerInfo.Encrypt || object instanceof PDFStream_default || object instanceof PDFInvalidObject_default || ref.generationNumber !== 0;
                 if (!shouldNotCompress) return [3, 4];
@@ -23115,15 +23064,15 @@ Are you sure you want to download this calendar event?`
                 chunk.push(indirectObject);
                 _a.label = 5;
               case 5:
-                idx++;
+                idx4++;
                 return [3, 1];
               case 6:
-                idx = 0, len = compressedObjects.length;
+                idx4 = 0, len3 = compressedObjects.length;
                 _a.label = 7;
               case 7:
-                if (!(idx < len)) return [3, 10];
-                chunk = compressedObjects[idx];
-                ref = objectStreamRefs[idx];
+                if (!(idx4 < len3)) return [3, 10];
+                chunk = compressedObjects[idx4];
+                ref = objectStreamRefs[idx4];
                 objectStream = PDFObjectStream_default.withContextAndObjects(this.context, chunk, this.encodeStreams);
                 xrefStream.addUncompressedEntry(ref, size);
                 size += this.computeIndirectObjectSize([ref, objectStream]);
@@ -23134,7 +23083,7 @@ Are you sure you want to download this calendar event?`
                 _a.sent();
                 _a.label = 9;
               case 9:
-                idx++;
+                idx4++;
                 return [3, 7];
               case 10:
                 xrefStreamRef = PDFRef_default.of(objectNumber++);
@@ -23225,8 +23174,8 @@ Are you sure you want to download this calendar event?`
       PDFHexString2.fromText = function(value2) {
         var encoded = utf16Encode(value2);
         var hex = "";
-        for (var idx = 0, len = encoded.length; idx < len; idx++) {
-          hex += toHexStringOfMinLength(encoded[idx], 4);
+        for (var idx4 = 0, len3 = encoded.length; idx4 < len3; idx4++) {
+          hex += toHexStringOfMinLength(encoded[idx4], 4);
         }
         return new PDFHexString2(hex);
       };
@@ -23248,17 +23197,17 @@ Are you sure you want to download this calendar event?`
       StandardFontEmbedder2.prototype.encodeText = function(text2) {
         var glyphs = this.encodeTextAsGlyphs(text2);
         var hexCodes = new Array(glyphs.length);
-        for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-          hexCodes[idx] = toHexString(glyphs[idx].code);
+        for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+          hexCodes[idx4] = toHexString(glyphs[idx4].code);
         }
         return PDFHexString_default.of(hexCodes.join(""));
       };
       StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
         var glyphs = this.encodeTextAsGlyphs(text2);
         var totalWidth = 0;
-        for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-          var left = glyphs[idx].name;
-          var right = (glyphs[idx + 1] || {}).name;
+        for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+          var left = glyphs[idx4].name;
+          var right = (glyphs[idx4 + 1] || {}).name;
           var kernAmount = this.font.getXAxisKerningForPair(left, right) || 0;
           totalWidth += this.widthOfGlyph(left) + kernAmount;
         }
@@ -23304,9 +23253,9 @@ Are you sure you want to download this calendar event?`
       StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text2) {
         var codePoints = Array.from(text2);
         var glyphs = new Array(codePoints.length);
-        for (var idx = 0, len = codePoints.length; idx < len; idx++) {
-          var codePoint = toCodePoint(codePoints[idx]);
-          glyphs[idx] = this.encoding.encodeUnicodeCodePoint(codePoint);
+        for (var idx4 = 0, len3 = codePoints.length; idx4 < len3; idx4++) {
+          var codePoint = toCodePoint(codePoints[idx4]);
+          glyphs[idx4] = this.encoding.encodeUnicodeCodePoint(codePoint);
         }
         return glyphs;
       };
@@ -23321,11 +23270,11 @@ Are you sure you want to download this calendar event?`
   // node_modules/pdf-lib/es/core/embedders/CMap.js
   var createCmap = function(glyphs, glyphId) {
     var bfChars = new Array(glyphs.length);
-    for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-      var glyph = glyphs[idx];
+    for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+      var glyph = glyphs[idx4];
       var id = cmapHexFormat(cmapHexString(glyphId(glyph)));
       var unicode = cmapHexFormat.apply(void 0, glyph.codePoints.map(cmapCodePointFormat));
-      bfChars[idx] = [id, unicode];
+      bfChars[idx4] = [id, unicode];
     }
     return fillCmapTemplate(bfChars);
   };
@@ -23415,10 +23364,10 @@ Are you sure you want to download this calendar event?`
             bytes.push(byte2);
           escaped = false;
         };
-        for (var idx = 0, len = this.value.length; idx < len; idx++) {
-          var char = this.value[idx];
+        for (var idx4 = 0, len3 = this.value.length; idx4 < len3; idx4++) {
+          var char = this.value[idx4];
           var byte = toCharCode(char);
-          var nextChar = this.value[idx + 1];
+          var nextChar = this.value[idx4 + 1];
           if (!escaped) {
             if (byte === CharCodes_default.BackSlash)
               escaped = true;
@@ -23514,9 +23463,9 @@ Are you sure you want to download this calendar event?`
         var _this = this;
         this.allGlyphsInFontSortedById = function() {
           var glyphs = new Array(_this.font.characterSet.length);
-          for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-            var codePoint = _this.font.characterSet[idx];
-            glyphs[idx] = _this.font.glyphForCodePoint(codePoint);
+          for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+            var codePoint = _this.font.characterSet[idx4];
+            glyphs[idx4] = _this.font.glyphForCodePoint(codePoint);
           }
           return sortedUniq(glyphs.sort(byAscendingId), function(g) {
             return g.id;
@@ -23548,16 +23497,16 @@ Are you sure you want to download this calendar event?`
       CustomFontEmbedder2.prototype.encodeText = function(text2) {
         var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
         var hexCodes = new Array(glyphs.length);
-        for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-          hexCodes[idx] = toHexStringOfMinLength(glyphs[idx].id, 4);
+        for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+          hexCodes[idx4] = toHexStringOfMinLength(glyphs[idx4].id, 4);
         }
         return PDFHexString_default.of(hexCodes.join(""));
       };
       CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
         var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
         var totalWidth = 0;
-        for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-          totalWidth += glyphs[idx].advanceWidth * this.scale;
+        for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+          totalWidth += glyphs[idx4].advanceWidth * this.scale;
         }
         var scale2 = size / 1e3;
         return totalWidth * scale2;
@@ -23715,12 +23664,12 @@ Are you sure you want to download this calendar event?`
         var glyphs = this.glyphCache.access();
         var widths = [];
         var currSection = [];
-        for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-          var currGlyph = glyphs[idx];
-          var prevGlyph = glyphs[idx - 1];
+        for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+          var currGlyph = glyphs[idx4];
+          var prevGlyph = glyphs[idx4 - 1];
           var currGlyphId = this.glyphId(currGlyph);
           var prevGlyphId = this.glyphId(prevGlyph);
-          if (idx === 0) {
+          if (idx4 === 0) {
             widths.push(currGlyphId);
           } else if (currGlyphId - prevGlyphId !== 1) {
             widths.push(currSection);
@@ -23769,12 +23718,12 @@ Are you sure you want to download this calendar event?`
       CustomFontSubsetEmbedder2.prototype.encodeText = function(text2) {
         var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
         var hexCodes = new Array(glyphs.length);
-        for (var idx = 0, len = glyphs.length; idx < len; idx++) {
-          var glyph = glyphs[idx];
+        for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
+          var glyph = glyphs[idx4];
           var subsetGlyphId = this.subset.includeGlyph(glyph);
           this.glyphs[subsetGlyphId - 1] = glyph;
           this.glyphIdMap.set(glyph.id, subsetGlyphId);
-          hexCodes[idx] = toHexStringOfMinLength(subsetGlyphId, 4);
+          hexCodes[idx4] = toHexStringOfMinLength(subsetGlyphId, 4);
         }
         this.glyphCache.invalidate();
         return PDFHexString_default.of(hexCodes.join(""));
@@ -23993,18 +23942,18 @@ Are you sure you want to download this calendar event?`
     if (out.tabs.acTL == null) return [UPNG.toRGBA8.decodeImage(out.data, w, h, out).buffer];
     var frms = [];
     if (out.frames[0].data == null) out.frames[0].data = out.data;
-    var len = w * h * 4, img = new Uint8Array(len), empty = new Uint8Array(len), prev = new Uint8Array(len);
-    for (var i = 0; i < out.frames.length; i++) {
-      var frm = out.frames[i];
+    var len3 = w * h * 4, img = new Uint8Array(len3), empty = new Uint8Array(len3), prev = new Uint8Array(len3);
+    for (var i3 = 0; i3 < out.frames.length; i3++) {
+      var frm = out.frames[i3];
       var fx = frm.rect.x, fy = frm.rect.y, fw = frm.rect.width, fh = frm.rect.height;
       var fdata = UPNG.toRGBA8.decodeImage(frm.data, fw, fh, out);
-      if (i != 0) for (var j = 0; j < len; j++) prev[j] = img[j];
+      if (i3 != 0) for (var j = 0; j < len3; j++) prev[j] = img[j];
       if (frm.blend == 0) UPNG._copyTile(fdata, fw, fh, img, w, h, fx, fy, 0);
       else if (frm.blend == 1) UPNG._copyTile(fdata, fw, fh, img, w, h, fx, fy, 1);
       frms.push(img.buffer.slice(0));
       if (frm.dispose == 0) {
       } else if (frm.dispose == 1) UPNG._copyTile(empty, fw, fh, img, w, h, fx, fy, 0);
-      else if (frm.dispose == 2) for (var j = 0; j < len; j++) img[j] = prev[j];
+      else if (frm.dispose == 2) for (var j = 0; j < len3; j++) img[j] = prev[j];
     }
     return frms;
   };
@@ -24017,36 +23966,36 @@ Are you sure you want to download this calendar event?`
     var time = Date.now();
     if (ctype == 6) {
       var qarea = area << 2;
-      if (depth == 8) for (var i = 0; i < qarea; i += 4) {
-        bf[i] = data[i];
-        bf[i + 1] = data[i + 1];
-        bf[i + 2] = data[i + 2];
-        bf[i + 3] = data[i + 3];
+      if (depth == 8) for (var i3 = 0; i3 < qarea; i3 += 4) {
+        bf[i3] = data[i3];
+        bf[i3 + 1] = data[i3 + 1];
+        bf[i3 + 2] = data[i3 + 2];
+        bf[i3 + 3] = data[i3 + 3];
       }
-      if (depth == 16) for (var i = 0; i < qarea; i++) {
-        bf[i] = data[i << 1];
+      if (depth == 16) for (var i3 = 0; i3 < qarea; i3++) {
+        bf[i3] = data[i3 << 1];
       }
     } else if (ctype == 2) {
       var ts = out.tabs["tRNS"];
       if (ts == null) {
-        if (depth == 8) for (var i = 0; i < area; i++) {
-          var ti = i * 3;
-          bf32[i] = 255 << 24 | data[ti + 2] << 16 | data[ti + 1] << 8 | data[ti];
+        if (depth == 8) for (var i3 = 0; i3 < area; i3++) {
+          var ti = i3 * 3;
+          bf32[i3] = 255 << 24 | data[ti + 2] << 16 | data[ti + 1] << 8 | data[ti];
         }
-        if (depth == 16) for (var i = 0; i < area; i++) {
-          var ti = i * 6;
-          bf32[i] = 255 << 24 | data[ti + 4] << 16 | data[ti + 2] << 8 | data[ti];
+        if (depth == 16) for (var i3 = 0; i3 < area; i3++) {
+          var ti = i3 * 6;
+          bf32[i3] = 255 << 24 | data[ti + 4] << 16 | data[ti + 2] << 8 | data[ti];
         }
       } else {
         var tr = ts[0], tg = ts[1], tb = ts[2];
-        if (depth == 8) for (var i = 0; i < area; i++) {
-          var qi = i << 2, ti = i * 3;
-          bf32[i] = 255 << 24 | data[ti + 2] << 16 | data[ti + 1] << 8 | data[ti];
+        if (depth == 8) for (var i3 = 0; i3 < area; i3++) {
+          var qi = i3 << 2, ti = i3 * 3;
+          bf32[i3] = 255 << 24 | data[ti + 2] << 16 | data[ti + 1] << 8 | data[ti];
           if (data[ti] == tr && data[ti + 1] == tg && data[ti + 2] == tb) bf[qi + 3] = 0;
         }
-        if (depth == 16) for (var i = 0; i < area; i++) {
-          var qi = i << 2, ti = i * 6;
-          bf32[i] = 255 << 24 | data[ti + 4] << 16 | data[ti + 2] << 8 | data[ti];
+        if (depth == 16) for (var i3 = 0; i3 < area; i3++) {
+          var qi = i3 << 2, ti = i3 * 6;
+          bf32[i3] = 255 << 24 | data[ti + 4] << 16 | data[ti + 2] << 8 | data[ti];
           if (rs(data, ti) == tr && rs(data, ti + 2) == tg && rs(data, ti + 4) == tb) bf[qi + 3] = 0;
         }
       }
@@ -24054,8 +24003,8 @@ Are you sure you want to download this calendar event?`
       var p = out.tabs["PLTE"], ap = out.tabs["tRNS"], tl = ap ? ap.length : 0;
       if (depth == 1) for (var y = 0; y < h; y++) {
         var s0 = y * bpl, t0 = y * w;
-        for (var i = 0; i < w; i++) {
-          var qi = t0 + i << 2, j = data[s0 + (i >> 3)] >> 7 - ((i & 7) << 0) & 1, cj = 3 * j;
+        for (var i3 = 0; i3 < w; i3++) {
+          var qi = t0 + i3 << 2, j = data[s0 + (i3 >> 3)] >> 7 - ((i3 & 7) << 0) & 1, cj = 3 * j;
           bf[qi] = p[cj];
           bf[qi + 1] = p[cj + 1];
           bf[qi + 2] = p[cj + 2];
@@ -24064,8 +24013,8 @@ Are you sure you want to download this calendar event?`
       }
       if (depth == 2) for (var y = 0; y < h; y++) {
         var s0 = y * bpl, t0 = y * w;
-        for (var i = 0; i < w; i++) {
-          var qi = t0 + i << 2, j = data[s0 + (i >> 2)] >> 6 - ((i & 3) << 1) & 3, cj = 3 * j;
+        for (var i3 = 0; i3 < w; i3++) {
+          var qi = t0 + i3 << 2, j = data[s0 + (i3 >> 2)] >> 6 - ((i3 & 3) << 1) & 3, cj = 3 * j;
           bf[qi] = p[cj];
           bf[qi + 1] = p[cj + 1];
           bf[qi + 2] = p[cj + 2];
@@ -24074,31 +24023,31 @@ Are you sure you want to download this calendar event?`
       }
       if (depth == 4) for (var y = 0; y < h; y++) {
         var s0 = y * bpl, t0 = y * w;
-        for (var i = 0; i < w; i++) {
-          var qi = t0 + i << 2, j = data[s0 + (i >> 1)] >> 4 - ((i & 1) << 2) & 15, cj = 3 * j;
+        for (var i3 = 0; i3 < w; i3++) {
+          var qi = t0 + i3 << 2, j = data[s0 + (i3 >> 1)] >> 4 - ((i3 & 1) << 2) & 15, cj = 3 * j;
           bf[qi] = p[cj];
           bf[qi + 1] = p[cj + 1];
           bf[qi + 2] = p[cj + 2];
           bf[qi + 3] = j < tl ? ap[j] : 255;
         }
       }
-      if (depth == 8) for (var i = 0; i < area; i++) {
-        var qi = i << 2, j = data[i], cj = 3 * j;
+      if (depth == 8) for (var i3 = 0; i3 < area; i3++) {
+        var qi = i3 << 2, j = data[i3], cj = 3 * j;
         bf[qi] = p[cj];
         bf[qi + 1] = p[cj + 1];
         bf[qi + 2] = p[cj + 2];
         bf[qi + 3] = j < tl ? ap[j] : 255;
       }
     } else if (ctype == 4) {
-      if (depth == 8) for (var i = 0; i < area; i++) {
-        var qi = i << 2, di = i << 1, gr = data[di];
+      if (depth == 8) for (var i3 = 0; i3 < area; i3++) {
+        var qi = i3 << 2, di = i3 << 1, gr = data[di];
         bf[qi] = gr;
         bf[qi + 1] = gr;
         bf[qi + 2] = gr;
         bf[qi + 3] = data[di + 1];
       }
-      if (depth == 16) for (var i = 0; i < area; i++) {
-        var qi = i << 2, di = i << 2, gr = data[di];
+      if (depth == 16) for (var i3 = 0; i3 < area; i3++) {
+        var qi = i3 << 2, di = i3 << 2, gr = data[di];
         bf[qi] = gr;
         bf[qi + 1] = gr;
         bf[qi + 2] = gr;
@@ -24125,7 +24074,7 @@ Are you sure you want to download this calendar event?`
           bf32[to + x] = al << 24 | gr << 16 | gr << 8 | gr;
         }
         else if (depth == 16) for (var x = 0; x < w; x++) {
-          var gr = data[off + (x << 1)], al = rs(data, off + (x << i)) == tr ? 0 : 255;
+          var gr = data[off + (x << 1)], al = rs(data, off + (x << i3)) == tr ? 0 : 255;
           bf32[to + x] = al << 24 | gr << 16 | gr << 8 | gr;
         }
       }
@@ -24138,17 +24087,17 @@ Are you sure you want to download this calendar event?`
     var dd = new Uint8Array(data.length), doff = 0;
     var fd, foff = 0;
     var mgck = [137, 80, 78, 71, 13, 10, 26, 10];
-    for (var i = 0; i < 8; i++) if (data[i] != mgck[i]) throw "The input is not a PNG file!";
+    for (var i3 = 0; i3 < 8; i3++) if (data[i3] != mgck[i3]) throw "The input is not a PNG file!";
     while (offset < data.length) {
-      var len = bin.readUint(data, offset);
+      var len3 = bin.readUint(data, offset);
       offset += 4;
       var type = bin.readASCII(data, offset, 4);
       offset += 4;
       if (type == "IHDR") {
         UPNG.decode._IHDR(data, offset, out);
       } else if (type == "IDAT") {
-        for (var i = 0; i < len; i++) dd[doff + i] = data[offset + i];
-        doff += len;
+        for (var i3 = 0; i3 < len3; i3++) dd[doff + i3] = data[offset + i3];
+        doff += len3;
       } else if (type == "acTL") {
         out.tabs[type] = { num_frames: rUi(data, offset), num_plays: rUi(data, offset + 4) };
         fd = new Uint8Array(data.length);
@@ -24164,18 +24113,18 @@ Are you sure you want to download this calendar event?`
         var frm = { rect: rct, delay: Math.round(del * 1e3), dispose: data[offset + 24], blend: data[offset + 25] };
         out.frames.push(frm);
       } else if (type == "fdAT") {
-        for (var i = 0; i < len - 4; i++) fd[foff + i] = data[offset + i + 4];
-        foff += len - 4;
+        for (var i3 = 0; i3 < len3 - 4; i3++) fd[foff + i3] = data[offset + i3 + 4];
+        foff += len3 - 4;
       } else if (type == "pHYs") {
         out.tabs[type] = [bin.readUint(data, offset), bin.readUint(data, offset + 4), data[offset + 8]];
       } else if (type == "cHRM") {
         out.tabs[type] = [];
-        for (var i = 0; i < 8; i++) out.tabs[type].push(bin.readUint(data, offset + i * 4));
+        for (var i3 = 0; i3 < 8; i3++) out.tabs[type].push(bin.readUint(data, offset + i3 * 4));
       } else if (type == "tEXt") {
         if (out.tabs[type] == null) out.tabs[type] = {};
         var nz = bin.nextZero(data, offset);
         var keyw = bin.readASCII(data, offset, nz - offset);
-        var text2 = bin.readASCII(data, nz + 1, offset + len - nz - 1);
+        var text2 = bin.readASCII(data, nz + 1, offset + len3 - nz - 1);
         out.tabs[type][keyw] = text2;
       } else if (type == "iTXt") {
         if (out.tabs[type] == null) out.tabs[type] = {};
@@ -24191,16 +24140,16 @@ Are you sure you want to download this calendar event?`
         nz = bin.nextZero(data, off);
         var tkeyw = bin.readUTF8(data, off, nz - off);
         off = nz + 1;
-        var text2 = bin.readUTF8(data, off, len - (off - offset));
+        var text2 = bin.readUTF8(data, off, len3 - (off - offset));
         out.tabs[type][keyw] = text2;
       } else if (type == "PLTE") {
-        out.tabs[type] = bin.readBytes(data, offset, len);
+        out.tabs[type] = bin.readBytes(data, offset, len3);
       } else if (type == "hIST") {
         var pl = out.tabs["PLTE"].length / 3;
         out.tabs[type] = [];
-        for (var i = 0; i < pl; i++) out.tabs[type].push(rUs(data, offset + i * 2));
+        for (var i3 = 0; i3 < pl; i3++) out.tabs[type].push(rUs(data, offset + i3 * 2));
       } else if (type == "tRNS") {
-        if (out.ctype == 3) out.tabs[type] = bin.readBytes(data, offset, len);
+        if (out.ctype == 3) out.tabs[type] = bin.readBytes(data, offset, len3);
         else if (out.ctype == 0) out.tabs[type] = rUs(data, offset);
         else if (out.ctype == 2) out.tabs[type] = [rUs(data, offset), rUs(data, offset + 2), rUs(data, offset + 4)];
       } else if (type == "gAMA") out.tabs[type] = bin.readUint(data, offset) / 1e5;
@@ -24212,7 +24161,7 @@ Are you sure you want to download this calendar event?`
       } else if (type == "IEND") {
         break;
       }
-      offset += len;
+      offset += len3;
       var crc = bin.readUint(data, offset);
       offset += 4;
     }
@@ -24244,12 +24193,12 @@ Are you sure you want to download this calendar event?`
     var H = {};
     H.H = {};
     H.H.N = function(N, W) {
-      var R = Uint8Array, i = 0, m = 0, J = 0, h = 0, Q = 0, X = 0, u = 0, w = 0, d = 0, v, C;
+      var R = Uint8Array, i3 = 0, m = 0, J = 0, h = 0, Q = 0, X = 0, u = 0, w = 0, d = 0, v, C;
       if (N[0] == 3 && N[1] == 0) return W ? W : new R(0);
       var V = H.H, n = V.b, A = V.e, l = V.R, M = V.n, I = V.A, e = V.Z, b = V.m, Z = W == null;
       if (Z) W = new R(N.length >>> 2 << 3);
-      while (i == 0) {
-        i = n(N, d, 1);
+      while (i3 == 0) {
+        i3 = n(N, d, 1);
         m = n(N, d + 1, 2);
         d += 3;
         if (m == 0) {
@@ -24551,26 +24500,26 @@ Are you sure you want to download this calendar event?`
   UPNG.decode._filterZero = function(data, out, off, w, h) {
     var bpp = UPNG.decode._getBPP(out), bpl = Math.ceil(w * bpp / 8), paeth = UPNG.decode._paeth;
     bpp = Math.ceil(bpp / 8);
-    var i = 0, di = 1, type = data[off], x = 0;
+    var i3 = 0, di = 1, type = data[off], x = 0;
     if (type > 1) data[off] = [0, 0, 1][type - 2];
     if (type == 3) for (x = bpp; x < bpl; x++) data[x + 1] = data[x + 1] + (data[x + 1 - bpp] >>> 1) & 255;
     for (var y = 0; y < h; y++) {
-      i = off + y * bpl;
-      di = i + y + 1;
+      i3 = off + y * bpl;
+      di = i3 + y + 1;
       type = data[di - 1];
       x = 0;
-      if (type == 0) for (; x < bpl; x++) data[i + x] = data[di + x];
+      if (type == 0) for (; x < bpl; x++) data[i3 + x] = data[di + x];
       else if (type == 1) {
-        for (; x < bpp; x++) data[i + x] = data[di + x];
-        for (; x < bpl; x++) data[i + x] = data[di + x] + data[i + x - bpp];
+        for (; x < bpp; x++) data[i3 + x] = data[di + x];
+        for (; x < bpl; x++) data[i3 + x] = data[di + x] + data[i3 + x - bpp];
       } else if (type == 2) {
-        for (; x < bpl; x++) data[i + x] = data[di + x] + data[i + x - bpl];
+        for (; x < bpl; x++) data[i3 + x] = data[di + x] + data[i3 + x - bpl];
       } else if (type == 3) {
-        for (; x < bpp; x++) data[i + x] = data[di + x] + (data[i + x - bpl] >>> 1);
-        for (; x < bpl; x++) data[i + x] = data[di + x] + (data[i + x - bpl] + data[i + x - bpp] >>> 1);
+        for (; x < bpp; x++) data[i3 + x] = data[di + x] + (data[i3 + x - bpl] >>> 1);
+        for (; x < bpl; x++) data[i3 + x] = data[di + x] + (data[i3 + x - bpl] + data[i3 + x - bpp] >>> 1);
       } else {
-        for (; x < bpp; x++) data[i + x] = data[di + x] + paeth(0, data[i + x - bpl], 0);
-        for (; x < bpl; x++) data[i + x] = data[di + x] + paeth(data[i + x - bpp], data[i + x - bpl], data[i + x - bpp - bpl]);
+        for (; x < bpp; x++) data[i3 + x] = data[di + x] + paeth(0, data[i3 + x - bpl], 0);
+        for (; x < bpl; x++) data[i3 + x] = data[di + x] + paeth(data[i3 + x - bpp], data[i3 + x - bpl], data[i3 + x - bpp - bpl]);
       }
     }
     return data;
@@ -24621,15 +24570,15 @@ Are you sure you want to download this calendar event?`
     },
     readASCII: function(buff, p, l) {
       var s = "";
-      for (var i = 0; i < l; i++) s += String.fromCharCode(buff[p + i]);
+      for (var i3 = 0; i3 < l; i3++) s += String.fromCharCode(buff[p + i3]);
       return s;
     },
     writeASCII: function(data, p, s) {
-      for (var i = 0; i < s.length; i++) data[p + i] = s.charCodeAt(i);
+      for (var i3 = 0; i3 < s.length; i3++) data[p + i3] = s.charCodeAt(i3);
     },
     readBytes: function(buff, p, l) {
       var arr = [];
-      for (var i = 0; i < l; i++) arr.push(buff[p + i]);
+      for (var i3 = 0; i3 < l; i3++) arr.push(buff[p + i3]);
       return arr;
     },
     pad: function(n) {
@@ -24637,7 +24586,7 @@ Are you sure you want to download this calendar event?`
     },
     readUTF8: function(buff, p, l) {
       var s = "", ns;
-      for (var i = 0; i < l; i++) s += "%" + UPNG._bin.pad(buff[p + i].toString(16));
+      for (var i3 = 0; i3 < l; i3++) s += "%" + UPNG._bin.pad(buff[p + i3].toString(16));
       try {
         ns = decodeURIComponent(s);
       } catch (e) {
@@ -24705,8 +24654,8 @@ Are you sure you want to download this calendar event?`
     var nimg = { ctype: 0 + (cc == 1 ? 0 : 2) + (ac == 0 ? 0 : 4), depth, frames: [] };
     var time = Date.now();
     var bipp = (cc + ac) * depth, bipl = bipp * w;
-    for (var i = 0; i < bufs.length; i++)
-      nimg.frames.push({ rect: { x: 0, y: 0, width: w, height: h }, img: new Uint8Array(bufs[i]), blend: 0, dispose: 1, bpp: Math.ceil(bipp / 8), bpl: Math.ceil(bipl / 8) });
+    for (var i3 = 0; i3 < bufs.length; i3++)
+      nimg.frames.push({ rect: { x: 0, y: 0, width: w, height: h }, img: new Uint8Array(bufs[i3]), blend: 0, dispose: 1, bpp: Math.ceil(bipp / 8), bpl: Math.ceil(bipl / 8) });
     UPNG.encode.compressPNG(nimg, 0, true);
     var out = UPNG.encode._main(nimg, w, h, dels, tabs);
     return out;
@@ -24720,7 +24669,7 @@ Are you sure you want to download this calendar event?`
     if (tabs["pHYs"] != null) leng += 8 + 9 + 4;
     if (nimg.ctype == 3) {
       var dl = nimg.plte.length;
-      for (var i = 0; i < dl; i++) if (nimg.plte[i] >>> 24 != 255) pltAlpha = true;
+      for (var i3 = 0; i3 < dl; i3++) if (nimg.plte[i3] >>> 24 != 255) pltAlpha = true;
       leng += 8 + dl * 3 + 4 + (pltAlpha ? 8 + dl * 1 + 4 : 0);
     }
     for (var j = 0; j < nimg.frames.length; j++) {
@@ -24732,7 +24681,7 @@ Are you sure you want to download this calendar event?`
     leng += 12;
     var data = new Uint8Array(leng);
     var wr = [137, 80, 78, 71, 13, 10, 26, 10];
-    for (var i = 0; i < 8; i++) data[i] = wr[i];
+    for (var i3 = 0; i3 < 8; i3++) data[i3] = wr[i3];
     wUi(data, offset, 13);
     offset += 4;
     wAs(data, offset, "IHDR");
@@ -24795,8 +24744,8 @@ Are you sure you want to download this calendar event?`
       offset += 4;
       wAs(data, offset, "PLTE");
       offset += 4;
-      for (var i = 0; i < dl; i++) {
-        var ti = i * 3, c = nimg.plte[i], r = c & 255, g = c >>> 8 & 255, b = c >>> 16 & 255;
+      for (var i3 = 0; i3 < dl; i3++) {
+        var ti = i3 * 3, c = nimg.plte[i3], r = c & 255, g = c >>> 8 & 255, b = c >>> 16 & 255;
         data[offset + ti + 0] = r;
         data[offset + ti + 1] = g;
         data[offset + ti + 2] = b;
@@ -24809,7 +24758,7 @@ Are you sure you want to download this calendar event?`
         offset += 4;
         wAs(data, offset, "tRNS");
         offset += 4;
-        for (var i = 0; i < dl; i++) data[offset + i] = nimg.plte[i] >>> 24 & 255;
+        for (var i3 = 0; i3 < dl; i3++) data[offset + i3] = nimg.plte[i3] >>> 24 & 255;
         offset += dl;
         wUi(data, offset, crc(data, offset - dl - 4, dl + 4));
         offset += 4;
@@ -24868,8 +24817,8 @@ Are you sure you want to download this calendar event?`
     return data.buffer;
   };
   UPNG.encode.compressPNG = function(out, filter, levelZero) {
-    for (var i = 0; i < out.frames.length; i++) {
-      var frm = out.frames[i], nw = frm.rect.width, nh = frm.rect.height;
+    for (var i3 = 0; i3 < out.frames.length; i3++) {
+      var frm = out.frames[i3], nw = frm.rect.width, nh = frm.rect.height;
       var fdata = new Uint8Array(nh * frm.bpl + nh);
       frm.cimg = UPNG.encode._filterZero(frm.img, nh, frm.bpp, frm.bpl, fdata, filter, levelZero);
     }
@@ -24879,18 +24828,18 @@ Are you sure you want to download this calendar event?`
     var ctype = 6, depth = 8, alphaAnd = 255;
     for (var j = 0; j < bufs.length; j++) {
       var img = new Uint8Array(bufs[j]), ilen = img.length;
-      for (var i = 0; i < ilen; i += 4) alphaAnd &= img[i + 3];
+      for (var i3 = 0; i3 < ilen; i3 += 4) alphaAnd &= img[i3 + 3];
     }
     var gotAlpha = alphaAnd != 255;
     var frms = UPNG.encode.framize(bufs, w, h, onlyBlend, evenCrd, forbidPrev);
     var cmap = {}, plte = [], inds = [];
     if (ps != 0) {
       var nbufs = [];
-      for (var i = 0; i < frms.length; i++) nbufs.push(frms[i].img.buffer);
+      for (var i3 = 0; i3 < frms.length; i3++) nbufs.push(frms[i3].img.buffer);
       var abuf = UPNG.encode.concatRGBA(nbufs), qres = UPNG.quantize(abuf, ps);
       var cof = 0, bb = new Uint8Array(qres.abuf);
-      for (var i = 0; i < frms.length; i++) {
-        var ti = frms[i].img, bln = ti.length;
+      for (var i3 = 0; i3 < frms.length; i3++) {
+        var ti = frms[i3].img, bln = ti.length;
         inds.push(new Uint8Array(qres.inds.buffer, cof >> 2, bln >> 2));
         for (var j = 0; j < bln; j += 4) {
           ti[j] = bb[cof + j];
@@ -24900,16 +24849,16 @@ Are you sure you want to download this calendar event?`
         }
         cof += bln;
       }
-      for (var i = 0; i < qres.plte.length; i++) plte.push(qres.plte[i].est.rgba);
+      for (var i3 = 0; i3 < qres.plte.length; i3++) plte.push(qres.plte[i3].est.rgba);
     } else {
       for (var j = 0; j < frms.length; j++) {
         var frm = frms[j], img32 = new Uint32Array(frm.img.buffer), nw = frm.rect.width, ilen = img32.length;
         var ind = new Uint8Array(ilen);
         inds.push(ind);
-        for (var i = 0; i < ilen; i++) {
-          var c = img32[i];
-          if (i != 0 && c == img32[i - 1]) ind[i] = ind[i - 1];
-          else if (i > nw && c == img32[i - nw]) ind[i] = ind[i - nw];
+        for (var i3 = 0; i3 < ilen; i3++) {
+          var c = img32[i3];
+          if (i3 != 0 && c == img32[i3 - 1]) ind[i3] = ind[i3 - 1];
+          else if (i3 > nw && c == img32[i3 - nw]) ind[i3] = ind[i3 - nw];
           else {
             var cmc = cmap[c];
             if (cmc == null) {
@@ -24917,7 +24866,7 @@ Are you sure you want to download this calendar event?`
               plte.push(c);
               if (plte.length >= 300) break;
             }
-            ind[i] = cmc;
+            ind[i3] = cmc;
           }
         }
       }
@@ -24939,19 +24888,19 @@ Are you sure you want to download this calendar event?`
         var nimg = new Uint8Array(bpl * nh);
         var inj = inds[j];
         for (var y = 0; y < nh; y++) {
-          var i = y * bpl, ii = y * nw;
-          if (depth == 8) for (var x = 0; x < nw; x++) nimg[i + x] = inj[ii + x];
-          else if (depth == 4) for (var x = 0; x < nw; x++) nimg[i + (x >> 1)] |= inj[ii + x] << 4 - (x & 1) * 4;
-          else if (depth == 2) for (var x = 0; x < nw; x++) nimg[i + (x >> 2)] |= inj[ii + x] << 6 - (x & 3) * 2;
-          else if (depth == 1) for (var x = 0; x < nw; x++) nimg[i + (x >> 3)] |= inj[ii + x] << 7 - (x & 7) * 1;
+          var i3 = y * bpl, ii = y * nw;
+          if (depth == 8) for (var x = 0; x < nw; x++) nimg[i3 + x] = inj[ii + x];
+          else if (depth == 4) for (var x = 0; x < nw; x++) nimg[i3 + (x >> 1)] |= inj[ii + x] << 4 - (x & 1) * 4;
+          else if (depth == 2) for (var x = 0; x < nw; x++) nimg[i3 + (x >> 2)] |= inj[ii + x] << 6 - (x & 3) * 2;
+          else if (depth == 1) for (var x = 0; x < nw; x++) nimg[i3 + (x >> 3)] |= inj[ii + x] << 7 - (x & 7) * 1;
         }
         cimg = nimg;
         ctype = 3;
         bpp = 1;
       } else if (gotAlpha == false && frms.length == 1) {
         var nimg = new Uint8Array(nw * nh * 3), area = nw * nh;
-        for (var i = 0; i < area; i++) {
-          var ti = i * 3, qi = i * 4;
+        for (var i3 = 0; i3 < area; i3++) {
+          var ti = i3 * 3, qi = i3 * 4;
           nimg[ti] = cimg[qi];
           nimg[ti + 1] = cimg[qi + 1];
           nimg[ti + 2] = cimg[qi + 2];
@@ -24979,8 +24928,8 @@ Are you sure you want to download this calendar event?`
           var pimg = new Uint8Array(bufs[j - 1 - it]), p32 = new Uint32Array(bufs[j - 1 - it]);
           var mix = w, miy = h, max = -1, may = -1;
           for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
-            var i = y * w + x;
-            if (cimg32[i] != p32[i]) {
+            var i3 = y * w + x;
+            if (cimg32[i3] != p32[i3]) {
               if (x < mix) mix = x;
               if (x > max) max = x;
               if (y < miy) miy = y;
@@ -25025,21 +24974,21 @@ Are you sure you want to download this calendar event?`
       UPNG.encode._updateFrame(bufs, w, h, frms, j, r, evenCrd);
     }
     var area = 0;
-    if (bufs.length != 1) for (var i = 0; i < frms.length; i++) {
-      var frm = frms[i];
+    if (bufs.length != 1) for (var i3 = 0; i3 < frms.length; i3++) {
+      var frm = frms[i3];
       area += frm.rect.width * frm.rect.height;
     }
     return frms;
   };
-  UPNG.encode._updateFrame = function(bufs, w, h, frms, i, r, evenCrd) {
+  UPNG.encode._updateFrame = function(bufs, w, h, frms, i3, r, evenCrd) {
     var U8 = Uint8Array, U32 = Uint32Array;
-    var pimg = new U8(bufs[i - 1]), pimg32 = new U32(bufs[i - 1]), nimg = i + 1 < bufs.length ? new U8(bufs[i + 1]) : null;
-    var cimg = new U8(bufs[i]), cimg32 = new U32(cimg.buffer);
+    var pimg = new U8(bufs[i3 - 1]), pimg32 = new U32(bufs[i3 - 1]), nimg = i3 + 1 < bufs.length ? new U8(bufs[i3 + 1]) : null;
+    var cimg = new U8(bufs[i3]), cimg32 = new U32(cimg.buffer);
     var mix = w, miy = h, max = -1, may = -1;
     for (var y = 0; y < r.height; y++) for (var x = 0; x < r.width; x++) {
       var cx2 = r.x + x, cy2 = r.y + y;
       var j = cy2 * w + cx2, cc = cimg32[j];
-      if (cc == 0 || frms[i - 1].dispose == 0 && pimg32[j] == cc && (nimg == null || nimg[j * 4 + 3] != 0)) {
+      if (cc == 0 || frms[i3 - 1].dispose == 0 && pimg32[j] == cc && (nimg == null || nimg[j * 4 + 3] != 0)) {
       } else {
         if (cx2 < mix) mix = cx2;
         if (cx2 > max) max = cx2;
@@ -25053,11 +25002,11 @@ Are you sure you want to download this calendar event?`
       if ((miy & 1) == 1) miy--;
     }
     r = { x: mix, y: miy, width: max - mix + 1, height: may - miy + 1 };
-    var fr = frms[i];
+    var fr = frms[i3];
     fr.rect = r;
     fr.blend = 1;
     fr.img = new Uint8Array(r.width * r.height * 4);
-    if (frms[i - 1].dispose == 0) {
+    if (frms[i3 - 1].dispose == 0) {
       UPNG._copyTile(pimg, w, h, fr.img, r.width, r.height, -r.x, -r.y, 0);
       UPNG.encode._prepareDiff(cimg, w, h, fr.img, r);
     } else
@@ -25073,43 +25022,43 @@ Are you sure you want to download this calendar event?`
     var opts;
     if (levelZero) opts = { level: 0 };
     var CMPR = levelZero && UZIP != null ? UZIP : import_pako4.default;
-    for (var i = 0; i < ftry.length; i++) {
-      for (var y = 0; y < h; y++) UPNG.encode._filterLine(data, img, y, bpl, bpp, ftry[i]);
+    for (var i3 = 0; i3 < ftry.length; i3++) {
+      for (var y = 0; y < h; y++) UPNG.encode._filterLine(data, img, y, bpl, bpp, ftry[i3]);
       fls.push(CMPR["deflate"](data, opts));
     }
     var ti, tsize = 1e9;
-    for (var i = 0; i < fls.length; i++) if (fls[i].length < tsize) {
-      ti = i;
-      tsize = fls[i].length;
+    for (var i3 = 0; i3 < fls.length; i3++) if (fls[i3].length < tsize) {
+      ti = i3;
+      tsize = fls[i3].length;
     }
     return fls[ti];
   };
   UPNG.encode._filterLine = function(data, img, y, bpl, bpp, type) {
-    var i = y * bpl, di = i + y, paeth = UPNG.decode._paeth;
+    var i3 = y * bpl, di = i3 + y, paeth = UPNG.decode._paeth;
     data[di] = type;
     di++;
     if (type == 0) {
-      if (bpl < 500) for (var x = 0; x < bpl; x++) data[di + x] = img[i + x];
-      else data.set(new Uint8Array(img.buffer, i, bpl), di);
+      if (bpl < 500) for (var x = 0; x < bpl; x++) data[di + x] = img[i3 + x];
+      else data.set(new Uint8Array(img.buffer, i3, bpl), di);
     } else if (type == 1) {
-      for (var x = 0; x < bpp; x++) data[di + x] = img[i + x];
-      for (var x = bpp; x < bpl; x++) data[di + x] = img[i + x] - img[i + x - bpp] + 256 & 255;
+      for (var x = 0; x < bpp; x++) data[di + x] = img[i3 + x];
+      for (var x = bpp; x < bpl; x++) data[di + x] = img[i3 + x] - img[i3 + x - bpp] + 256 & 255;
     } else if (y == 0) {
-      for (var x = 0; x < bpp; x++) data[di + x] = img[i + x];
-      if (type == 2) for (var x = bpp; x < bpl; x++) data[di + x] = img[i + x];
-      if (type == 3) for (var x = bpp; x < bpl; x++) data[di + x] = img[i + x] - (img[i + x - bpp] >> 1) + 256 & 255;
-      if (type == 4) for (var x = bpp; x < bpl; x++) data[di + x] = img[i + x] - paeth(img[i + x - bpp], 0, 0) + 256 & 255;
+      for (var x = 0; x < bpp; x++) data[di + x] = img[i3 + x];
+      if (type == 2) for (var x = bpp; x < bpl; x++) data[di + x] = img[i3 + x];
+      if (type == 3) for (var x = bpp; x < bpl; x++) data[di + x] = img[i3 + x] - (img[i3 + x - bpp] >> 1) + 256 & 255;
+      if (type == 4) for (var x = bpp; x < bpl; x++) data[di + x] = img[i3 + x] - paeth(img[i3 + x - bpp], 0, 0) + 256 & 255;
     } else {
       if (type == 2) {
-        for (var x = 0; x < bpl; x++) data[di + x] = img[i + x] + 256 - img[i + x - bpl] & 255;
+        for (var x = 0; x < bpl; x++) data[di + x] = img[i3 + x] + 256 - img[i3 + x - bpl] & 255;
       }
       if (type == 3) {
-        for (var x = 0; x < bpp; x++) data[di + x] = img[i + x] + 256 - (img[i + x - bpl] >> 1) & 255;
-        for (var x = bpp; x < bpl; x++) data[di + x] = img[i + x] + 256 - (img[i + x - bpl] + img[i + x - bpp] >> 1) & 255;
+        for (var x = 0; x < bpp; x++) data[di + x] = img[i3 + x] + 256 - (img[i3 + x - bpl] >> 1) & 255;
+        for (var x = bpp; x < bpl; x++) data[di + x] = img[i3 + x] + 256 - (img[i3 + x - bpl] + img[i3 + x - bpp] >> 1) & 255;
       }
       if (type == 4) {
-        for (var x = 0; x < bpp; x++) data[di + x] = img[i + x] + 256 - paeth(0, img[i + x - bpl], 0) & 255;
-        for (var x = bpp; x < bpl; x++) data[di + x] = img[i + x] + 256 - paeth(img[i + x - bpp], img[i + x - bpl], img[i + x - bpp - bpl]) & 255;
+        for (var x = 0; x < bpp; x++) data[di + x] = img[i3 + x] + 256 - paeth(0, img[i3 + x - bpl], 0) & 255;
+        for (var x = bpp; x < bpl; x++) data[di + x] = img[i3 + x] + 256 - paeth(img[i3 + x - bpp], img[i3 + x - bpl], img[i3 + x - bpp - bpl]) & 255;
       }
     }
   };
@@ -25126,8 +25075,8 @@ Are you sure you want to download this calendar event?`
       }
       return tab;
     })(),
-    update: function(c, buf, off, len) {
-      for (var i = 0; i < len; i++) c = UPNG.crc.table[(c ^ buf[off + i]) & 255] ^ c >>> 8;
+    update: function(c, buf, off, len3) {
+      for (var i3 = 0; i3 < len3; i3++) c = UPNG.crc.table[(c ^ buf[off + i3]) & 255] ^ c >>> 8;
       return c;
     },
     crc: function(b, o, l) {
@@ -25139,13 +25088,13 @@ Are you sure you want to download this calendar event?`
     var KD = UPNG.quantize.getKDtree(nimg, ps);
     var root = KD[0], leafs = KD[1];
     var planeDst = UPNG.quantize.planeDst;
-    var sb = oimg, tb = nimg32, len = sb.length;
+    var sb = oimg, tb = nimg32, len3 = sb.length;
     var inds = new Uint8Array(oimg.length >> 2);
-    for (var i = 0; i < len; i += 4) {
-      var r = sb[i] * (1 / 255), g = sb[i + 1] * (1 / 255), b = sb[i + 2] * (1 / 255), a = sb[i + 3] * (1 / 255);
+    for (var i3 = 0; i3 < len3; i3 += 4) {
+      var r = sb[i3] * (1 / 255), g = sb[i3 + 1] * (1 / 255), b = sb[i3 + 2] * (1 / 255), a = sb[i3 + 3] * (1 / 255);
       var nd = UPNG.quantize.getNearest(root, r, g, b, a);
-      inds[i >> 2] = nd.ind;
-      tb[i >> 2] = nd.est.rgba;
+      inds[i3 >> 2] = nd.ind;
+      tb[i3 >> 2] = nd.est.rgba;
     }
     return { abuf: nimg.buffer, inds, plte: leafs };
   };
@@ -25158,9 +25107,9 @@ Are you sure you want to download this calendar event?`
     var leafs = [root];
     while (leafs.length < ps) {
       var maxL = 0, mi = 0;
-      for (var i = 0; i < leafs.length; i++) if (leafs[i].est.L > maxL) {
-        maxL = leafs[i].est.L;
-        mi = i;
+      for (var i3 = 0; i3 < leafs.length; i3++) if (leafs[i3].est.L > maxL) {
+        maxL = leafs[i3].est.L;
+        mi = i3;
       }
       if (maxL < err) break;
       var node = leafs[mi];
@@ -25175,8 +25124,8 @@ Are you sure you want to download this calendar event?`
       ln.est = UPNG.quantize.estats(ln.bst);
       var rn = { i0: s0, i1: node.i1, bst: null, est: null, tdst: 0, left: null, right: null };
       rn.bst = { R: [], m: [], N: node.bst.N - ln.bst.N };
-      for (var i = 0; i < 16; i++) rn.bst.R[i] = node.bst.R[i] - ln.bst.R[i];
-      for (var i = 0; i < 4; i++) rn.bst.m[i] = node.bst.m[i] - ln.bst.m[i];
+      for (var i3 = 0; i3 < 16; i3++) rn.bst.R[i3] = node.bst.R[i3] - ln.bst.R[i3];
+      for (var i3 = 0; i3 < 4; i3++) rn.bst.m[i3] = node.bst.m[i3] - ln.bst.m[i3];
       rn.est = UPNG.quantize.estats(rn.bst);
       node.left = ln;
       node.right = rn;
@@ -25186,7 +25135,7 @@ Are you sure you want to download this calendar event?`
     leafs.sort(function(a, b) {
       return b.bst.N - a.bst.N;
     });
-    for (var i = 0; i < leafs.length; i++) leafs[i].ind = i;
+    for (var i3 = 0; i3 < leafs.length; i3++) leafs[i3].ind = i3;
     return [root, leafs];
   };
   UPNG.quantize.getNearest = function(nd, r, g, b, a) {
@@ -25230,15 +25179,15 @@ Are you sure you want to download this calendar event?`
     while (vecDot(nimg, i0, e) > eMq) i0 -= 4;
     return i0 + 4;
   };
-  UPNG.quantize.vecDot = function(nimg, i, e) {
-    return nimg[i] * e[0] + nimg[i + 1] * e[1] + nimg[i + 2] * e[2] + nimg[i + 3] * e[3];
+  UPNG.quantize.vecDot = function(nimg, i3, e) {
+    return nimg[i3] * e[0] + nimg[i3 + 1] * e[1] + nimg[i3 + 2] * e[2] + nimg[i3 + 3] * e[3];
   };
   UPNG.quantize.stats = function(nimg, i0, i1) {
     var R = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     var m = [0, 0, 0, 0];
     var N = i1 - i0 >> 2;
-    for (var i = i0; i < i1; i += 4) {
-      var r = nimg[i] * (1 / 255), g = nimg[i + 1] * (1 / 255), b = nimg[i + 2] * (1 / 255), a = nimg[i + 3] * (1 / 255);
+    for (var i3 = i0; i3 < i1; i3 += 4) {
+      var r = nimg[i3] * (1 / 255), g = nimg[i3 + 1] * (1 / 255), b = nimg[i3 + 2] * (1 / 255), a = nimg[i3 + 3] * (1 / 255);
       m[0] += r;
       m[1] += g;
       m[2] += b;
@@ -25286,7 +25235,7 @@ Are you sure you want to download this calendar event?`
     var A = Rj, M = UPNG.M4;
     var b = [0.5, 0.5, 0.5, 0.5], mi = 0, tmi = 0;
     if (N != 0)
-      for (var i = 0; i < 10; i++) {
+      for (var i3 = 0; i3 < 10; i3++) {
         b = M.multVec(A, b);
         tmi = Math.sqrt(M.dot(b, b));
         b = M.sml(1 / tmi, b);
@@ -25323,10 +25272,10 @@ Are you sure you want to download this calendar event?`
   };
   UPNG.encode.concatRGBA = function(bufs) {
     var tlen = 0;
-    for (var i = 0; i < bufs.length; i++) tlen += bufs[i].byteLength;
+    for (var i3 = 0; i3 < bufs.length; i3++) tlen += bufs[i3].byteLength;
     var nimg = new Uint8Array(tlen), noff = 0;
-    for (var i = 0; i < bufs.length; i++) {
-      var img = new Uint8Array(bufs[i]), il = img.length;
+    for (var i3 = 0; i3 < bufs.length; i3++) {
+      var img = new Uint8Array(bufs[i3]), il = img.length;
       for (var j = 0; j < il; j += 4) {
         var r = img[j], g = img[j + 1], b = img[j + 2], a = img[j + 3];
         if (a == 0) r = g = b = 0;
@@ -25743,40 +25692,40 @@ Are you sure you want to download this calendar event?`
         }
         var bufferLength = this.bufferLength;
         var buffer;
-        var i;
+        var i3;
         if (c === Z_LOWER_CHAR) {
           buffer = this.ensureBuffer(bufferLength + 4);
-          for (i = 0; i < 4; ++i) {
-            buffer[bufferLength + i] = 0;
+          for (i3 = 0; i3 < 4; ++i3) {
+            buffer[bufferLength + i3] = 0;
           }
           this.bufferLength += 4;
         } else {
           var input = this.input;
           input[0] = c;
-          for (i = 1; i < 5; ++i) {
+          for (i3 = 1; i3 < 5; ++i3) {
             c = stream2.getByte();
             while (isSpace(c)) {
               c = stream2.getByte();
             }
-            input[i] = c;
+            input[i3] = c;
             if (c === EOF || c === TILDA_CHAR) {
               break;
             }
           }
-          buffer = this.ensureBuffer(bufferLength + i - 1);
-          this.bufferLength += i - 1;
-          if (i < 5) {
-            for (; i < 5; ++i) {
-              input[i] = 33 + 84;
+          buffer = this.ensureBuffer(bufferLength + i3 - 1);
+          this.bufferLength += i3 - 1;
+          if (i3 < 5) {
+            for (; i3 < 5; ++i3) {
+              input[i3] = 33 + 84;
             }
             this.eof = true;
           }
           var t = 0;
-          for (i = 0; i < 5; ++i) {
-            t = t * 85 + (input[i] - 33);
+          for (i3 = 0; i3 < 5; ++i3) {
+            t = t * 85 + (input[i3] - 33);
           }
-          for (i = 3; i >= 0; --i) {
-            buffer[bufferLength + i] = t & 255;
+          for (i3 = 3; i3 >= 0; --i3) {
+            buffer[bufferLength + i3] = t & 255;
             t >>= 8;
           }
         }
@@ -25811,8 +25760,8 @@ Are you sure you want to download this calendar event?`
         var buffer = this.ensureBuffer(this.bufferLength + maxDecodeLength);
         var bufferLength = this.bufferLength;
         var firstDigit = this.firstDigit;
-        for (var i = 0, ii = bytes.length; i < ii; i++) {
-          var ch = bytes[i];
+        for (var i3 = 0, ii = bytes.length; i3 < ii; i3++) {
+          var ch = bytes[i3];
           var digit = void 0;
           if (ch >= 48 && ch <= 57) {
             digit = ch & 15;
@@ -26505,7 +26454,7 @@ Are you sure you want to download this calendar event?`
       }
       FlateStream2.prototype.readBlock = function() {
         var buffer;
-        var len;
+        var len3;
         var str = this.stream;
         var hdr = this.getBits(3);
         if (hdr & 1) {
@@ -26564,39 +26513,39 @@ Are you sure you want to download this calendar event?`
           var numDistCodes = this.getBits(5) + 1;
           var numCodeLenCodes = this.getBits(4) + 4;
           var codeLenCodeLengths = new Uint8Array(codeLenCodeMap.length);
-          var i = void 0;
-          for (i = 0; i < numCodeLenCodes; ++i) {
-            codeLenCodeLengths[codeLenCodeMap[i]] = this.getBits(3);
+          var i3 = void 0;
+          for (i3 = 0; i3 < numCodeLenCodes; ++i3) {
+            codeLenCodeLengths[codeLenCodeMap[i3]] = this.getBits(3);
           }
           var codeLenCodeTab = this.generateHuffmanTable(codeLenCodeLengths);
-          len = 0;
-          i = 0;
+          len3 = 0;
+          i3 = 0;
           var codes = numLitCodes + numDistCodes;
           var codeLengths = new Uint8Array(codes);
           var bitsLength = void 0;
           var bitsOffset = void 0;
           var what = void 0;
-          while (i < codes) {
+          while (i3 < codes) {
             var code = this.getCode(codeLenCodeTab);
             if (code === 16) {
               bitsLength = 2;
               bitsOffset = 3;
-              what = len;
+              what = len3;
             } else if (code === 17) {
               bitsLength = 3;
               bitsOffset = 3;
-              what = len = 0;
+              what = len3 = 0;
             } else if (code === 18) {
               bitsLength = 7;
               bitsOffset = 11;
-              what = len = 0;
+              what = len3 = 0;
             } else {
-              codeLengths[i++] = len = code;
+              codeLengths[i3++] = len3 = code;
               continue;
             }
             var repeatLength = this.getBits(bitsLength) + bitsOffset;
             while (repeatLength-- > 0) {
-              codeLengths[i++] = what;
+              codeLengths[i3++] = what;
             }
           }
           litCodeTable = this.generateHuffmanTable(codeLengths.subarray(0, numLitCodes));
@@ -26627,7 +26576,7 @@ Are you sure you want to download this calendar event?`
           if (code2 > 0) {
             code2 = this.getBits(code2);
           }
-          len = (code1 & 65535) + code2;
+          len3 = (code1 & 65535) + code2;
           code1 = this.getCode(distCodeTable);
           code1 = distDecode[code1];
           code2 = code1 >> 16;
@@ -26635,11 +26584,11 @@ Are you sure you want to download this calendar event?`
             code2 = this.getBits(code2);
           }
           var dist = (code1 & 65535) + code2;
-          if (pos + len >= limit) {
-            buffer = this.ensureBuffer(pos + len);
+          if (pos + len3 >= limit) {
+            buffer = this.ensureBuffer(pos + len3);
             limit = buffer.length;
           }
-          for (var k = 0; k < len; ++k, ++pos) {
+          for (var k = 0; k < len3; ++k, ++pos) {
             buffer[pos] = buffer[pos - dist];
           }
         }
@@ -26691,25 +26640,25 @@ Are you sure you want to download this calendar event?`
       FlateStream2.prototype.generateHuffmanTable = function(lengths) {
         var n = lengths.length;
         var maxLen = 0;
-        var i;
-        for (i = 0; i < n; ++i) {
-          if (lengths[i] > maxLen) {
-            maxLen = lengths[i];
+        var i3;
+        for (i3 = 0; i3 < n; ++i3) {
+          if (lengths[i3] > maxLen) {
+            maxLen = lengths[i3];
           }
         }
         var size = 1 << maxLen;
         var codes = new Int32Array(size);
-        for (var len = 1, code = 0, skip = 2; len <= maxLen; ++len, code <<= 1, skip <<= 1) {
+        for (var len3 = 1, code = 0, skip = 2; len3 <= maxLen; ++len3, code <<= 1, skip <<= 1) {
           for (var val = 0; val < n; ++val) {
-            if (lengths[val] === len) {
+            if (lengths[val] === len3) {
               var code2 = 0;
               var t = code;
-              for (i = 0; i < len; ++i) {
+              for (i3 = 0; i3 < len3; ++i3) {
                 code2 = code2 << 1 | t & 1;
                 t >>= 1;
               }
-              for (i = code2; i < size; i += skip) {
-                codes[i] = len << 16 | val;
+              for (i3 = code2; i3 < size; i3 += skip) {
+                codes[i3] = len3 << 16 | val;
               }
               ++code;
             }
@@ -26743,9 +26692,9 @@ Are you sure you want to download this calendar event?`
           currentSequence: new Uint8Array(maxLzwDictionarySize),
           currentSequenceLength: 0
         };
-        for (var i = 0; i < 256; ++i) {
-          lzwState.dictionaryValues[i] = i;
-          lzwState.dictionaryLengths[i] = 1;
+        for (var i3 = 0; i3 < 256; ++i3) {
+          lzwState.dictionaryValues[i3] = i3;
+          lzwState.dictionaryLengths[i3] = 1;
         }
         _this.lzwState = lzwState;
         return _this;
@@ -26754,7 +26703,7 @@ Are you sure you want to download this calendar event?`
         var blockSize = 512;
         var estimatedDecodedSize = blockSize * 2;
         var decodedSizeDelta = blockSize;
-        var i;
+        var i3;
         var j;
         var q;
         var lzwState = this.lzwState;
@@ -26773,7 +26722,7 @@ Are you sure you want to download this calendar event?`
         var decodedLength = 0;
         var currentBufferLength = this.bufferLength;
         var buffer = this.ensureBuffer(this.bufferLength + estimatedDecodedSize);
-        for (i = 0; i < blockSize; i++) {
+        for (i3 = 0; i3 < blockSize; i3++) {
           var code = this.readBits(codeLength);
           var hasPrev = currentSequenceLength > 0;
           if (!code || code < 256) {
@@ -26876,7 +26825,7 @@ Are you sure you want to download this calendar event?`
           n = 257 - n;
           var b = repeatHeader[1];
           buffer = this.ensureBuffer(bufferLength + n + 1);
-          for (var i = 0; i < n; i++) {
+          for (var i3 = 0; i3 < n; i3++) {
             buffer[bufferLength++] = b;
           }
         }
@@ -26921,8 +26870,8 @@ Are you sure you want to download this calendar event?`
     if (Filter instanceof PDFName_default) {
       stream2 = decodeStream(stream2, Filter, DecodeParms);
     } else if (Filter instanceof PDFArray_default) {
-      for (var idx = 0, len = Filter.size(); idx < len; idx++) {
-        stream2 = decodeStream(stream2, Filter.lookup(idx, PDFName_default), DecodeParms && DecodeParms.lookupMaybe(idx, PDFDict_default));
+      for (var idx4 = 0, len3 = Filter.size(); idx4 < len3; idx4++) {
+        stream2 = decodeStream(stream2, Filter.lookup(idx4, PDFName_default), DecodeParms && DecodeParms.lookupMaybe(idx4, PDFDict_default));
       }
     } else if (!!Filter) {
       throw new UnexpectedObjectTypeError([PDFName_default, PDFArray_default], Filter);
@@ -26991,8 +26940,8 @@ Are you sure you want to download this calendar event?`
       PDFPageEmbedder2.prototype.decodeContents = function(contents) {
         var newline = Uint8Array.of(CharCodes_default.Newline);
         var decodedContents = [];
-        for (var idx = 0, len = contents.size(); idx < len; idx++) {
-          var stream2 = contents.lookup(idx, PDFStream_default);
+        for (var idx4 = 0, len3 = contents.size(); idx4 < len3; idx4++) {
+          var stream2 = contents.lookup(idx4, PDFStream_default);
           var content = void 0;
           if (stream2 instanceof PDFRawStream_default) {
             content = decodePDFRawStream(stream2).decode();
@@ -27155,9 +27104,9 @@ Are you sure you want to download this calendar event?`
         if (!rng)
           return [];
         var pageRanges = [];
-        for (var i = 0; i < rng.size(); i += 2) {
-          var start = rng.lookup(i, PDFNumber_default).asNumber();
-          var end = rng.lookup(i + 1, PDFNumber_default).asNumber();
+        for (var i3 = 0; i3 < rng.size(); i3 += 2) {
+          var start = rng.lookup(i3, PDFNumber_default).asNumber();
+          var end = rng.lookup(i3 + 1, PDFNumber_default).asNumber();
           pageRanges.push({ start, end });
         }
         return pageRanges;
@@ -27218,9 +27167,9 @@ Are you sure you want to download this calendar event?`
         if (!Array.isArray(printPageRange))
           printPageRange = [printPageRange];
         var flatRange = [];
-        for (var idx = 0, len = printPageRange.length; idx < len; idx++) {
-          flatRange.push(printPageRange[idx].start);
-          flatRange.push(printPageRange[idx].end);
+        for (var idx4 = 0, len3 = printPageRange.length; idx4 < len3; idx4++) {
+          flatRange.push(printPageRange[idx4].start);
+          flatRange.push(printPageRange[idx4].end);
         }
         assertEachIs(flatRange, "printPageRange", ["number"]);
         var pageRanges = this.dict.context.obj(flatRange);
@@ -27572,8 +27521,8 @@ Are you sure you want to download this calendar event?`
         if (!BC)
           return void 0;
         var components = [];
-        for (var idx = 0, len = BC === null || BC === void 0 ? void 0 : BC.size(); idx < len; idx++) {
-          var component = BC.get(idx);
+        for (var idx4 = 0, len3 = BC === null || BC === void 0 ? void 0 : BC.size(); idx4 < len3; idx4++) {
+          var component = BC.get(idx4);
           if (component instanceof PDFNumber_default)
             components.push(component.asNumber());
         }
@@ -27584,8 +27533,8 @@ Are you sure you want to download this calendar event?`
         if (!BG)
           return void 0;
         var components = [];
-        for (var idx = 0, len = BG === null || BG === void 0 ? void 0 : BG.size(); idx < len; idx++) {
-          var component = BG.get(idx);
+        for (var idx4 = 0, len3 = BG === null || BG === void 0 ? void 0 : BG.size(); idx4 < len3; idx4++) {
+          var component = BG.get(idx4);
           if (component instanceof PDFNumber_default)
             components.push(component.asNumber());
         }
@@ -27715,8 +27664,8 @@ Are you sure you want to download this calendar event?`
         var normal = (_a = this.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal;
         if (normal instanceof PDFDict_default) {
           var keys = normal.keys();
-          for (var idx = 0, len = keys.length; idx < len; idx++) {
-            var key = keys[idx];
+          for (var idx4 = 0, len3 = keys.length; idx4 < len3; idx4++) {
+            var key = keys[idx4];
             if (key !== PDFName_default.of("Off"))
               return key;
           }
@@ -27757,9 +27706,9 @@ Are you sure you want to download this calendar event?`
         if (!kidDicts)
           return [PDFWidgetAnnotation_default.fromDict(this.dict)];
         var widgets = new Array(kidDicts.size());
-        for (var idx = 0, len = kidDicts.size(); idx < len; idx++) {
-          var dict = kidDicts.lookup(idx, PDFDict_default);
-          widgets[idx] = PDFWidgetAnnotation_default.fromDict(dict);
+        for (var idx4 = 0, len3 = kidDicts.size(); idx4 < len3; idx4++) {
+          var dict = kidDicts.lookup(idx4, PDFDict_default);
+          widgets[idx4] = PDFWidgetAnnotation_default.fromDict(dict);
         }
         return widgets;
       };
@@ -27767,17 +27716,17 @@ Are you sure you want to download this calendar event?`
         var Kids = this.normalizedEntries().Kids;
         Kids.push(ref);
       };
-      PDFAcroTerminal2.prototype.removeWidget = function(idx) {
+      PDFAcroTerminal2.prototype.removeWidget = function(idx4) {
         var kidDicts = this.Kids();
         if (!kidDicts) {
-          if (idx !== 0)
-            throw new IndexOutOfBoundsError(idx, 0, 0);
+          if (idx4 !== 0)
+            throw new IndexOutOfBoundsError(idx4, 0, 0);
           this.setKids([]);
         } else {
-          if (idx < 0 || idx > kidDicts.size()) {
-            throw new IndexOutOfBoundsError(idx, 0, kidDicts.size());
+          if (idx4 < 0 || idx4 > kidDicts.size()) {
+            throw new IndexOutOfBoundsError(idx4, 0, kidDicts.size());
           }
-          kidDicts.remove(idx);
+          kidDicts.remove(idx4);
         }
       };
       PDFAcroTerminal2.prototype.normalizedEntries = function() {
@@ -27818,27 +27767,27 @@ Are you sure you want to download this calendar event?`
           return [opt];
         }
         var values2 = [];
-        for (var idx = 0, len = opt.size(); idx < len; idx++) {
-          var value2 = opt.lookup(idx);
+        for (var idx4 = 0, len3 = opt.size(); idx4 < len3; idx4++) {
+          var value2 = opt.lookup(idx4);
           if (value2 instanceof PDFString_default || value2 instanceof PDFHexString_default) {
             values2.push(value2);
           }
         }
         return values2;
       };
-      PDFAcroButton2.prototype.removeExportValue = function(idx) {
+      PDFAcroButton2.prototype.removeExportValue = function(idx4) {
         var opt = this.Opt();
         if (!opt)
           return;
         if (opt instanceof PDFString_default || opt instanceof PDFHexString_default) {
-          if (idx !== 0)
-            throw new IndexOutOfBoundsError(idx, 0, 0);
+          if (idx4 !== 0)
+            throw new IndexOutOfBoundsError(idx4, 0, 0);
           this.setOpt([]);
         } else {
-          if (idx < 0 || idx > opt.size()) {
-            throw new IndexOutOfBoundsError(idx, 0, opt.size());
+          if (idx4 < 0 || idx4 > opt.size()) {
+            throw new IndexOutOfBoundsError(idx4, 0, opt.size());
           }
-          opt.remove(idx);
+          opt.remove(idx4);
         }
       };
       PDFAcroButton2.prototype.normalizeExportValues = function() {
@@ -27846,9 +27795,9 @@ Are you sure you want to download this calendar event?`
         var exportValues = (_a = this.getExportValues()) !== null && _a !== void 0 ? _a : [];
         var Opt = [];
         var widgets = this.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
-          var exportVal = (_b = exportValues[idx]) !== null && _b !== void 0 ? _b : PDFHexString_default.fromText((_d = (_c = widget.getOnValue()) === null || _c === void 0 ? void 0 : _c.decodeText()) !== null && _d !== void 0 ? _d : "");
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
+          var exportVal = (_b = exportValues[idx4]) !== null && _b !== void 0 ? _b : PDFHexString_default.fromText((_d = (_c = widget.getOnValue()) === null || _c === void 0 ? void 0 : _c.decodeText()) !== null && _d !== void 0 ? _d : "");
           Opt.push(exportVal);
         }
         this.setOpt(Opt);
@@ -27860,10 +27809,10 @@ Are you sure you want to download this calendar event?`
         var existingIdx;
         if (useExistingOptIdx) {
           var exportValues = (_a = this.getExportValues()) !== null && _a !== void 0 ? _a : [];
-          for (var idx = 0, len = exportValues.length; idx < len; idx++) {
-            var exportVal = exportValues[idx];
+          for (var idx4 = 0, len3 = exportValues.length; idx4 < len3; idx4++) {
+            var exportVal = exportValues[idx4];
             if (exportVal.decodeText() === optText)
-              existingIdx = idx;
+              existingIdx = idx4;
           }
         }
         var Opt = this.Opt();
@@ -27897,8 +27846,8 @@ Are you sure you want to download this calendar event?`
         }
         this.dict.set(PDFName_default.of("V"), value2);
         var widgets = this.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var state = widget.getOnValue() === value2 ? value2 : PDFName_default.of("Off");
           widget.setAppearanceState(state);
         }
@@ -27994,16 +27943,16 @@ Are you sure you want to download this calendar event?`
       };
       PDFAcroChoice2.prototype.valuesAreValid = function(values2) {
         var options = this.getOptions();
-        var _loop_1 = function(idx2, len2) {
-          var val = values2[idx2].decodeText();
+        var _loop_1 = function(idx5, len4) {
+          var val = values2[idx5].decodeText();
           if (!options.find(function(o) {
             return val === (o.display || o.value).decodeText();
           })) {
             return { value: false };
           }
         };
-        for (var idx = 0, len = values2.length; idx < len; idx++) {
-          var state_1 = _loop_1(idx, len);
+        for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+          var state_1 = _loop_1(idx4, len3);
           if (typeof state_1 === "object")
             return state_1.value;
         }
@@ -28013,14 +27962,14 @@ Are you sure you want to download this calendar event?`
         if (values2.length > 1) {
           var indices = new Array(values2.length);
           var options = this.getOptions();
-          var _loop_2 = function(idx2, len2) {
-            var val = values2[idx2].decodeText();
-            indices[idx2] = options.findIndex(function(o) {
+          var _loop_2 = function(idx5, len4) {
+            var val = values2[idx5].decodeText();
+            indices[idx5] = options.findIndex(function(o) {
               return val === (o.display || o.value).decodeText();
             });
           };
-          for (var idx = 0, len = values2.length; idx < len; idx++) {
-            _loop_2(idx, len);
+          for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+            _loop_2(idx4, len3);
           }
           this.dict.set(PDFName_default.of("I"), this.dict.context.obj(indices.sort()));
         } else {
@@ -28033,8 +27982,8 @@ Are you sure you want to download this calendar event?`
           return [v];
         if (v instanceof PDFArray_default) {
           var values2 = [];
-          for (var idx = 0, len = v.size(); idx < len; idx++) {
-            var value2 = v.lookup(idx);
+          for (var idx4 = 0, len3 = v.size(); idx4 < len3; idx4++) {
+            var value2 = v.lookup(idx4);
             if (value2 instanceof PDFString_default || value2 instanceof PDFHexString_default) {
               values2.push(value2);
             }
@@ -28048,9 +27997,9 @@ Are you sure you want to download this calendar event?`
       };
       PDFAcroChoice2.prototype.setOptions = function(options) {
         var newOpt = new Array(options.length);
-        for (var idx = 0, len = options.length; idx < len; idx++) {
-          var _a = options[idx], value2 = _a.value, display = _a.display;
-          newOpt[idx] = this.dict.context.obj([value2, display || value2]);
+        for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
+          var _a = options[idx4], value2 = _a.value, display = _a.display;
+          newOpt[idx4] = this.dict.context.obj([value2, display || value2]);
         }
         this.dict.set(PDFName_default.of("Opt"), this.dict.context.obj(newOpt));
       };
@@ -28061,8 +28010,8 @@ Are you sure you want to download this calendar event?`
         }
         if (Opt instanceof PDFArray_default) {
           var res = [];
-          for (var idx = 0, len = Opt.size(); idx < len; idx++) {
-            var item = Opt.lookup(idx);
+          for (var idx4 = 0, len3 = Opt.size(); idx4 < len3; idx4++) {
+            var item = Opt.lookup(idx4);
             if (item instanceof PDFString_default || item instanceof PDFHexString_default) {
               res.push({ value: item, display: item });
             }
@@ -28262,8 +28211,8 @@ Are you sure you want to download this calendar event?`
         }
         this.dict.set(PDFName_default.of("V"), value2);
         var widgets = this.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var state = widget.getOnValue() === value2 ? value2 : PDFName_default.of("Off");
           widget.setAppearanceState(state);
         }
@@ -28277,8 +28226,8 @@ Are you sure you want to download this calendar event?`
       PDFAcroRadioButton2.prototype.getOnValues = function() {
         var widgets = this.getWidgets();
         var onValues = [];
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var onValue = widgets[idx].getOnValue();
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var onValue = widgets[idx4].getOnValue();
           if (onValue)
             onValues.push(onValue);
         }
@@ -28330,9 +28279,9 @@ Are you sure you want to download this calendar event?`
     if (!kidDicts)
       return [];
     var kids = [];
-    for (var idx = 0, len = kidDicts.size(); idx < len; idx++) {
-      var ref = kidDicts.get(idx);
-      var dict = kidDicts.lookup(idx);
+    for (var idx4 = 0, len3 = kidDicts.size(); idx4 < len3; idx4++) {
+      var ref = kidDicts.get(idx4);
+      var dict = kidDicts.lookup(idx4);
       if (ref instanceof PDFRef_default && dict instanceof PDFDict_default) {
         kids.push([createPDFAcroField(dict, ref), ref]);
       }
@@ -28348,8 +28297,8 @@ Are you sure you want to download this calendar event?`
   var isNonTerminalAcroField = function(dict) {
     var kids = dict.lookup(PDFName_default.of("Kids"));
     if (kids instanceof PDFArray_default) {
-      for (var idx = 0, len = kids.size(); idx < len; idx++) {
-        var kid = kids.lookup(idx);
+      for (var idx4 = 0, len3 = kids.size(); idx4 < len3; idx4++) {
+        var kid = kids.lookup(idx4);
         var kidIsField = kid instanceof PDFDict_default && kid.has(PDFName_default.of("T"));
         if (kidIsField)
           return true;
@@ -28428,10 +28377,10 @@ Are you sure you want to download this calendar event?`
       PDFAcroForm2.prototype.getFields = function() {
         var Fields = this.normalizedEntries().Fields;
         var fields = new Array(Fields.size());
-        for (var idx = 0, len = Fields.size(); idx < len; idx++) {
-          var ref = Fields.get(idx);
-          var dict = Fields.lookup(idx, PDFDict_default);
-          fields[idx] = [createPDFAcroField(dict, ref), ref];
+        for (var idx4 = 0, len3 = Fields.size(); idx4 < len3; idx4++) {
+          var ref = Fields.get(idx4);
+          var dict = Fields.lookup(idx4, PDFDict_default);
+          fields[idx4] = [createPDFAcroField(dict, ref), ref];
         }
         return fields;
       };
@@ -28440,8 +28389,8 @@ Are you sure you want to download this calendar event?`
         var pushFields = function(fields) {
           if (!fields)
             return;
-          for (var idx = 0, len = fields.length; idx < len; idx++) {
-            var field = fields[idx];
+          for (var idx4 = 0, len3 = fields.length; idx4 < len3; idx4++) {
+            var field = fields[idx4];
             allFields.push(field);
             var fieldModel = field[0];
             if (fieldModel instanceof PDFAcroNonTerminal_default) {
@@ -28589,12 +28538,12 @@ Are you sure you want to download this calendar event?`
           throw new InvalidTargetIndexError(targetIndex, Count);
         }
         var leafsRemainingUntilTarget = targetIndex;
-        for (var idx = 0, len = Kids.size(); idx < len; idx++) {
+        for (var idx4 = 0, len3 = Kids.size(); idx4 < len3; idx4++) {
           if (leafsRemainingUntilTarget === 0) {
-            this.insertLeafKid(idx, leafRef);
+            this.insertLeafKid(idx4, leafRef);
             return void 0;
           }
-          var kidRef = Kids.get(idx);
+          var kidRef = Kids.get(idx4);
           var kid = this.context.lookup(kidRef);
           if (kid instanceof PDFPageTree2) {
             if (kid.Count().asNumber() > leafsRemainingUntilTarget) {
@@ -28623,14 +28572,14 @@ Are you sure you want to download this calendar event?`
           throw new InvalidTargetIndexError(targetIndex, Count);
         }
         var leafsRemainingUntilTarget = targetIndex;
-        for (var idx = 0, len = Kids.size(); idx < len; idx++) {
-          var kidRef = Kids.get(idx);
+        for (var idx4 = 0, len3 = Kids.size(); idx4 < len3; idx4++) {
+          var kidRef = Kids.get(idx4);
           var kid = this.context.lookup(kidRef);
           if (kid instanceof PDFPageTree2) {
             if (kid.Count().asNumber() > leafsRemainingUntilTarget) {
               kid.removeLeafNode(leafsRemainingUntilTarget, prune);
               if (prune && kid.Kids().size() === 0)
-                Kids.remove(idx);
+                Kids.remove(idx4);
               return;
             } else {
               leafsRemainingUntilTarget -= kid.Count().asNumber();
@@ -28638,7 +28587,7 @@ Are you sure you want to download this calendar event?`
           }
           if (kid instanceof PDFPageLeaf_default) {
             if (leafsRemainingUntilTarget === 0) {
-              this.removeKid(idx);
+              this.removeKid(idx4);
               return;
             } else {
               leafsRemainingUntilTarget -= 1;
@@ -28655,8 +28604,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFPageTree2.prototype.traverse = function(visitor) {
         var Kids = this.Kids();
-        for (var idx = 0, len = Kids.size(); idx < len; idx++) {
-          var kidRef = Kids.get(idx);
+        for (var idx4 = 0, len3 = Kids.size(); idx4 < len3; idx4++) {
+          var kidRef = Kids.get(idx4);
           var kid = this.context.lookup(kidRef);
           if (kid instanceof PDFPageTree2)
             kid.traverse(visitor);
@@ -28716,11 +28665,11 @@ Are you sure you want to download this calendar event?`
   IsNumericPrefix[CharCodes_default.Plus] = 1;
   IsNumericPrefix[CharCodes_default.Minus] = 1;
   var IsNumeric = new Uint8Array(256);
-  for (idx = 0, len = 256; idx < len; idx++) {
-    IsNumeric[idx] = IsDigit[idx] || IsNumericPrefix[idx] ? 1 : 0;
+  for (idx3 = 0, len2 = 256; idx3 < len2; idx3++) {
+    IsNumeric[idx3] = IsDigit[idx3] || IsNumericPrefix[idx3] ? 1 : 0;
   }
-  var idx;
-  var len;
+  var idx3;
+  var len2;
 
   // node_modules/pdf-lib/es/core/parser/BaseParser.js
   var Newline = CharCodes_default.Newline;
@@ -28812,8 +28761,8 @@ Are you sure you want to download this calendar event?`
       };
       BaseParser2.prototype.matchKeyword = function(keyword) {
         var initialOffset = this.bytes.offset();
-        for (var idx = 0, len = keyword.length; idx < len; idx++) {
-          if (this.bytes.done() || this.bytes.next() !== keyword[idx]) {
+        for (var idx4 = 0, len3 = keyword.length; idx4 < len3; idx4++) {
+          if (this.bytes.done() || this.bytes.next() !== keyword[idx4]) {
             this.bytes.moveTo(initialOffset);
             return false;
           }
@@ -29178,7 +29127,7 @@ Are you sure you want to download this calendar event?`
       }
       PDFObjectStreamParser2.prototype.parseIntoContext = function() {
         return __awaiter(this, void 0, void 0, function() {
-          var offsetsAndObjectNumbers, idx, len, _a, objectNumber, offset, object, ref;
+          var offsetsAndObjectNumbers, idx4, len3, _a, objectNumber, offset, object, ref;
           return __generator(this, function(_b) {
             switch (_b.label) {
               case 0:
@@ -29187,11 +29136,11 @@ Are you sure you want to download this calendar event?`
                 }
                 this.alreadyParsed = true;
                 offsetsAndObjectNumbers = this.parseOffsetsAndObjectNumbers();
-                idx = 0, len = offsetsAndObjectNumbers.length;
+                idx4 = 0, len3 = offsetsAndObjectNumbers.length;
                 _b.label = 1;
               case 1:
-                if (!(idx < len)) return [3, 4];
-                _a = offsetsAndObjectNumbers[idx], objectNumber = _a.objectNumber, offset = _a.offset;
+                if (!(idx4 < len3)) return [3, 4];
+                _a = offsetsAndObjectNumbers[idx4], objectNumber = _a.objectNumber, offset = _a.offset;
                 this.bytes.moveTo(this.firstOffset + offset);
                 object = this.parseObject();
                 ref = PDFRef_default.of(objectNumber, 0);
@@ -29202,7 +29151,7 @@ Are you sure you want to download this calendar event?`
                 _b.sent();
                 _b.label = 3;
               case 3:
-                idx++;
+                idx4++;
                 return [3, 1];
               case 4:
                 return [
@@ -29215,7 +29164,7 @@ Are you sure you want to download this calendar event?`
       };
       PDFObjectStreamParser2.prototype.parseOffsetsAndObjectNumbers = function() {
         var offsetsAndObjectNumbers = [];
-        for (var idx = 0, len = this.objectCount; idx < len; idx++) {
+        for (var idx4 = 0, len3 = this.objectCount; idx4 < len3; idx4++) {
           this.skipWhitespaceAndComments();
           var objectNumber = this.parseRawInt();
           this.skipWhitespaceAndComments();
@@ -29245,9 +29194,9 @@ Are you sure you want to download this calendar event?`
         var Index = this.dict.lookup(PDFName_default.of("Index"));
         if (Index instanceof PDFArray_default) {
           this.subsections = [];
-          for (var idx = 0, len = Index.size(); idx < len; idx += 2) {
-            var firstObjectNumber = Index.lookup(idx + 0, PDFNumber_default).asNumber();
-            var length_1 = Index.lookup(idx + 1, PDFNumber_default).asNumber();
+          for (var idx4 = 0, len3 = Index.size(); idx4 < len3; idx4 += 2) {
+            var firstObjectNumber = Index.lookup(idx4 + 0, PDFNumber_default).asNumber();
+            var length_1 = Index.lookup(idx4 + 1, PDFNumber_default).asNumber();
             this.subsections.push({ firstObjectNumber, length: length_1 });
           }
         } else {
@@ -29255,8 +29204,8 @@ Are you sure you want to download this calendar event?`
         }
         var W = this.dict.lookup(PDFName_default.of("W"), PDFArray_default);
         this.byteWidths = [-1, -1, -1];
-        for (var idx = 0, len = W.size(); idx < len; idx++) {
-          this.byteWidths[idx] = W.lookup(idx, PDFNumber_default).asNumber();
+        for (var idx4 = 0, len3 = W.size(); idx4 < len3; idx4++) {
+          this.byteWidths[idx4] = W.lookup(idx4, PDFNumber_default).asNumber();
         }
       }
       PDFXRefStreamParser2.prototype.parseIntoContext = function() {
@@ -29280,15 +29229,15 @@ Are you sure you want to download this calendar event?`
           var _b = this.subsections[subsectionIdx], firstObjectNumber = _b.firstObjectNumber, length_2 = _b.length;
           for (var objIdx = 0; objIdx < length_2; objIdx++) {
             var type = 0;
-            for (var idx = 0, len = typeFieldWidth; idx < len; idx++) {
+            for (var idx4 = 0, len3 = typeFieldWidth; idx4 < len3; idx4++) {
               type = type << 8 | this.bytes.next();
             }
             var offset = 0;
-            for (var idx = 0, len = offsetFieldWidth; idx < len; idx++) {
+            for (var idx4 = 0, len3 = offsetFieldWidth; idx4 < len3; idx4++) {
               offset = offset << 8 | this.bytes.next();
             }
             var generationNumber = 0;
-            for (var idx = 0, len = genFieldWidth; idx < len; idx++) {
+            for (var idx4 = 0, len3 = genFieldWidth; idx4 < len3; idx4++) {
               generationNumber = generationNumber << 8 | this.bytes.next();
             }
             if (typeFieldWidth === 0)
@@ -29380,8 +29329,8 @@ Are you sure you want to download this calendar event?`
         var catalog = this.context.lookup(this.context.trailerInfo.Root);
         if (!isValidCatalog(catalog)) {
           var indirectObjects = this.context.enumerateIndirectObjects();
-          for (var idx = 0, len = indirectObjects.length; idx < len; idx++) {
-            var _a = indirectObjects[idx], ref = _a[0], object = _a[1];
+          for (var idx4 = 0, len3 = indirectObjects.length; idx4 < len3; idx4++) {
+            var _a = indirectObjects[idx4], ref = _a[0], object = _a[1];
             if (isValidCatalog(object)) {
               this.context.trailerInfo.Root = ref;
             }
@@ -30056,8 +30005,8 @@ Are you sure you want to download this calendar event?`
   var apply = function(commands) {
     cx = cy = px = py = sx = sy = 0;
     var cmds = [];
-    for (var i = 0; i < commands.length; i++) {
-      var c = commands[i];
+    for (var i3 = 0; i3 < commands.length; i3++) {
+      var c = commands[i3];
       if (c.cmd && typeof runners[c.cmd] === "function") {
         var cmd = runners[c.cmd](c.args);
         if (Array.isArray(cmd)) {
@@ -30281,10 +30230,10 @@ Are you sure you want to download this calendar event?`
     }
     var segments = Math.ceil(Math.abs(thArc / (Math.PI * 0.5 + 1e-3)));
     var result = [];
-    for (var i = 0; i < segments; i++) {
-      var th2 = th0 + i * thArc / segments;
-      var th3 = th0 + (i + 1) * thArc / segments;
-      result[i] = [xc, yc, th2, th3, rx, ry, sinTh, cosTh];
+    for (var i3 = 0; i3 < segments; i3++) {
+      var th2 = th0 + i3 * thArc / segments;
+      var th3 = th0 + (i3 + 1) * thArc / segments;
+      result[i3] = [xc, yc, th2, th3, rx, ry, sinTh, cosTh];
     }
     return result;
   };
@@ -30326,8 +30275,8 @@ Are you sure you want to download this calendar event?`
       setLineHeight(options.lineHeight),
       rotateAndSkewTextRadiansAndTranslate(toRadians(options.rotate), toRadians(options.xSkew), toRadians(options.ySkew), options.x, options.y)
     ].filter(Boolean);
-    for (var idx = 0, len = lines.length; idx < len; idx++) {
-      operators.push(showText(lines[idx]), nextLine());
+    for (var idx4 = 0, len3 = lines.length; idx4 < len3; idx4++) {
+      operators.push(showText(lines[idx4]), nextLine());
     }
     operators.push(endText(), popGraphicsState());
     return operators;
@@ -30610,8 +30559,8 @@ Are you sure you want to download this calendar event?`
       setFillingColor(options.color),
       setFontAndSize(options.font, options.size)
     ];
-    for (var idx = 0, len = lines.length; idx < len; idx++) {
-      var _a = lines[idx], encoded = _a.encoded, x = _a.x, y = _a.y;
+    for (var idx4 = 0, len3 = lines.length; idx4 < len3; idx4++) {
+      var _a = lines[idx4], encoded = _a.encoded, x = _a.x, y = _a.y;
       operators.push(rotateAndSkewTextRadiansAndTranslate(toRadians(options.rotate), toRadians(options.xSkew), toRadians(options.ySkew), x, y), showText(encoded));
     }
     operators.push(endText());
@@ -30704,8 +30653,8 @@ Are you sure you want to download this calendar event?`
       ySkew: degrees(0)
     });
     var highlights = [];
-    for (var idx = 0, len = options.selectedLines.length; idx < len; idx++) {
-      var line = options.textLines[options.selectedLines[idx]];
+    for (var idx4 = 0, len3 = options.selectedLines.length; idx4 < len3; idx4++) {
+      var line = options.textLines[options.selectedLines[idx4]];
       highlights.push.apply(highlights, drawRectangle({
         x: line.x - padding,
         y: line.y - (lineHeight - line.height) / 2,
@@ -30951,9 +30900,9 @@ Are you sure you want to download this calendar event?`
         var line = lines[lineIdx];
         var words = line.split(" ");
         var spaceInLineRemaining = bounds.width;
-        for (var idx = 0, len = words.length; idx < len; idx++) {
-          var isLastWord = idx === len - 1;
-          var word = isLastWord ? words[idx] : words[idx] + " ";
+        for (var idx4 = 0, len3 = words.length; idx4 < len3; idx4++) {
+          var isLastWord = idx4 === len3 - 1;
+          var word = isLastWord ? words[idx4] : words[idx4] + " ";
           var widthOfWord = font.widthOfTextAtSize(word, fontSize);
           spaceInLineRemaining -= widthOfWord;
           if (spaceInLineRemaining <= 0) {
@@ -30979,8 +30928,8 @@ Are you sure you want to download this calendar event?`
     var fontSize = MIN_FONT_SIZE;
     var chars3 = charSplit(line);
     while (fontSize < MAX_FONT_SIZE) {
-      for (var idx = 0, len = chars3.length; idx < len; idx++) {
-        var c = chars3[idx];
+      for (var idx4 = 0, len3 = chars3.length; idx4 < len3; idx4++) {
+        var c = chars3[idx4];
         var tooLong = font.widthOfTextAtSize(c, fontSize) > cellWidth * 0.75;
         if (tooLong)
           return fontSize - 1;
@@ -30993,9 +30942,9 @@ Are you sure you want to download this calendar event?`
     return fontSize;
   };
   var lastIndexOfWhitespace = function(line) {
-    for (var idx = line.length; idx > 0; idx--) {
-      if (/\s/.test(line[idx]))
-        return idx;
+    for (var idx4 = line.length; idx4 > 0; idx4--) {
+      if (/\s/.test(line[idx4]))
+        return idx4;
     }
     return void 0;
   };
@@ -31033,8 +30982,8 @@ Are you sure you want to download this calendar event?`
     var maxX = bounds.x + bounds.width;
     var maxY = bounds.y + bounds.height;
     var y = bounds.y + bounds.height;
-    for (var idx = 0, len = lines.length; idx < len; idx++) {
-      var prevRemainder = lines[idx];
+    for (var idx4 = 0, len3 = lines.length; idx4 < len3; idx4++) {
+      var prevRemainder = lines[idx4];
       while (prevRemainder !== void 0) {
         var _b = splitOutLines(prevRemainder, bounds.width, font, fontSize), line = _b.line, encoded = _b.encoded, width = _b.width, remainder = _b.remainder;
         var x = alignment === TextAlignment.Left ? bounds.x : alignment === TextAlignment.Center ? bounds.x + bounds.width / 2 - width / 2 : alignment === TextAlignment.Right ? bounds.x + bounds.width - width : bounds.x;
@@ -31464,9 +31413,9 @@ Are you sure you want to download this calendar event?`
     if (optionList.isSorted())
       options.sort();
     var text2 = "";
-    for (var idx = 0, len = options.length; idx < len; idx++) {
-      text2 += options[idx];
-      if (idx < len - 1)
+    for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
+      text2 += options[idx4];
+      if (idx4 < len3 - 1)
         text2 += "\n";
     }
     var padding = 1;
@@ -31483,10 +31432,10 @@ Are you sure you want to download this calendar event?`
       bounds
     }), lines = _d.lines, fontSize = _d.fontSize, lineHeight = _d.lineHeight;
     var selectedLines = [];
-    for (var idx = 0, len = lines.length; idx < len; idx++) {
-      var line = lines[idx];
+    for (var idx4 = 0, len3 = lines.length; idx4 < len3; idx4++) {
+      var line = lines[idx4];
       if (selected.includes(line.text))
-        selectedLines.push(idx);
+        selectedLines.push(idx4);
     }
     var blue = rgb(153 / 255, 193 / 255, 218 / 255);
     var textColor = (_b = widgetColor !== null && widgetColor !== void 0 ? widgetColor : fieldColor) !== null && _b !== void 0 ? _b : black;
@@ -31989,8 +31938,8 @@ Are you sure you want to download this calendar event?`
       PDFCheckBox2.prototype.needsAppearancesUpdate = function() {
         var _a;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var state = widget.getAppearanceState();
           var normal = (_a = widget.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal;
           if (!(normal instanceof PDFDict_default))
@@ -32007,8 +31956,8 @@ Are you sure you want to download this calendar event?`
         var _a;
         assertOrUndefined(provider, "provider", [Function]);
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var onValue = (_a = widget.getOnValue()) !== null && _a !== void 0 ? _a : PDFName_default.of("Yes");
           if (!onValue)
             continue;
@@ -32045,25 +31994,25 @@ Are you sure you want to download this calendar event?`
       PDFDropdown2.prototype.getOptions = function() {
         var rawOptions = this.acroField.getOptions();
         var options = new Array(rawOptions.length);
-        for (var idx = 0, len = options.length; idx < len; idx++) {
-          var _a = rawOptions[idx], display = _a.display, value2 = _a.value;
-          options[idx] = (display !== null && display !== void 0 ? display : value2).decodeText();
+        for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
+          var _a = rawOptions[idx4], display = _a.display, value2 = _a.value;
+          options[idx4] = (display !== null && display !== void 0 ? display : value2).decodeText();
         }
         return options;
       };
       PDFDropdown2.prototype.getSelected = function() {
         var values2 = this.acroField.getValues();
         var selected = new Array(values2.length);
-        for (var idx = 0, len = values2.length; idx < len; idx++) {
-          selected[idx] = values2[idx].decodeText();
+        for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+          selected[idx4] = values2[idx4].decodeText();
         }
         return selected;
       };
       PDFDropdown2.prototype.setOptions = function(options) {
         assertIs(options, "options", [Array]);
         var optionObjects = new Array(options.length);
-        for (var idx = 0, len = options.length; idx < len; idx++) {
-          optionObjects[idx] = { value: PDFHexString_default.fromText(options[idx]) };
+        for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
+          optionObjects[idx4] = { value: PDFHexString_default.fromText(options[idx4]) };
         }
         this.acroField.setOptions(optionObjects);
       };
@@ -32072,8 +32021,8 @@ Are you sure you want to download this calendar event?`
         var optionsArr = Array.isArray(options) ? options : [options];
         var existingOptions = this.acroField.getOptions();
         var newOptions = new Array(optionsArr.length);
-        for (var idx = 0, len = optionsArr.length; idx < len; idx++) {
-          newOptions[idx] = { value: PDFHexString_default.fromText(optionsArr[idx]) };
+        for (var idx4 = 0, len3 = optionsArr.length; idx4 < len3; idx4++) {
+          newOptions[idx4] = { value: PDFHexString_default.fromText(optionsArr[idx4]) };
         }
         this.acroField.setOptions(existingOptions.concat(newOptions));
       };
@@ -32095,8 +32044,8 @@ Are you sure you want to download this calendar event?`
           this.enableMultiselect();
         }
         var values2 = new Array(optionsArr.length);
-        for (var idx = 0, len = optionsArr.length; idx < len; idx++) {
-          values2[idx] = PDFHexString_default.fromText(optionsArr[idx]);
+        for (var idx4 = 0, len3 = optionsArr.length; idx4 < len3; idx4++) {
+          values2[idx4] = PDFHexString_default.fromText(optionsArr[idx4]);
         }
         if (merge) {
           var existingValues = this.acroField.getValues();
@@ -32197,8 +32146,8 @@ Are you sure you want to download this calendar event?`
         if (this.isDirty())
           return true;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var hasAppearances = ((_a = widget.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal) instanceof PDFStream_default;
           if (!hasAppearances)
             return true;
@@ -32213,8 +32162,8 @@ Are you sure you want to download this calendar event?`
         assertIs(font, "font", [[PDFFont_default, "PDFFont"]]);
         assertOrUndefined(provider, "provider", [Function]);
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           this.updateWidgetAppearance(widget, font, provider);
         }
         this.markAsClean();
@@ -32246,17 +32195,17 @@ Are you sure you want to download this calendar event?`
       PDFOptionList2.prototype.getOptions = function() {
         var rawOptions = this.acroField.getOptions();
         var options = new Array(rawOptions.length);
-        for (var idx = 0, len = options.length; idx < len; idx++) {
-          var _a = rawOptions[idx], display = _a.display, value2 = _a.value;
-          options[idx] = (display !== null && display !== void 0 ? display : value2).decodeText();
+        for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
+          var _a = rawOptions[idx4], display = _a.display, value2 = _a.value;
+          options[idx4] = (display !== null && display !== void 0 ? display : value2).decodeText();
         }
         return options;
       };
       PDFOptionList2.prototype.getSelected = function() {
         var values2 = this.acroField.getValues();
         var selected = new Array(values2.length);
-        for (var idx = 0, len = values2.length; idx < len; idx++) {
-          selected[idx] = values2[idx].decodeText();
+        for (var idx4 = 0, len3 = values2.length; idx4 < len3; idx4++) {
+          selected[idx4] = values2[idx4].decodeText();
         }
         return selected;
       };
@@ -32264,8 +32213,8 @@ Are you sure you want to download this calendar event?`
         assertIs(options, "options", [Array]);
         this.markAsDirty();
         var optionObjects = new Array(options.length);
-        for (var idx = 0, len = options.length; idx < len; idx++) {
-          optionObjects[idx] = { value: PDFHexString_default.fromText(options[idx]) };
+        for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
+          optionObjects[idx4] = { value: PDFHexString_default.fromText(options[idx4]) };
         }
         this.acroField.setOptions(optionObjects);
       };
@@ -32275,8 +32224,8 @@ Are you sure you want to download this calendar event?`
         var optionsArr = Array.isArray(options) ? options : [options];
         var existingOptions = this.acroField.getOptions();
         var newOptions = new Array(optionsArr.length);
-        for (var idx = 0, len = optionsArr.length; idx < len; idx++) {
-          newOptions[idx] = { value: PDFHexString_default.fromText(optionsArr[idx]) };
+        for (var idx4 = 0, len3 = optionsArr.length; idx4 < len3; idx4++) {
+          newOptions[idx4] = { value: PDFHexString_default.fromText(optionsArr[idx4]) };
         }
         this.acroField.setOptions(existingOptions.concat(newOptions));
       };
@@ -32294,8 +32243,8 @@ Are you sure you want to download this calendar event?`
           this.enableMultiselect();
         }
         var values2 = new Array(optionsArr.length);
-        for (var idx = 0, len = optionsArr.length; idx < len; idx++) {
-          values2[idx] = PDFHexString_default.fromText(optionsArr[idx]);
+        for (var idx4 = 0, len3 = optionsArr.length; idx4 < len3; idx4++) {
+          values2[idx4] = PDFHexString_default.fromText(optionsArr[idx4]);
         }
         if (merge) {
           var existingValues = this.acroField.getValues();
@@ -32378,8 +32327,8 @@ Are you sure you want to download this calendar event?`
         if (this.isDirty())
           return true;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var hasAppearances = ((_a = widget.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal) instanceof PDFStream_default;
           if (!hasAppearances)
             return true;
@@ -32394,8 +32343,8 @@ Are you sure you want to download this calendar event?`
         assertIs(font, "font", [[PDFFont_default, "PDFFont"]]);
         assertOrUndefined(provider, "provider", [Function]);
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           this.updateWidgetAppearance(widget, font, provider);
         }
         this.markAsClean();
@@ -32430,15 +32379,15 @@ Are you sure you want to download this calendar event?`
         var exportValues = this.acroField.getExportValues();
         if (exportValues) {
           var exportOptions = new Array(exportValues.length);
-          for (var idx = 0, len = exportValues.length; idx < len; idx++) {
-            exportOptions[idx] = exportValues[idx].decodeText();
+          for (var idx4 = 0, len3 = exportValues.length; idx4 < len3; idx4++) {
+            exportOptions[idx4] = exportValues[idx4].decodeText();
           }
           return exportOptions;
         }
         var onValues = this.acroField.getOnValues();
         var onOptions = new Array(onValues.length);
-        for (var idx = 0, len = onOptions.length; idx < len; idx++) {
-          onOptions[idx] = onValues[idx].decodeText();
+        for (var idx4 = 0, len3 = onOptions.length; idx4 < len3; idx4++) {
+          onOptions[idx4] = onValues[idx4].decodeText();
         }
         return onOptions;
       };
@@ -32449,9 +32398,9 @@ Are you sure you want to download this calendar event?`
         var exportValues = this.acroField.getExportValues();
         if (exportValues) {
           var onValues = this.acroField.getOnValues();
-          for (var idx = 0, len = onValues.length; idx < len; idx++) {
-            if (onValues[idx] === value2)
-              return exportValues[idx].decodeText();
+          for (var idx4 = 0, len3 = onValues.length; idx4 < len3; idx4++) {
+            if (onValues[idx4] === value2)
+              return exportValues[idx4].decodeText();
           }
         }
         return value2.decodeText();
@@ -32464,14 +32413,14 @@ Are you sure you want to download this calendar event?`
         var onValues = this.acroField.getOnValues();
         var exportValues = this.acroField.getExportValues();
         if (exportValues) {
-          for (var idx = 0, len = exportValues.length; idx < len; idx++) {
-            if (exportValues[idx].decodeText() === option) {
-              this.acroField.setValue(onValues[idx]);
+          for (var idx4 = 0, len3 = exportValues.length; idx4 < len3; idx4++) {
+            if (exportValues[idx4].decodeText() === option) {
+              this.acroField.setValue(onValues[idx4]);
             }
           }
         } else {
-          for (var idx = 0, len = onValues.length; idx < len; idx++) {
-            var value2 = onValues[idx];
+          for (var idx4 = 0, len3 = onValues.length; idx4 < len3; idx4++) {
+            var value2 = onValues[idx4];
             if (value2.decodeText() === option)
               this.acroField.setValue(value2);
           }
@@ -32526,8 +32475,8 @@ Are you sure you want to download this calendar event?`
       PDFRadioGroup2.prototype.needsAppearancesUpdate = function() {
         var _a;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var state = widget.getAppearanceState();
           var normal = (_a = widget.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal;
           if (!(normal instanceof PDFDict_default))
@@ -32543,8 +32492,8 @@ Are you sure you want to download this calendar event?`
       PDFRadioGroup2.prototype.updateAppearances = function(provider) {
         assertOrUndefined(provider, "provider", [Function]);
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var onValue = widget.getOnValue();
           if (!onValue)
             continue;
@@ -32653,8 +32602,8 @@ Are you sure you want to download this calendar event?`
         var fieldAlignment = this.getAlignment();
         var alignment = fieldAlignment === TextAlignment.Center ? ImageAlignment.Center : fieldAlignment === TextAlignment.Right ? ImageAlignment.Right : ImageAlignment.Left;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var streamRef = this.createImageAppearanceStream(widget, image, alignment);
           this.updateWidgetAppearances(widget, { normal: streamRef });
         }
@@ -32777,8 +32726,8 @@ Are you sure you want to download this calendar event?`
         if (this.isDirty())
           return true;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var hasAppearances = ((_a = widget.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal) instanceof PDFStream_default;
           if (!hasAppearances)
             return true;
@@ -32793,8 +32742,8 @@ Are you sure you want to download this calendar event?`
         assertIs(font, "font", [[PDFFont_default, "PDFFont"]]);
         assertOrUndefined(provider, "provider", [Function]);
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           this.updateWidgetAppearance(widget, font, provider);
         }
         this.markAsClean();
@@ -32856,8 +32805,8 @@ Are you sure you want to download this calendar event?`
       PDFForm2.prototype.getFields = function() {
         var allFields = this.acroForm.getAllFields();
         var fields = [];
-        for (var idx = 0, len = allFields.length; idx < len; idx++) {
-          var _a = allFields[idx], acroField = _a[0], ref = _a[1];
+        for (var idx4 = 0, len3 = allFields.length; idx4 < len3; idx4++) {
+          var _a = allFields[idx4], acroField = _a[0], ref = _a[1];
           var field = convertToPDFField(acroField, ref, this.doc);
           if (field)
             fields.push(field);
@@ -32867,8 +32816,8 @@ Are you sure you want to download this calendar event?`
       PDFForm2.prototype.getFieldMaybe = function(name) {
         assertIs(name, "name", ["string"]);
         var fields = this.getFields();
-        for (var idx = 0, len = fields.length; idx < len; idx++) {
-          var field = fields[idx];
+        for (var idx4 = 0, len3 = fields.length; idx4 < len3; idx4++) {
+          var field = fields[idx4];
           if (field.getName() === name)
             return field;
         }
@@ -32992,8 +32941,8 @@ Are you sure you want to download this calendar event?`
           this.updateFieldAppearances();
         }
         var fields = this.getFields();
-        for (var i = 0, lenFields = fields.length; i < lenFields; i++) {
-          var field = fields[i];
+        for (var i3 = 0, lenFields = fields.length; i3 < lenFields; i3++) {
+          var field = fields[i3];
           var widgets = field.acroField.getWidgets();
           for (var j = 0, lenWidgets = widgets.length; j < lenWidgets; j++) {
             var widget = widgets[j];
@@ -33016,8 +32965,8 @@ Are you sure you want to download this calendar event?`
       PDFForm2.prototype.removeField = function(field) {
         var widgets = field.acroField.getWidgets();
         var pages = /* @__PURE__ */ new Set();
-        for (var i = 0, len = widgets.length; i < len; i++) {
-          var widget = widgets[i];
+        for (var i3 = 0, len3 = widgets.length; i3 < len3; i3++) {
+          var widget = widgets[i3];
           var widgetRef = this.findWidgetAppearanceRef(field, widget);
           var page = this.findWidgetPage(widget);
           pages.add(page);
@@ -33041,8 +32990,8 @@ Are you sure you want to download this calendar event?`
         assertOrUndefined(font, "font", [[PDFFont_default, "PDFFont"]]);
         font = font !== null && font !== void 0 ? font : this.getDefaultFont();
         var fields = this.getFields();
-        for (var idx = 0, len = fields.length; idx < len; idx++) {
-          var field = fields[idx];
+        for (var idx4 = 0, len3 = fields.length; idx4 < len3; idx4++) {
+          var field = fields[idx4];
           if (field.needsAppearancesUpdate()) {
             field.defaultUpdateAppearances(font);
           }
@@ -33100,8 +33049,8 @@ Are you sure you want to download this calendar event?`
         var nonTerminal = [
           this.acroForm
         ];
-        for (var idx = 0, len = partialNames.length; idx < len; idx++) {
-          var namePart = partialNames[idx];
+        for (var idx4 = 0, len3 = partialNames.length; idx4 < len3; idx4++) {
+          var namePart = partialNames[idx4];
           if (!namePart)
             throw new InvalidFieldNamePartError(namePart);
           var parent_1 = nonTerminal[0], parentRef = nonTerminal[1];
@@ -33121,8 +33070,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFForm2.prototype.findNonTerminal = function(partialName, parent) {
         var fields = parent instanceof PDFAcroForm_default ? this.acroForm.getFields() : createPDFAcroFields(parent.Kids());
-        for (var idx = 0, len = fields.length; idx < len; idx++) {
-          var _a = fields[idx], field = _a[0], ref = _a[1];
+        for (var idx4 = 0, len3 = fields.length; idx4 < len3; idx4++) {
+          var _a = fields[idx4], field = _a[0], ref = _a[1];
           if (field.getPartialName() === partialName) {
             if (field instanceof PDFAcroNonTerminal_default)
               return [field, ref];
@@ -33162,8 +33111,8 @@ Are you sure you want to download this calendar event?`
       throw new Error("PDF field names must not be empty strings");
     }
     var parts = fullyQualifiedName.split(".");
-    for (var idx = 0, len = parts.length; idx < len; idx++) {
-      if (parts[idx] === "") {
+    for (var idx4 = 0, len3 = parts.length; idx4 < len3; idx4++) {
+      if (parts[idx4] === "") {
         throw new Error('Periods in PDF field names must be separated by at least one character: "' + fullyQualifiedName + '"');
       }
     }
@@ -33179,8 +33128,8 @@ Are you sure you want to download this calendar event?`
     var field = _b[0], fieldRef = _b[1];
     var entries = parent.normalizedEntries();
     var fields = createPDFAcroFields("Kids" in entries ? entries.Kids : entries.Fields);
-    for (var idx = 0, len = fields.length; idx < len; idx++) {
-      if (fields[idx][0].getPartialName() === partialName) {
+    for (var idx4 = 0, len3 = fields.length; idx4 < len3; idx4++) {
+      if (fields[idx4][0].getPartialName() === partialName) {
         throw new FieldAlreadyExistsError(partialName);
       }
     }
@@ -33648,7 +33597,7 @@ Are you sure you want to download this calendar event?`
       };
       PDFDocument2.prototype.copyPages = function(srcDoc, indices) {
         return __awaiter(this, void 0, void 0, function() {
-          var copier, srcPages, copiedPages, idx, len, srcPage, copiedPage, ref;
+          var copier, srcPages, copiedPages, idx4, len3, srcPage, copiedPage, ref;
           return __generator(this, function(_a) {
             switch (_a.label) {
               case 0:
@@ -33660,11 +33609,11 @@ Are you sure you want to download this calendar event?`
                 copier = PDFObjectCopier_default.for(srcDoc.context, this.context);
                 srcPages = srcDoc.getPages();
                 copiedPages = new Array(indices.length);
-                for (idx = 0, len = indices.length; idx < len; idx++) {
-                  srcPage = srcPages[indices[idx]];
+                for (idx4 = 0, len3 = indices.length; idx4 < len3; idx4++) {
+                  srcPage = srcPages[indices[idx4]];
                   copiedPage = copier.copy(srcPage.node);
                   ref = this.context.register(copiedPage);
-                  copiedPages[idx] = PDFPage_default.of(copiedPage, ref, this);
+                  copiedPages[idx4] = PDFPage_default.of(copiedPage, ref, this);
                 }
                 return [2, copiedPages];
             }
@@ -33673,7 +33622,7 @@ Are you sure you want to download this calendar event?`
       };
       PDFDocument2.prototype.copy = function() {
         return __awaiter(this, void 0, void 0, function() {
-          var pdfCopy, contentPages, idx, len;
+          var pdfCopy, contentPages, idx4, len3;
           return __generator(this, function(_a) {
             switch (_a.label) {
               case 0:
@@ -33683,8 +33632,8 @@ Are you sure you want to download this calendar event?`
                 return [4, pdfCopy.copyPages(this, this.getPageIndices())];
               case 2:
                 contentPages = _a.sent();
-                for (idx = 0, len = contentPages.length; idx < len; idx++) {
-                  pdfCopy.addPage(contentPages[idx]);
+                for (idx4 = 0, len3 = contentPages.length; idx4 < len3; idx4++) {
+                  pdfCopy.addPage(contentPages[idx4]);
                 }
                 if (this.getAuthor() !== void 0) {
                   pdfCopy.setAuthor(this.getAuthor());
@@ -33896,16 +33845,16 @@ Are you sure you want to download this calendar event?`
           transformationMatrices = [];
         }
         return __awaiter(this, void 0, void 0, function() {
-          var idx, len, currPage, nextPage, context, maybeCopyPage, embeddedPages, idx, len, page, box, matrix, embedder, ref;
+          var idx4, len3, currPage, nextPage, context, maybeCopyPage, embeddedPages, idx4, len3, page, box, matrix, embedder, ref;
           var _a;
           return __generator(this, function(_b) {
             switch (_b.label) {
               case 0:
                 if (pages.length === 0)
                   return [2, []];
-                for (idx = 0, len = pages.length - 1; idx < len; idx++) {
-                  currPage = pages[idx];
-                  nextPage = pages[idx + 1];
+                for (idx4 = 0, len3 = pages.length - 1; idx4 < len3; idx4++) {
+                  currPage = pages[idx4];
+                  nextPage = pages[idx4 + 1];
                   if (currPage.node.context !== nextPage.node.context) {
                     throw new PageEmbeddingMismatchedContextError();
                   }
@@ -33915,21 +33864,21 @@ Are you sure you want to download this calendar event?`
                   return p;
                 } : PDFObjectCopier_default.for(context, this.context).copy;
                 embeddedPages = new Array(pages.length);
-                idx = 0, len = pages.length;
+                idx4 = 0, len3 = pages.length;
                 _b.label = 1;
               case 1:
-                if (!(idx < len)) return [3, 4];
-                page = maybeCopyPage(pages[idx].node);
-                box = boundingBoxes[idx];
-                matrix = transformationMatrices[idx];
+                if (!(idx4 < len3)) return [3, 4];
+                page = maybeCopyPage(pages[idx4].node);
+                box = boundingBoxes[idx4];
+                matrix = transformationMatrices[idx4];
                 return [4, PDFPageEmbedder_default.for(page, box, matrix)];
               case 2:
                 embedder = _b.sent();
                 ref = this.context.nextRef();
-                embeddedPages[idx] = PDFEmbeddedPage_default.of(ref, this, embedder);
+                embeddedPages[idx4] = PDFEmbeddedPage_default.of(ref, this, embedder);
                 _b.label = 3;
               case 3:
-                idx++;
+                idx4++;
                 return [3, 1];
               case 4:
                 (_a = this.embeddedPages).push.apply(_a, embeddedPages);
@@ -34018,8 +33967,8 @@ Are you sure you want to download this calendar event?`
       };
       PDFDocument2.prototype.findPageForAnnotationRef = function(ref) {
         var pages = this.getPages();
-        for (var idx = 0, len = pages.length; idx < len; idx++) {
-          var page = pages[idx];
+        for (var idx4 = 0, len3 = pages.length; idx4 < len3; idx4++) {
+          var page = pages[idx4];
           var annotations = page.node.Annots();
           if ((annotations === null || annotations === void 0 ? void 0 : annotations.indexOf(ref)) !== void 0) {
             return page;
@@ -34029,20 +33978,20 @@ Are you sure you want to download this calendar event?`
       };
       PDFDocument2.prototype.embedAll = function(embeddables) {
         return __awaiter(this, void 0, void 0, function() {
-          var idx, len;
+          var idx4, len3;
           return __generator(this, function(_a) {
             switch (_a.label) {
               case 0:
-                idx = 0, len = embeddables.length;
+                idx4 = 0, len3 = embeddables.length;
                 _a.label = 1;
               case 1:
-                if (!(idx < len)) return [3, 4];
-                return [4, embeddables[idx].embed()];
+                if (!(idx4 < len3)) return [3, 4];
+                return [4, embeddables[idx4].embed()];
               case 2:
                 _a.sent();
                 _a.label = 3;
               case 3:
-                idx++;
+                idx4++;
                 return [3, 1];
               case 4:
                 return [
@@ -34273,8 +34222,8 @@ Are you sure you want to download this calendar event?`
         var annots = this.node.Annots();
         if (!annots)
           return;
-        for (var idx = 0; idx < annots.size(); idx++) {
-          var annot = annots.lookup(idx);
+        for (var idx4 = 0; idx4 < annots.size(); idx4++) {
+          var annot = annots.lookup(idx4);
           if (annot instanceof PDFDict_default)
             this.scaleAnnot(annot, x, y);
         }
@@ -34368,8 +34317,8 @@ Are you sure you want to download this calendar event?`
         };
         var lines = options.maxWidth === void 0 ? lineSplit(cleanText4(text2)) : breakTextIntoLines(text2, wordBreaks, options.maxWidth, textWidth);
         var encodedLines = new Array(lines.length);
-        for (var idx = 0, len = lines.length; idx < len; idx++) {
-          encodedLines[idx] = newFont.encodeText(lines[idx]);
+        for (var idx4 = 0, len3 = lines.length; idx4 < len3; idx4++) {
+          encodedLines[idx4] = newFont.encodeText(lines[idx4]);
         }
         var graphicsStateKey = this.maybeEmbedGraphicsState({
           opacity: options.opacity,
@@ -34727,15 +34676,15 @@ Are you sure you want to download this calendar event?`
       };
       PDFPage2.prototype.scaleAnnot = function(annot, x, y) {
         var selectors = ["RD", "CL", "Vertices", "QuadPoints", "L", "Rect"];
-        for (var idx = 0, len = selectors.length; idx < len; idx++) {
-          var list = annot.lookup(PDFName_default.of(selectors[idx]));
+        for (var idx4 = 0, len3 = selectors.length; idx4 < len3; idx4++) {
+          var list = annot.lookup(PDFName_default.of(selectors[idx4]));
           if (list instanceof PDFArray_default)
             list.scalePDFNumbers(x, y);
         }
         var inkLists = annot.lookup(PDFName_default.of("InkList"));
         if (inkLists instanceof PDFArray_default) {
-          for (var idx = 0, len = inkLists.size(); idx < len; idx++) {
-            var arr = inkLists.lookup(idx);
+          for (var idx4 = 0, len3 = inkLists.size(); idx4 < len3; idx4++) {
+            var arr = inkLists.lookup(idx4);
             if (arr instanceof PDFArray_default)
               arr.scalePDFNumbers(x, y);
           }
@@ -34774,8 +34723,8 @@ Are you sure you want to download this calendar event?`
           alignment = ImageAlignment.Center;
         }
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var streamRef = this.createImageAppearanceStream(widget, image, alignment);
           this.updateWidgetAppearances(widget, { normal: streamRef });
         }
@@ -34816,8 +34765,8 @@ Are you sure you want to download this calendar event?`
         if (this.isDirty())
           return true;
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           var hasAppearances = ((_a = widget.getAppearances()) === null || _a === void 0 ? void 0 : _a.normal) instanceof PDFStream_default;
           if (!hasAppearances)
             return true;
@@ -34832,8 +34781,8 @@ Are you sure you want to download this calendar event?`
         assertIs(font, "font", [[PDFFont_default, "PDFFont"]]);
         assertOrUndefined(provider, "provider", [Function]);
         var widgets = this.acroField.getWidgets();
-        for (var idx = 0, len = widgets.length; idx < len; idx++) {
-          var widget = widgets[idx];
+        for (var idx4 = 0, len3 = widgets.length; idx4 < len3; idx4++) {
+          var widget = widgets[idx4];
           this.updateWidgetAppearance(widget, font, provider);
         }
       };
@@ -35474,9 +35423,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     (function walk(winRef) {
       if (!winRef) return;
       frames.push(winRef);
-      const len = safe(() => winRef.frames.length, 0);
-      for (let i = 0; i < len; i += 1) {
-        walk(safe(() => winRef.frames[i], null));
+      const len3 = safe(() => winRef.frames.length, 0);
+      for (let i3 = 0; i3 < len3; i3 += 1) {
+        walk(safe(() => winRef.frames[i3], null));
       }
     })(topWin);
     const candidates = frames.filter((w) => safe(() => !!w.g_form?.getTableName(), false)).map((w) => {
@@ -35606,8 +35555,8 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   }
   function getCell(cells, headerMap, names = [], fallback = -1) {
     for (const name of names) {
-      const idx = headerMap.get(normalizeHeader(name));
-      if (typeof idx === "number" && idx >= 0) return cells[idx] || "";
+      const idx4 = headerMap.get(normalizeHeader(name));
+      if (typeof idx4 === "number" && idx4 >= 0) return cells[idx4] || "";
     }
     return fallback >= 0 ? cells[fallback] || "" : "";
   }
@@ -35871,7 +35820,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       seen.add(win);
       result.push(win);
       const length = safe2(() => win.frames?.length, 0) || 0;
-      for (let i = 0; i < length; i += 1) walk(safe2(() => win.frames[i], null));
+      for (let i3 = 0; i3 < length; i3 += 1) walk(safe2(() => win.frames[i3], null));
     })(top);
     return result;
   }
@@ -36128,23 +36077,8 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       state.ui.assistantHidden = false;
     }
   }
-  function setSettingsSection(state, section) {
-    state.ui.settingsSection = section;
-  }
-  function setActiveCategory2(state, category) {
-    state.ui.activeCategory = category;
-  }
   function setSelectedTemplate2(state, { category, templateId }) {
     state.ui.selectedTemplates[category] = templateId;
-  }
-  function setEditingTemplate(state, { category, templateId }) {
-    state.ui.editingTemplate = { category, templateId };
-  }
-  function clearEditingTemplate(state) {
-    state.ui.editingTemplate = { category: "", templateId: "" };
-  }
-  function setTemplateManagerCategory(state, category) {
-    state.ui.templateManagerCategory = category;
   }
   function openWorkNotes(state, { templateId, draftText, generatedTemplateId }) {
     state.ui.panelOpen = false;
@@ -36285,27 +36219,15 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   function setWorkNotesRecentPhrasesReset(state, value2 = true) {
     state.ui.workNotesRecentPhrasesReset = Boolean(value2);
   }
-  function setSettingsDraft2(state, draft) {
-    state.ui.settingsDraft = draft;
-  }
-  function closeSettingsModal(state) {
-    state.ui.settingsOpen = false;
-    state.ui.settingsMandatory = false;
-    state.ui.settingsDraft = null;
-    state.ui.assistantHidden = false;
-  }
-  function setFavoriteTemplates(state, list) {
-    state.ui.favoriteTemplates = Array.isArray(list) ? list : null;
-  }
   function patchContext(state, patch) {
     state.context = { ...state.context || {}, ...patch || {} };
   }
   function setContext(state, nextContext) {
     state.context = nextContext;
   }
-  function cachePiByRecord(state, { recordKey, value: value2 }) {
-    if (!recordKey) return;
-    state.caches.piByRecord[recordKey] = value2;
+  function cachePiByRecord(state, { recordKey: recordKey2, value: value2 }) {
+    if (!recordKey2) return;
+    state.caches.piByRecord[recordKey2] = value2;
   }
   function setHeaderCountsLoading(state, loading) {
     if (!state.ui.headerCounts) {
@@ -36314,7 +36236,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     state.ui.headerCounts.loading = Boolean(loading);
     if (loading) state.ui.headerCounts.error = false;
   }
-  function setHeaderCounts(state, { inc = 0, task = 0, recordKey = "" } = {}) {
+  function setHeaderCounts(state, { inc = 0, task = 0, recordKey: recordKey2 = "" } = {}) {
     const prev = state.ui.headerCounts || {};
     state.ui.headerCounts = {
       inc: Number.isFinite(inc) ? Math.max(0, Math.trunc(inc)) : 0,
@@ -36322,20 +36244,20 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       loading: false,
       ready: true,
       error: false,
-      recordKey: String(recordKey || ""),
+      recordKey: String(recordKey2 || ""),
       fetchedAt: Date.now(),
       lastNotifiedInc: Number.isFinite(prev.lastNotifiedInc) ? prev.lastNotifiedInc : 0,
       lastNotifiedTask: Number.isFinite(prev.lastNotifiedTask) ? prev.lastNotifiedTask : 0
     };
   }
-  function setHeaderCountsError(state, { recordKey = "" } = {}) {
+  function setHeaderCountsError(state, { recordKey: recordKey2 = "" } = {}) {
     state.ui.headerCounts = {
       inc: Number.isFinite(state.ui.headerCounts?.inc) ? state.ui.headerCounts.inc : 0,
       task: Number.isFinite(state.ui.headerCounts?.task) ? state.ui.headerCounts.task : 0,
       loading: false,
       ready: false,
       error: true,
-      recordKey: String(recordKey || state.ui.headerCounts?.recordKey || ""),
+      recordKey: String(recordKey2 || state.ui.headerCounts?.recordKey || ""),
       fetchedAt: Number(state.ui.headerCounts?.fetchedAt || 0),
       lastNotifiedInc: Number(state.ui.headerCounts?.lastNotifiedInc || 0),
       lastNotifiedTask: Number(state.ui.headerCounts?.lastNotifiedTask || 0)
@@ -36729,9 +36651,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
         clearAutoHideTimer();
         scheduleRecovery("user-info-open", 0);
         try {
-          const recordKey = getCurrentRecordKey();
-          const cacheKey = getUserInfoCacheKey(recordKey);
-          if (refresh) clearUserInfoCacheForRecord(recordKey);
+          const recordKey2 = getCurrentRecordKey();
+          const cacheKey = getUserInfoCacheKey(recordKey2);
+          if (refresh) clearUserInfoCacheForRecord(recordKey2);
           const token = /* @__PURE__ */ Symbol("userInfoLoad");
           setCurrentLoadToken(token);
           const timeoutId = window.setTimeout(() => {
@@ -36767,7 +36689,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
             window.clearTimeout(timeoutId);
             return;
           }
-          if (getCurrentRecordKey() !== recordKey) {
+          if (getCurrentRecordKey() !== recordKey2) {
             window.clearTimeout(timeoutId);
             state.ui.userInfoLoading = false;
             state.ui.userInfoError = "";
@@ -37921,31 +37843,21 @@ ${bundle.email.body}`,
         if (!templateText) {
           throw new Error("Work note template rendered empty");
         }
-        const writeResult = writeWorkNoteToField(templateText, currentContext, { append: false });
-        if (!writeResult.ok) {
-          throw new Error("Work notes could not be written");
-        }
         store.dispatch(applyWorkNoteTemplate, {
           templateId: selectedId,
           text: templateText,
           generatedTemplateId: selectedId
         });
-        noteWorkNoteTemplateUsage(state, rootWindow, selectedId);
-        pushRecentWorkNote(rootWindow, selectedId, selectedTemplate.label || "");
-        const phrase = extractPhrases(templateText)[0] || "";
-        pushPhrase(phrase);
-        state.ui.workNotesSource = "template-auto-apply";
+        state.ui.workNotesSource = "template-preview";
         logger.info("work-notes:template-selected", {
           ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "",
           selectedTemplateId: selectedId,
           previousTemplateId,
-          targetField: writeResult.targetField || "work_notes",
-          appended: false,
-          source: "template-auto-apply"
+          source: "template-preview"
         });
         showToast(state.host.document, {
-          message: `Work note applied: ${selectedTemplate.label || selectedId}`,
-          tone: "success"
+          message: `Template selected: ${selectedTemplate.label || selectedId}`,
+          tone: "info"
         });
         scheduleRecovery("work-notes-template", 0);
       },
@@ -38112,506 +38024,8 @@ ${text2}` : text2;
     };
   }
 
-  // Assistant/application/templates/custom-templates.js
-  function createCustomTemplateId(category) {
-    return `custom_${cleanText(category || "email")}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-  }
-  function looksGeneratedCustomId(value2 = "") {
-    return /^custom_(?:email|reminder|close_note|work_note|appointment)_[a-z0-9]+_[a-z0-9]+$/i.test(cleanText(value2));
-  }
-  function templateFingerprint(template = {}) {
-    return JSON.stringify([
-      cleanText(template.category),
-      cleanText(template.label),
-      cleanText(template.target),
-      cleanText(template.subject),
-      String(template.body || ""),
-      cleanText(template.paragraphSpacing || "standard")
-    ]);
-  }
-  function getDefaultCustomTemplate(category) {
-    const rawCategory = cleanText(category);
-    const safeCategory = ["email", "reminder", "close_note", "work_note", "appointment"].includes(rawCategory) ? rawCategory : rawCategory === "resolution" ? "close_note" : rawCategory === "internal" ? "work_note" : "email";
-    if (safeCategory === "reminder") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New reminder template",
-        target: "comments",
-        subject: "Reminder: {{ticket_number}}",
-        body: "Dear {{user_name}},\n\nReminder regarding ticket {{ticket_number}}.\n\nWe are following up on the previous message and kindly ask you to confirm your availability or share the missing details.\n\nKind regards,\n{{agent_name}}",
-        isCustom: true
-      };
-    }
-    if (safeCategory === "work_note") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New work note template",
-        target: "work_notes",
-        body: "Write your work note here.\nYou can use placeholders like {{ticket_number}} and {{user_name}}.",
-        isCustom: true
-      };
-    }
-    if (safeCategory === "appointment") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New appointment template",
-        target: "comments",
-        subject: "Appointment confirmation - {{ticket_number}}",
-        body: "Dear {{user_name}},\n\nWe confirm your appointment on {{appointment_date}} at {{appointment_time}}.\n\nLocation: {{office_location}}\n\nKind regards,\n{{agent_name}}",
-        isCustom: true
-      };
-    }
-    if (safeCategory === "close_note") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New close note template",
-        target: "close_notes",
-        subject: "",
-        body: "Dear {{user_name}},\n\nWe would like to inform you that your incident {{ticket_number}} has been successfully resolved.\n\n{{dynamic_resolution}}\n\nIf you continue to experience any issues or require further assistance, please do not hesitate to contact us.\n\nKind regards,\nIT Support Team",
-        isCustom: true
-      };
-    }
-    return {
-      id: createCustomTemplateId(safeCategory),
-      category: safeCategory,
-      label: "New email template",
-      target: "comments",
-      subject: "Follow-up on {{ticket_number}}",
-      body: "Dear {{user_name}},\n\nWe are contacting you regarding ticket {{ticket_number}}.\n\nPlease share any additional details so we can proceed.\n\nKind regards,\n{{agent_name}}",
-      isCustom: true
-    };
-  }
-  function duplicateTemplateAsCustom(category, templateId, settings) {
-    const rawCategory = cleanText(category);
-    const safeCategory = ["email", "reminder", "close_note", "work_note", "appointment"].includes(rawCategory) ? rawCategory : rawCategory === "resolution" ? "close_note" : rawCategory === "internal" ? "work_note" : "email";
-    const sourceTemplate = getTemplate(safeCategory, templateId, settings);
-    if (!sourceTemplate) {
-      return getDefaultCustomTemplate(safeCategory);
-    }
-    return {
-      ...sourceTemplate,
-      id: createCustomTemplateId(safeCategory),
-      category: safeCategory,
-      label: `${cleanText(sourceTemplate.label) || "New template"} Copy`,
-      isCustom: true
-    };
-  }
-  function upsertCustomTemplate(draft, template, { previousId = "" } = {}) {
-    const next = Array.isArray(draft.customTemplates) ? [...draft.customTemplates] : [];
-    const normalizedTemplate = { ...template, id: cleanText(template?.id) };
-    if (!normalizedTemplate.id) return;
-    let index = next.findIndex((item) => item.id === normalizedTemplate.id);
-    if (index < 0 && cleanText(previousId)) {
-      index = next.findIndex((item) => item.id === cleanText(previousId));
-    }
-    if (index < 0 && normalizedTemplate.isCustom && !looksGeneratedCustomId(normalizedTemplate.id)) {
-      const fingerprint = templateFingerprint(normalizedTemplate);
-      const matches = next.map((item, candidateIndex) => ({ item, candidateIndex })).filter(({ item }) => item?.isCustom && templateFingerprint(item) === fingerprint);
-      if (matches.length === 1) index = matches[0].candidateIndex;
-    }
-    if (index >= 0) {
-      next[index] = normalizedTemplate;
-    } else {
-      next.push(normalizedTemplate);
-    }
-    draft.customTemplates = next;
-  }
-
   // Assistant/handlers/settings.js
-  var DEFAULT_BUTTON_COLOR = "#2563eb";
-  var LAUNCHER_COLOR_PALETTES = {
-    ocean: {
-      "quick-draft": "#2563eb",
-      "open-work-notes": "#0f766e",
-      "open-reminder": "#d97706",
-      "incident-resolution-notes": "#b45309",
-      "open-ep-links": "#0d9488",
-      "create-calendar-event": "#0284c7",
-      "open-pdf": "#7c3aed",
-      "open-settings": "#475569",
-      "force-close": "#dc2626"
-    },
-    pastel: {
-      "quick-draft": "#60a5fa",
-      "open-work-notes": "#5eead4",
-      "open-reminder": "#fbbf24",
-      "incident-resolution-notes": "#fb923c",
-      "open-ep-links": "#2dd4bf",
-      "create-calendar-event": "#38bdf8",
-      "open-pdf": "#a78bfa",
-      "open-settings": "#94a3b8",
-      "force-close": "#f87171"
-    }
-  };
-  function normalizeCustomTemplateId(value2 = "", fallback = "") {
-    const normalized = cleanText(value2).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80);
-    return normalized || cleanText(fallback);
-  }
-  function applyDraftFieldChange(state, name, value2) {
-    const draft = cloneSettings(ensureSettingsDraft(state));
-    if (name === "officeProfile") {
-      setSettingsDraft(state, applyOfficePreset(value2, draft));
-      return { rerender: true };
-    }
-    if (name === "templateSearch") {
-      const category = state.ui.templateManagerCategory || "email";
-      state.ui.templateSearch[category] = String(value2 || "");
-      return { rerender: true };
-    }
-    if (name === "templateSubcategory") {
-      const category = state.ui.templateManagerCategory || "email";
-      state.ui.templateSubcategory[category] = cleanText(value2 || "all").toLowerCase() || "all";
-      return { rerender: true };
-    }
-    if (name === "autoHideAssistantDelay") {
-      draft.autoHideAssistantDelay = String(value2 || "off");
-      setSettingsDraft(state, sanitizeSettings(draft));
-      return { rerender: false };
-    }
-    if (name === "buttonOpacity") {
-      draft.buttonOpacity = Math.min(1, Math.max(0, Number(value2) || 1));
-      setSettingsDraft(state, sanitizeSettings(draft));
-      return { rerender: true };
-    }
-    if (name.startsWith("toggle:")) {
-      const toggleKey = name.split(":")[1];
-      draft.toggles[toggleKey] = Boolean(value2);
-      setSettingsDraft(state, sanitizeSettings(draft));
-      return { rerender: false };
-    }
-    if (name.startsWith("btnColor:")) {
-      const buttonId = name.split(":")[1];
-      const currentColors = typeof draft.buttonColors === "object" ? { ...draft.buttonColors } : {};
-      const safeColor = cleanText(value2);
-      if (safeColor && safeColor !== DEFAULT_BUTTON_COLOR) currentColors[buttonId] = safeColor;
-      else delete currentColors[buttonId];
-      draft.buttonColors = currentColors;
-      setSettingsDraft(state, sanitizeSettings(draft));
-      return { rerender: false };
-    }
-    if (name.startsWith("launcherBtn:")) {
-      const buttonId = name.split(":")[1];
-      const currentHidden = Array.isArray(draft.hiddenButtons) ? draft.hiddenButtons : [];
-      if (value2) draft.hiddenButtons = currentHidden.filter((id) => id !== buttonId);
-      else if (!currentHidden.includes(buttonId)) draft.hiddenButtons = [...currentHidden, buttonId];
-      setSettingsDraft(state, sanitizeSettings(draft));
-      return { rerender: false };
-    }
-    if (name.startsWith("customLink:")) {
-      const parts = name.split(":");
-      const linkId = parts[1];
-      const fieldName = parts[2];
-      const currentLinks = Array.isArray(draft.customLinks) ? draft.customLinks : [];
-      const idx = currentLinks.findIndex((l) => l.id === linkId);
-      if (idx >= 0) {
-        const updated = { ...currentLinks[idx], [fieldName]: cleanText(value2) };
-        const nextLinks = [...currentLinks];
-        nextLinks[idx] = updated;
-        draft.customLinks = nextLinks;
-        setSettingsDraft(state, sanitizeSettings(draft));
-      }
-      return { rerender: false };
-    }
-    if (name.startsWith("cannedPhrase:")) {
-      const idx = parseInt(name.split(":")[1], 10);
-      const current = Array.isArray(draft.cannedPhrases) ? [...draft.cannedPhrases] : [];
-      if (!isNaN(idx) && idx >= 0 && idx < current.length) {
-        current[idx] = cleanText(value2);
-        draft.cannedPhrases = current;
-        setSettingsDraft(state, sanitizeSettings(draft));
-      }
-      return { rerender: false };
-    }
-    if (name.startsWith("tpl:")) {
-      const [, category, templateId, fieldName] = name.split(":");
-      const customTemplate = (draft.customTemplates || []).find((template) => template.id === templateId);
-      if (customTemplate) {
-        const updatedTemplate = { ...customTemplate };
-        if (fieldName === "id") {
-          const nextId = normalizeCustomTemplateId(value2, templateId);
-          const collision = (draft.customTemplates || []).some(
-            (template) => template.id === nextId && template.id !== templateId
-          );
-          if (collision) {
-            return {
-              rerender: true,
-              error: `Template ID already exists: ${nextId}`
-            };
-          }
-          updatedTemplate.id = nextId;
-          upsertCustomTemplate(draft, updatedTemplate, { previousId: templateId });
-          setSettingsDraft(state, sanitizeSettings(draft));
-          setSelectedTemplate(state, category, nextId);
-          if (state.ui.editingTemplate?.category === category && state.ui.editingTemplate?.templateId === templateId) {
-            state.ui.editingTemplate = { category, templateId: nextId };
-          }
-          return { rerender: true, renamedTemplateId: nextId };
-        }
-        updatedTemplate[fieldName] = String(value2 || "");
-        upsertCustomTemplate(draft, updatedTemplate);
-        setSettingsDraft(state, sanitizeSettings(draft));
-        return { rerender: false };
-      }
-      draft.templateOverrides[category] = draft.templateOverrides[category] || {};
-      draft.templateOverrides[category][templateId] = draft.templateOverrides[category][templateId] || {};
-      draft.templateOverrides[category][templateId][fieldName] = String(value2 || "");
-      setSettingsDraft(state, sanitizeSettings(draft));
-      return { rerender: false };
-    }
-    if (["officeName", "officeRoom", "officeLabel"].includes(name)) draft.officeProfile = "custom";
-    draft[name] = String(value2 || "");
-    setSettingsDraft(state, sanitizeSettings(draft));
-    return { rerender: false };
-  }
-  function createSettingsHandlers({ state, store, logger, rootWindow, scheduleRecovery, scheduleAutoHideTimer }) {
-    function applyColor(settings, buttonId, color) {
-      const id = cleanText(buttonId);
-      if (!id) return sanitizeSettings(settings);
-      const next = cloneSettings(settings);
-      const currentColors = typeof next.buttonColors === "object" ? { ...next.buttonColors } : {};
-      const safeColor = cleanText(color);
-      if (safeColor && safeColor !== DEFAULT_BUTTON_COLOR) currentColors[id] = safeColor;
-      else delete currentColors[id];
-      next.buttonColors = currentColors;
-      return sanitizeSettings(next);
-    }
-    function setColorOnDraft(buttonId, color) {
-      const id = cleanText(buttonId);
-      if (!id) return;
-      setSettingsDraft(state, applyColor(ensureSettingsDraft(state), id, color));
-    }
-    function persistInlineButtonColor(buttonId, color) {
-      const id = cleanText(buttonId);
-      if (!id) return;
-      const persistedSettings = saveSettings(rootWindow, applyColor(state.settings, id, color), logger);
-      setSettings(state, persistedSettings);
-      if (state.ui.settingsDraft) {
-        setSettingsDraft(state, applyColor(state.ui.settingsDraft, id, color));
-      }
-    }
-    return {
-      onOpenSettings() {
-        openSettings(state, false);
-        scheduleAutoHideTimer();
-        scheduleRecovery("settings-open", 0);
-      },
-      onCloseSettings() {
-        const draft = state.ui.settingsDraft;
-        const isDirty = draft && JSON.stringify(state.settings) !== JSON.stringify(draft);
-        if (isDirty) showToast(state.host.document, { message: "Unsaved changes discarded.", tone: "info" });
-        store.dispatch(closeSettingsModal);
-        scheduleAutoHideTimer();
-        scheduleRecovery("settings-close", 0);
-      },
-      onSettingsSection(section) {
-        const safe3 = SETTINGS_SECTIONS.includes(section) ? section : "templates";
-        store.dispatch(setSettingsSection, safe3);
-        scheduleRecovery("settings-section", 0);
-      },
-      onSelectCategory(category) {
-        store.dispatch(setActiveCategory2, category);
-        scheduleRecovery("template-category", 0);
-      },
-      onSelectTemplate(templateId) {
-        store.dispatch(setSelectedTemplate2, { category: state.ui.activeCategory, templateId });
-        scheduleRecovery("template-select", 0);
-      },
-      onFieldChange(name, value2) {
-        const result = applyDraftFieldChange(state, name, value2);
-        const draftSettings = sanitizeSettings(state.ui.settingsDraft || state.settings);
-        if (result.error) {
-          showToast(state.host.document, { message: result.error, tone: "error" });
-        }
-        if (name === "theme" || name === "enableThemeSkin") {
-          applyThemeToAll(rootWindow, draftSettings.theme, draftSettings.enableThemeSkin);
-          scheduleRecovery("settings-theme-preview", TIMING.themePreviewMs);
-          return;
-        }
-        if (result.rerender) scheduleRecovery("settings-field-change", 0);
-      },
-      onTemplateManagerCategory(category) {
-        store.dispatch(setTemplateManagerCategory, category);
-        state.ui.templateSearch[category] = "";
-        state.ui.templateSubcategory[category] = "all";
-        scheduleRecovery("settings-template-category", 0);
-      },
-      onSelectSettingsTemplate(category, templateId) {
-        store.dispatch(setSelectedTemplate2, { category, templateId });
-        store.dispatch(setActiveCategory2, category);
-        showToast(state.host.document, { message: `Template selected: ${templateId}`, tone: "info" });
-        scheduleRecovery("settings-template-selected", 0);
-      },
-      onEditTemplate(category, templateId) {
-        store.dispatch(setSelectedTemplate2, { category, templateId });
-        store.dispatch(setActiveCategory2, category);
-        store.dispatch(setTemplateManagerCategory, category);
-        store.dispatch(setEditingTemplate, { category, templateId });
-        scheduleRecovery("settings-template-edit", 0);
-      },
-      onCloseTemplateEditor() {
-        store.dispatch(clearEditingTemplate);
-        scheduleRecovery("settings-template-edit-close", 0);
-      },
-      onRestoreTemplate(category, templateId) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        if (draft.templateOverrides?.[category]) delete draft.templateOverrides[category][templateId];
-        const sanitized = sanitizeSettings(draft);
-        store.dispatch(setSettingsDraft2, sanitized);
-        setSettings(state, saveSettings(rootWindow, sanitized, logger));
-        scheduleRecovery("settings-template-restore", 0);
-      },
-      onNewCustomTemplate(category) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const template = getDefaultCustomTemplate(category || state.ui.templateManagerCategory || "email");
-        upsertCustomTemplate(draft, template);
-        const sanitized = sanitizeSettings(draft);
-        store.dispatch(setSettingsDraft2, sanitized);
-        setSettings(state, saveSettings(rootWindow, sanitized, logger));
-        store.dispatch(setActiveCategory2, template.category);
-        store.dispatch(setTemplateManagerCategory, template.category);
-        store.dispatch(setSelectedTemplate2, { category: template.category, templateId: template.id });
-        store.dispatch(setEditingTemplate, { category: template.category, templateId: template.id });
-        showToast(state.host.document, { message: `New template created: ${template.label}`, tone: "info" });
-        scheduleRecovery("settings-template-created", 0);
-      },
-      onDuplicateTemplate(category, templateId) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const sourceCategory = category || state.ui.templateManagerCategory || "email";
-        const sourceTemplateId = templateId || state.ui.selectedTemplates?.[sourceCategory] || "";
-        const template = duplicateTemplateAsCustom(sourceCategory, sourceTemplateId, draft);
-        upsertCustomTemplate(draft, template);
-        const sanitized = sanitizeSettings(draft);
-        store.dispatch(setSettingsDraft2, sanitized);
-        setSettings(state, saveSettings(rootWindow, sanitized, logger));
-        store.dispatch(setActiveCategory2, template.category);
-        store.dispatch(setTemplateManagerCategory, template.category);
-        store.dispatch(setSelectedTemplate2, { category: template.category, templateId: template.id });
-        store.dispatch(setEditingTemplate, { category: template.category, templateId: template.id });
-        showToast(state.host.document, { message: `Template duplicated: ${template.label}`, tone: "info" });
-        scheduleRecovery("settings-template-duplicated", 0);
-      },
-      onDeleteCustomTemplate(category, templateId) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const nextTemplates = Array.isArray(draft.customTemplates) ? draft.customTemplates : [];
-        draft.customTemplates = nextTemplates.filter((template) => template.id !== templateId);
-        const sanitized = sanitizeSettings(draft);
-        store.dispatch(setSettingsDraft2, sanitized);
-        setSettings(state, saveSettings(rootWindow, sanitized, logger));
-        if (state.ui.selectedTemplates?.[category] === templateId) {
-          store.dispatch(setSelectedTemplate2, { category, templateId: getFirstTemplateId(category, sanitized) });
-        }
-        if (state.ui.editingTemplate?.category === category && state.ui.editingTemplate?.templateId === templateId) {
-          store.dispatch(clearEditingTemplate);
-        }
-        showToast(state.host.document, { message: "Custom template deleted", tone: "info" });
-        scheduleRecovery("settings-template-deleted", 0);
-      },
-      onSetButtonColor(buttonId, color) {
-        persistInlineButtonColor(buttonId, color);
-        scheduleRecovery("launcher-button-color-inline", 0);
-      },
-      onResetButtonColor(buttonId) {
-        setColorOnDraft(buttonId, "");
-        scheduleRecovery("settings-launcher-button-color", 0);
-      },
-      onApplyLauncherPalette(paletteId) {
-        const palette = LAUNCHER_COLOR_PALETTES[cleanText(paletteId)];
-        if (!palette) return;
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        draft.buttonColors = { ...draft.buttonColors || {}, ...palette };
-        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-        scheduleRecovery("settings-launcher-palette", 0);
-      },
-      onAddCustomLink() {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const currentLinks = Array.isArray(draft.customLinks) ? draft.customLinks : [];
-        const newLink = { id: `link_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, label: "New link", url: "https://" };
-        draft.customLinks = [...currentLinks, newLink];
-        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-        scheduleRecovery("settings-launcher-custom-link", 0);
-      },
-      onRemoveCustomLink(linkId) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const currentLinks = Array.isArray(draft.customLinks) ? draft.customLinks : [];
-        draft.customLinks = currentLinks.filter((l) => l.id !== linkId);
-        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-        scheduleRecovery("settings-launcher-custom-link", 0);
-      },
-      onAddCannedPhrase() {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const current = Array.isArray(draft.cannedPhrases) ? draft.cannedPhrases : [];
-        draft.cannedPhrases = [...current, "New phrase"];
-        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-        scheduleRecovery("settings-launcher-canned", 0);
-      },
-      onRemoveCannedPhrase(idx) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const current = Array.isArray(draft.cannedPhrases) ? [...draft.cannedPhrases] : [];
-        if (idx >= 0 && idx < current.length) {
-          current.splice(idx, 1);
-          draft.cannedPhrases = current;
-          store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-          scheduleRecovery("settings-launcher-canned", 0);
-        }
-      },
-      onResetSettings() {
-        store.dispatch(setSettingsDraft2, getDefaultSettings());
-        showToast(state.host.document, { message: "Defaults restored. Save settings to apply.", tone: "info" });
-        scheduleRecovery("settings-reset-draft", 0);
-      },
-      async onImportSettingsFile(file) {
-        if (!file) return;
-        try {
-          const importedSettings = await importSettingsPackage(file);
-          store.dispatch(setSettingsDraft2, importedSettings);
-          setSettings(state, saveSettings(rootWindow, importedSettings, logger));
-          showToast(state.host.document, { message: "Import loaded. Save settings to apply.", tone: "info" });
-          scheduleRecovery("settings-imported", 0);
-        } catch (error2) {
-          logger.error("settings import failed", error2);
-          showToast(state.host.document, { message: error2?.message || "Import failed", tone: "error" });
-        }
-      },
-      async onExportSettings() {
-        try {
-          const result = await exportSettingsPackage(rootWindow, sanitizeSettings(state.ui.settingsDraft || state.settings));
-          if (!result.ok && result.canceled) return;
-          const message = result.mode === "filesystem" ? `Templates exported to ${result.path}` : `Templates exported as ${result.fileName}`;
-          showToast(state.host.document, { message, tone: "info" });
-        } catch (error2) {
-          logger.error("settings export failed", error2);
-          showToast(state.host.document, { message: error2?.message || "Export failed", tone: "error" });
-        }
-      },
-      onToggleFavoriteTemplate(templateId, category) {
-        const updated = toggleFavoriteTemplate(rootWindow, templateId, category);
-        store.dispatch(setFavoriteTemplates, updated);
-        scheduleRecovery("favorite-template-toggled", 0);
-      },
-      onSaveSettings() {
-        const safeSettings = sanitizeSettings(state.ui.settingsDraft || state.settings);
-        if (!hasRequiredSettings(safeSettings)) {
-          openSettings(state, true);
-          showToast(state.host.document, { message: "Office profile, room, label and language are required", tone: "error" });
-          scheduleRecovery("settings-invalid", 0);
-          return;
-        }
-        const persistedSettings = saveSettings(rootWindow, safeSettings, logger);
-        setSettings(state, persistedSettings);
-        store.dispatch(setSettingsDraft2, persistedSettings);
-        state.ui.settingsMandatory = false;
-        state.flags.missingSettingsLogged = false;
-        applyThemeToAll(rootWindow, persistedSettings.theme, persistedSettings.enableThemeSkin);
-        logger.info("settings saved");
-        showToast(state.host.document, { message: "Settings saved" });
-        scheduleRecovery("settings-saved", 0);
-      }
-    };
-  }
+  __PLACEHOLDER__;
 
   // Assistant/handlers/panel.js
   function createPanelHandlers({ store, scheduleRecovery, api }) {
@@ -38892,75 +38306,45 @@ ${text2}` : text2;
   // Assistant/application/assign/assignToMyGroup.js
   function getCurrentUserDisplayName(rootWindow) {
     const w = rootWindow || getRootWindow();
-    return cleanText(
-      w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" ")
-    );
+    return cleanText(w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" "));
   }
   function setByDom(rootWindow, field, value2) {
-    const selectors = [
-      `#sys_display\\.sc_task\\.${field}`,
-      `input[id="sys_display.sc_task.${field}"]`,
-      `input[name="${field}"]`,
-      `input[id="${field}"]`
-    ];
-    for (const doc of getAccessibleDocuments(rootWindow)) {
-      for (const sel of selectors) {
-        const el = doc.querySelector(sel);
-        if (!el) continue;
-        el.value = value2;
-        ["input", "change", "blur"].forEach((evt) => el.dispatchEvent(new Event(evt, { bubbles: true })));
-        return true;
-      }
+    const selectors = [`#sys_display\\.sc_task\\.${field}`, `input[id="sys_display.sc_task.${field}"]`, `input[name="${field}"]`, `input[id="${field}"]`];
+    for (const doc of getAccessibleDocuments(rootWindow)) for (const sel of selectors) {
+      const el = doc.querySelector(sel);
+      if (!el) continue;
+      const EventCtor = doc.defaultView?.Event || globalThis.Event;
+      el.value = value2;
+      if (typeof EventCtor === "function") ["input", "change", "blur"].forEach((evt) => el.dispatchEvent(new EventCtor(evt, { bubbles: true })));
+      return { ok: cleanText(el.value) === cleanText(value2), value: cleanText(el.value), source: "dom" };
     }
-    return false;
+    return { ok: false, value: "", source: "dom" };
   }
-  function prefillScTaskAssignment({
-    rootWindow,
-    currentUserSysId,
-    currentUserDisplayName,
-    assignmentGroupSysId = "",
-    assignmentGroupDisplayName = "",
-    keepGroup = false
-  }) {
-    const best = getBestGForm(rootWindow);
-    const gForm = best?.gForm;
-    let usedGForm = false;
+  function prefillScTaskAssignment({ rootWindow, currentUserSysId, currentUserDisplayName, assignmentGroupSysId = "", assignmentGroupDisplayName = "", keepGroup = false }) {
+    const gForm = getBestGForm(rootWindow)?.gForm;
     if (gForm && typeof gForm.setValue === "function") {
-      if (!keepGroup && assignmentGroupSysId) {
-        gForm.setValue("assignment_group", assignmentGroupSysId, assignmentGroupDisplayName || assignmentGroupSysId);
-      }
+      const before = { assignedTo: cleanText(gForm.getValue?.("assigned_to")), assignmentGroup: cleanText(gForm.getValue?.("assignment_group")) };
+      if (!keepGroup && assignmentGroupSysId) gForm.setValue("assignment_group", assignmentGroupSysId, assignmentGroupDisplayName || assignmentGroupSysId);
       gForm.setValue("assigned_to", currentUserSysId, currentUserDisplayName || currentUserSysId);
-      usedGForm = true;
-    } else {
-      if (!keepGroup && assignmentGroupDisplayName) {
-        setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
-      }
-      setByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
+      const after = { assignedTo: cleanText(gForm.getValue?.("assigned_to")), assignmentGroup: cleanText(gForm.getValue?.("assignment_group")) };
+      const assignedOk = after.assignedTo === cleanText(currentUserSysId);
+      const groupOk = keepGroup || !assignmentGroupSysId || after.assignmentGroup === cleanText(assignmentGroupSysId);
+      return { ok: assignedOk && groupOk, verified: assignedOk && groupOk, usedGForm: true, before, after, kind: assignedOk ? groupOk ? "ok" : "group-rejected" : "assignee-rejected" };
     }
-    return { ok: true, usedGForm };
+    const groupResult = keepGroup || !assignmentGroupDisplayName ? { ok: true } : setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
+    const userResult = setByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
+    return { ok: Boolean(groupResult.ok && userResult.ok), verified: Boolean(groupResult.ok && userResult.ok), usedGForm: false, groupResult, userResult, kind: groupResult.ok && userResult.ok ? "ok" : "dom-rejected" };
   }
-  async function assignToMyGroup({
-    userGroup,
-    currentUserSysId,
-    rootWindow = typeof window !== "undefined" ? window : null
-  } = {}) {
+  async function assignToMyGroup({ userGroup, currentUserSysId, rootWindow = typeof window !== "undefined" ? window : null } = {}) {
     const groupSysId = cleanText(userGroup?.group_sys_id);
     if (!groupSysId) return { ok: false, kind: "no-group-configured" };
     if (!isValidGroupSysId(groupSysId)) return { ok: false, kind: "invalid-group" };
     if (!currentUserSysId) return { ok: false, kind: "no-current-user" };
-    const display = getCurrentUserDisplayName(rootWindow);
-    return prefillScTaskAssignment({
-      rootWindow,
-      currentUserSysId,
-      currentUserDisplayName: display,
-      assignmentGroupSysId: groupSysId,
-      assignmentGroupDisplayName: cleanText(userGroup?.name),
-      keepGroup: false
-    });
+    return prefillScTaskAssignment({ rootWindow, currentUserSysId, currentUserDisplayName: getCurrentUserDisplayName(rootWindow), assignmentGroupSysId: groupSysId, assignmentGroupDisplayName: cleanText(userGroup?.name), keepGroup: false });
   }
 
   // Assistant/handlers/assign.js
-  function createAssignHandlers({ state, rootWindow, runAction, scheduleRecovery }) {
+  function createAssignHandlers({ state, rootWindow, runAction, scheduleRecovery, logger }) {
     const hostDocument = () => state.host.document;
     async function ensureGroupConfigured() {
       const existing = loadUserGroup(rootWindow);
@@ -38977,53 +38361,41 @@ ${text2}` : text2;
       const gForm = getBestGForm(rootWindow)?.gForm;
       const assignedTo = cleanText(gForm?.getValue?.("assigned_to"));
       const assignmentGroup = cleanText(gForm?.getValue?.("assignment_group"));
-      const changesOwner = assignedTo && assignedTo !== currentUserSysId;
-      const changesGroup = assignmentGroup && assignmentGroup !== cleanText(group?.group_sys_id);
-      if (!changesOwner && !changesGroup) return true;
-      const assignedDisplay = cleanText(gForm?.getDisplayBox?.("assigned_to")?.value) || assignedTo || "Unassigned";
-      const groupDisplay = cleanText(gForm?.getDisplayBox?.("assignment_group")?.value) || assignmentGroup || "Unassigned";
-      return showConfirmationModal(hostDocument(), {
-        title: "Replace existing assignment",
-        description: "This ticket is already assigned. Continue and replace the current assignment?",
-        details: [
-          { label: "Current assignee", value: assignedDisplay },
-          { label: "Current group", value: groupDisplay },
-          { label: "New group", value: group?.name || "Configured group" }
-        ]
-      });
+      if (!(assignedTo && assignedTo !== currentUserSysId) && !(assignmentGroup && assignmentGroup !== cleanText(group?.group_sys_id))) return true;
+      return showConfirmationModal(hostDocument(), { title: "Replace existing assignment", description: "This ticket is already assigned. Continue and replace the current assignment?", details: [{ label: "Current assignee", value: cleanText(gForm?.getDisplayBox?.("assigned_to")?.value) || assignedTo || "Unassigned" }, { label: "Current group", value: cleanText(gForm?.getDisplayBox?.("assignment_group")?.value) || assignmentGroup || "Unassigned" }, { label: "New group", value: group?.name || "Configured group" }] });
     }
-    return {
-      onAssignToMyGroup() {
-        return runAction("assign", async () => {
-          const currentUserSysId = getCurrentUserSysId(rootWindow);
-          if (!currentUserSysId) {
-            showToast(hostDocument(), { message: "Could not detect your ServiceNow user. Open the assistant from inside an open ticket and try again.", tone: "error" });
-            return;
-          }
-          const group = await ensureGroupConfigured();
-          if (!group) return;
-          if (!await confirmReassignmentIfNeeded(currentUserSysId, group)) return;
-          const result = await assignToMyGroup({ rootWindow, currentUserSysId, userGroup: group });
-          if (!result.ok) {
-            const message = result.kind === "invalid-group" ? "Your saved group has an invalid sys_id \u2014 reconfigure it with the gear button." : "Could not fill the assignment fields. Make sure the ticket form is open and try again.";
-            showToast(hostDocument(), { message, tone: "error" });
-            return;
-          }
-          showToast(hostDocument(), { message: "Fields filled \u2014 please save", tone: "info" });
-          scheduleRecovery("assign-prefill", 0);
-        });
-      },
-      async onConfigureAssignGroup() {
-        const picked = await showGroupPickerModal(hostDocument(), AVAILABLE_GROUPS);
-        if (!picked) {
-          showToast(hostDocument(), { message: "No group configured", tone: "warning" });
-          return false;
+    return { onAssignToMyGroup() {
+      return runAction("assign", async () => {
+        const currentUserSysId = getCurrentUserSysId(rootWindow);
+        logger?.trace?.("assign:start", { currentUserDetected: Boolean(currentUserSysId) });
+        if (!currentUserSysId) {
+          showToast(hostDocument(), { message: "Could not detect your ServiceNow user. Open the assistant from inside an open ticket and try again.", tone: "error" });
+          return;
         }
-        saveUserGroup(rootWindow, picked);
-        showToast(hostDocument(), { message: `Group set: ${picked.name}`, tone: "info" });
-        return true;
+        const group = await ensureGroupConfigured();
+        if (!group) return;
+        if (!await confirmReassignmentIfNeeded(currentUserSysId, group)) return;
+        const result = await assignToMyGroup({ rootWindow, currentUserSysId, userGroup: group });
+        logger?.trace?.("assign:result", { group: group?.name || "", groupSysId: group?.group_sys_id || "", result });
+        if (!result.ok) {
+          const message = result.kind === "invalid-group" ? "Your saved group has an invalid sys_id \u2014 reconfigure it with the gear button." : result.kind === "assignee-rejected" ? "ServiceNow rejected the assignee. Verify that you are a member of the selected assignment group." : result.kind === "group-rejected" ? "ServiceNow rejected the assignment group. Reconfigure the group and try again." : "Could not fill the assignment fields. Make sure the ticket form is open and try again.";
+          showToast(hostDocument(), { message, tone: "error" });
+          return;
+        }
+        showToast(hostDocument(), { message: "Assignment verified on the form \u2014 please save the ticket", tone: "success" });
+        scheduleRecovery("assign-prefill", 0);
+      });
+    }, async onConfigureAssignGroup() {
+      const picked = await showGroupPickerModal(hostDocument(), AVAILABLE_GROUPS);
+      if (!picked) {
+        showToast(hostDocument(), { message: "No group configured", tone: "warning" });
+        return false;
       }
-    };
+      saveUserGroup(rootWindow, picked);
+      logger?.trace?.("assign:group-configured", { name: picked.name || "", groupSysId: picked.group_sys_id || "" });
+      showToast(hostDocument(), { message: `Group set: ${picked.name}`, tone: "info" });
+      return true;
+    } };
   }
 
   // Assistant/application/headerCounts/refreshHeaderCounts.js
@@ -39062,8 +38434,8 @@ ${text2}` : text2;
     logger,
     forceRefresh = false
   } = {}) {
-    const recordKey = state?.context?.recordKey || "";
-    if (!recordKey) {
+    const recordKey2 = state?.context?.recordKey || "";
+    if (!recordKey2) {
       return { ok: false, kind: "no-record" };
     }
     const current = state?.ui?.headerCounts;
@@ -39076,12 +38448,12 @@ ${text2}` : text2;
     }
     const now = Date.now();
     const isFresh = Number(current?.fetchedAt || 0) > 0 && now - Number(current?.fetchedAt || 0) < HEADER_COUNTS_REFRESH_MS;
-    if (!forceRefresh && current?.ready && current?.recordKey === recordKey && isFresh) {
+    if (!forceRefresh && current?.ready && current?.recordKey === recordKey2 && isFresh) {
       return { ok: true, kind: "cached", counts: { inc: current.inc, task: current.task } };
     }
     const online = rootWindow?.navigator?.onLine;
     if (online === false) {
-      logger?.info?.("header-counts:offline-skip", { recordKey });
+      logger?.info?.("header-counts:offline-skip", { recordKey: recordKey2 });
       return { ok: true, kind: "offline-skip", counts: { inc: current?.inc || 0, task: current?.task || 0 } };
     }
     store?.dispatch?.(setHeaderCountsLoading, true);
@@ -39094,8 +38466,8 @@ ${text2}` : text2;
       ]);
       counts = { inc, task };
     } catch (error2) {
-      logger?.warn?.("header-counts:fetch-failed", { recordKey, error: error2 });
-      store?.dispatch?.(setHeaderCountsError, { recordKey });
+      logger?.warn?.("header-counts:fetch-failed", { recordKey: recordKey2, error: error2 });
+      store?.dispatch?.(setHeaderCountsError, { recordKey: recordKey2 });
       return { ok: false, kind: "fetch-failed", error: error2 };
     }
     const elapsed = ((typeof performance !== "undefined" ? performance.now() : Date.now()) - perfT0).toFixed(1);
@@ -39103,7 +38475,7 @@ ${text2}` : text2;
     store?.dispatch?.(setHeaderCounts, {
       inc: counts.inc,
       task: counts.task,
-      recordKey
+      recordKey: recordKey2
     });
     return { ok: true, kind: "fetched", counts };
   }
@@ -39183,11 +38555,11 @@ ${text2}` : text2;
     function getCurrentRecordKey() {
       return createRecordKeyFromFingerprint(getCurrentRecordFingerprint(rootWindow));
     }
-    function getUserInfoCacheKey(recordKey) {
-      return `user-info:${cleanText(recordKey || "")}`;
+    function getUserInfoCacheKey(recordKey2) {
+      return `user-info:${cleanText(recordKey2 || "")}`;
     }
-    function clearUserInfoCacheForRecord(recordKey) {
-      delete state.caches.userByRecord[getUserInfoCacheKey(recordKey)];
+    function clearUserInfoCacheForRecord(recordKey2) {
+      delete state.caches.userByRecord[getUserInfoCacheKey(recordKey2)];
     }
     function closeOtherAssistantPanels(activePanelName = "") {
       logger.info("opening panel", { active: activePanelName });
@@ -39549,8 +38921,8 @@ ${text2}` : text2;
         return;
       }
       if (result.kind === "filled") {
-        const recordKey = cleanText(ctx.recordKey || state.context?.recordKey || "");
-        if (recordKey) closeNoteAutoFillAttemptsByRecord[recordKey] = 0;
+        const recordKey2 = cleanText(ctx.recordKey || state.context?.recordKey || "");
+        if (recordKey2) closeNoteAutoFillAttemptsByRecord[recordKey2] = 0;
         const internalWorkNote = "Close notes auto-filled from template after ticket closure. Customer-facing resolution text is ready in close_notes.";
         writeWorkNoteToField(internalWorkNote, ctx, { append: true });
         showToast(state.host.document, {
@@ -39561,8 +38933,8 @@ ${text2}` : text2;
         return;
       }
       if (result.kind === "already-set") {
-        const recordKey = cleanText(ctx.recordKey || state.context?.recordKey || "");
-        if (recordKey) closeNoteAutoFillAttemptsByRecord[recordKey] = 0;
+        const recordKey2 = cleanText(ctx.recordKey || state.context?.recordKey || "");
+        if (recordKey2) closeNoteAutoFillAttemptsByRecord[recordKey2] = 0;
         showToast(state.host.document, {
           message: "Close notes already filled \xB7 field unchanged",
           tone: "info",
@@ -39571,16 +38943,16 @@ ${text2}` : text2;
       }
     }
     function maybeAutoFillClosedRecord(context = {}, reason = "recover") {
-      const recordKey = cleanText(context?.recordKey || "");
-      if (!recordKey) return;
+      const recordKey2 = cleanText(context?.recordKey || "");
+      if (!recordKey2) return;
       if (!isStateClosedForAutoFill(context?.table, context?.state, context?.stateDisplay || "")) return;
       if (readCloseNotesValue()) {
-        closeNoteAutoFillAttemptsByRecord[recordKey] = 0;
+        closeNoteAutoFillAttemptsByRecord[recordKey2] = 0;
         return;
       }
-      const attempts = closeNoteAutoFillAttemptsByRecord[recordKey] || 0;
+      const attempts = closeNoteAutoFillAttemptsByRecord[recordKey2] || 0;
       if (attempts >= 3) return;
-      closeNoteAutoFillAttemptsByRecord[recordKey] = attempts + 1;
+      closeNoteAutoFillAttemptsByRecord[recordKey2] = attempts + 1;
       triggerCloseNoteAutoFill({ retry: true, reason: `closed-record:${reason}` });
     }
     const handlerDeps = {
@@ -39614,7 +38986,7 @@ ${text2}` : text2;
       {},
       createPanelHandlers(handlerDeps),
       createLauncherHandlers(handlerDeps),
-      createSettingsHandlers(handlerDeps),
+      (void 0)(handlerDeps),
       createEpLinksHandlers(handlerDeps),
       createCalendarHandlers(handlerDeps),
       createPdfHandlers(handlerDeps),
@@ -39933,21 +39305,70 @@ ${text2}` : text2;
 
   // Assistant/core/logger.js
   var PREFIX = "[SN Assistant]";
+  var MAX_ENTRIES = 250;
+  function safeWindow() {
+    try {
+      return typeof window !== "undefined" ? window : null;
+    } catch {
+      return null;
+    }
+  }
   function write(method, args) {
-    const logger = console[method] || console.log;
-    logger.call(console, PREFIX, ...args);
+    const target = console[method] || console.log;
+    target.call(console, PREFIX, ...args);
+  }
+  function sanitize(value2, depth = 0) {
+    if (depth > 3) return "[depth-limit]";
+    if (value2 == null || ["string", "number", "boolean"].includes(typeof value2)) return value2;
+    if (value2 instanceof Error) return { name: value2.name, message: value2.message, stack: value2.stack || "" };
+    if (Array.isArray(value2)) return value2.slice(0, 20).map((entry) => sanitize(entry, depth + 1));
+    if (typeof value2 === "object") {
+      const out = {};
+      Object.entries(value2).slice(0, 30).forEach(([key, entry]) => {
+        if (/token|password|secret|authorization|cookie/i.test(key)) out[key] = "[redacted]";
+        else out[key] = sanitize(entry, depth + 1);
+      });
+      return out;
+    }
+    return String(value2);
   }
   function createLogger() {
+    const w = safeWindow();
     const debugEnabled = Boolean(
-      window?.__SN_ASSISTANT_DEBUG__ === true || new URLSearchParams(window?.location?.search || "").get("sn_debug") === "1"
+      w?.__SN_ASSISTANT_DEBUG__ === true || new URLSearchParams(w?.location?.search || "").get("sn_debug") === "1"
     );
+    const buffer = Array.isArray(w?.__SN_ASSISTANT_LOGS__) ? w.__SN_ASSISTANT_LOGS__ : [];
+    if (w) w.__SN_ASSISTANT_LOGS__ = buffer;
+    function record(level, args) {
+      const entry = { ts: (/* @__PURE__ */ new Date()).toISOString(), level, args: args.map((arg) => sanitize(arg)) };
+      buffer.push(entry);
+      if (buffer.length > MAX_ENTRIES) buffer.splice(0, buffer.length - MAX_ENTRIES);
+      return entry;
+    }
     return {
       info: (...args) => {
-        if (!debugEnabled) return;
-        write("log", args);
+        record("info", args);
+        if (debugEnabled) write("log", args);
       },
-      warn: (...args) => write("warn", args),
-      error: (...args) => write("error", args)
+      warn: (...args) => {
+        record("warn", args);
+        write("warn", args);
+      },
+      error: (...args) => {
+        record("error", args);
+        write("error", args);
+      },
+      trace: (event, details = {}) => {
+        const entry = record("trace", [event, details]);
+        if (debugEnabled) write("log", [event, details]);
+        return entry;
+      },
+      getEntries: () => buffer.slice(),
+      clear: () => {
+        buffer.splice(0, buffer.length);
+      },
+      exportText: () => JSON.stringify(buffer, null, 2),
+      debugEnabled
     };
   }
 
@@ -40040,6 +39461,711 @@ ${text2}` : text2;
     }, 250);
   }
 
+  // Assistant/ui/accessibility.js
+  var FOCUSABLE = [
+    "a[href]",
+    "button:not([disabled])",
+    'input:not([disabled]):not([type="hidden"])',
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(", ");
+  var enhancedDialogs = /* @__PURE__ */ new WeakSet();
+  var previousFocus = /* @__PURE__ */ new WeakMap();
+  var generateMenuOpenByDocument = /* @__PURE__ */ new WeakMap();
+  function setAttrIfDifferent(element, name, value2) {
+    if (!element || value2 === void 0 || value2 === null) return;
+    const next = String(value2);
+    if (element.getAttribute(name) !== next) element.setAttribute(name, next);
+  }
+  function enhanceTabs(doc) {
+    doc.querySelectorAll('[role="tablist"] > .sn-assistant-tickets-filter, [role="tablist"] > .template-workspace__subtab').forEach((button) => {
+      const selected = button.classList.contains("is-active");
+      setAttrIfDifferent(button, "role", "tab");
+      setAttrIfDifferent(button, "aria-selected", selected ? "true" : "false");
+      setAttrIfDifferent(button, "tabindex", selected ? "0" : "-1");
+    });
+    doc.querySelectorAll('[data-action="user-tickets-display"]').forEach((button) => {
+      setAttrIfDifferent(button, "aria-pressed", button.classList.contains("is-active") ? "true" : "false");
+    });
+    doc.querySelectorAll('[data-action="work-notes-select-template"], [data-action="select-theme"]').forEach((button) => {
+      setAttrIfDifferent(button, "aria-pressed", button.classList.contains("is-active") ? "true" : "false");
+    });
+  }
+  function enhanceNames(doc) {
+    const labels = /* @__PURE__ */ new Map([
+      ["open-eprime-mailbox", "Open Eprime mailbox"],
+      ["open-dapr2l-user", "Open DAPR user"],
+      ["open-mdm", "Open MDM / AirWatch"]
+    ]);
+    labels.forEach((label, action) => {
+      doc.querySelectorAll(`[data-action="${action}"]`).forEach((button) => setAttrIfDifferent(button, "aria-label", label));
+    });
+    doc.querySelectorAll('[data-action="user-tickets-copy-number"]').forEach((button) => {
+      const number = String(button.dataset.number || "").trim();
+      setAttrIfDifferent(button, "aria-label", number ? `Copy ticket number ${number}` : "Copy ticket number");
+    });
+    doc.querySelectorAll('button[title="Close"]:not([aria-label])').forEach((button) => setAttrIfDifferent(button, "aria-label", "Close"));
+    doc.querySelectorAll('button[title="Close"] .sn-assistant-icon').forEach((icon) => setAttrIfDifferent(icon, "aria-hidden", "true"));
+    const workNote = doc.querySelector('textarea[name="workNotesText"]');
+    if (workNote) setAttrIfDifferent(workNote, "aria-label", "Work note");
+    const workNoteSearch = doc.querySelector('input[name="workNotesSearch"]');
+    if (workNoteSearch) setAttrIfDifferent(workNoteSearch, "aria-label", "Search work note templates");
+  }
+  function enhanceLiveRegions(doc) {
+    doc.querySelectorAll(".sn-assistant-ci-loading, .sn-assistant-ticket-skeleton").forEach((element) => {
+      setAttrIfDifferent(element, "role", "status");
+      setAttrIfDifferent(element, "aria-live", "polite");
+    });
+    doc.querySelectorAll(".sn-assistant-toast").forEach((element) => {
+      setAttrIfDifferent(element, "role", "status");
+      setAttrIfDifferent(element, "aria-live", "polite");
+    });
+    doc.querySelectorAll(".sn-assistant-note--error").forEach((element) => {
+      setAttrIfDifferent(element, "role", "alert");
+    });
+  }
+  function enhanceLauncherCustomization(doc) {
+    doc.querySelectorAll(".sn-ep-editable-wrap[data-button-id]").forEach((wrapper) => {
+      const action = wrapper.querySelector(".sn-ep__action");
+      const editing = Boolean(wrapper.querySelector(".sn-ep__action--edit"));
+      setAttrIfDifferent(wrapper, "draggable", editing ? "true" : "false");
+      if (!action) return;
+      if (editing) setAttrIfDifferent(action, "aria-keyshortcuts", "Alt+ArrowUp Alt+ArrowDown");
+      else action.removeAttribute("aria-keyshortcuts");
+    });
+  }
+  function enhanceGenerateMenu(doc) {
+    const desiredOpen = generateMenuOpenByDocument.get(doc);
+    if (typeof desiredOpen !== "boolean") return;
+    const menu = doc.querySelector("[data-generate-menu]");
+    const toggle = doc.querySelector('[data-action="generate-menu-toggle"]');
+    if (!menu || !toggle) return;
+    menu.classList.toggle("is-open", desiredOpen);
+    setAttrIfDifferent(toggle, "aria-expanded", desiredOpen ? "true" : "false");
+  }
+  function dialogLabel(dialog) {
+    return String(
+      dialog.getAttribute("aria-label") || dialog.querySelector(".sn-assistant-pdf-selector__title, .sn-ob__title, .sn-assistant-modal__title")?.textContent || "Dialog"
+    ).trim();
+  }
+  function installDialogBehavior(dialog, doc) {
+    if (!dialog || enhancedDialogs.has(dialog)) return;
+    enhancedDialogs.add(dialog);
+    const isPdf = dialog.classList.contains("sn-assistant-pdf-selector__card");
+    const isOnboarding = dialog.classList.contains("sn-ob__card");
+    if (!isPdf && !isOnboarding) return;
+    if (isPdf) {
+      setAttrIfDifferent(dialog, "role", "dialog");
+      setAttrIfDifferent(dialog, "aria-modal", "true");
+      setAttrIfDifferent(dialog, "aria-label", dialogLabel(dialog));
+    }
+    if (!dialog.hasAttribute("tabindex")) dialog.setAttribute("tabindex", "-1");
+    const before = doc.activeElement;
+    if (before && before !== doc.body && !dialog.contains(before)) previousFocus.set(dialog, before);
+    dialog.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isOnboarding) {
+        const skip = dialog.querySelector('[data-action="ob-skip"]');
+        if (skip) {
+          event.preventDefault();
+          skip.click();
+        }
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = [...dialog.querySelectorAll(FOCUSABLE)].filter((item) => !item.hidden);
+      if (!items.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = items[0];
+      const last2 = items[items.length - 1];
+      if (event.shiftKey && (doc.activeElement === first || doc.activeElement === dialog)) {
+        event.preventDefault();
+        last2.focus();
+      } else if (!event.shiftKey && doc.activeElement === last2) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+    const initial = dialog.querySelector('input:not([type="hidden"]), textarea, select, button:not([disabled])');
+    if (initial && typeof initial.focus === "function") initial.focus();
+    else if (typeof dialog.focus === "function") dialog.focus();
+  }
+  function restoreRemovedDialogFocus(node) {
+    if (!node || node.nodeType !== 1) return;
+    const dialogs = [];
+    if (enhancedDialogs.has(node)) dialogs.push(node);
+    node.querySelectorAll?.(".sn-assistant-pdf-selector__card, .sn-ob__card").forEach((dialog) => {
+      if (enhancedDialogs.has(dialog)) dialogs.push(dialog);
+    });
+    dialogs.forEach((dialog) => {
+      const target = previousFocus.get(dialog);
+      if (target?.isConnected && typeof target.focus === "function") {
+        try {
+          target.focus();
+        } catch {
+        }
+      }
+    });
+  }
+  function enhance(doc) {
+    enhanceTabs(doc);
+    enhanceNames(doc);
+    enhanceLiveRegions(doc);
+    enhanceLauncherCustomization(doc);
+    enhanceGenerateMenu(doc);
+    doc.querySelectorAll(".sn-assistant-pdf-selector__card, .sn-ob__card").forEach((dialog) => installDialogBehavior(dialog, doc));
+  }
+  function handleTablistKeydown(event) {
+    const tab = event.target?.closest?.('[role="tab"]');
+    if (!tab) return;
+    const tablist = tab.parentElement?.getAttribute("role") === "tablist" ? tab.parentElement : tab.closest('[role="tablist"]');
+    if (!tablist) return;
+    const tabs = [...tablist.children].filter((item) => item.getAttribute?.("role") === "tab" && !item.disabled && !item.hidden);
+    if (!tabs.length) return;
+    let index = tabs.indexOf(tab);
+    if (index < 0) return;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") index = (index + 1) % tabs.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") index = (index - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") index = 0;
+    else if (event.key === "End") index = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    const next = tabs[index];
+    tabs.forEach((item) => item.setAttribute("tabindex", item === next ? "0" : "-1"));
+    next.focus();
+    next.click();
+  }
+  function persistLauncherOrder(doc, rootWindow) {
+    const actions = doc.querySelector(".sn-ep__actions");
+    if (!actions) return;
+    const order = [...actions.querySelectorAll(".sn-ep-editable-wrap[data-button-id]")].filter((wrapper) => !wrapper.querySelector(".sn-ep__action--reminder")).map((wrapper) => String(wrapper.dataset.buttonId || "").trim()).filter(Boolean);
+    saveAssistantButtonOrder(rootWindow, order);
+  }
+  function handleLauncherReorderKeydown(event, rootWindow) {
+    if (!event.altKey || event.key !== "ArrowUp" && event.key !== "ArrowDown") return false;
+    const action = event.target?.closest?.(".sn-ep__action--edit");
+    const wrapper = action?.closest?.(".sn-ep-editable-wrap[data-button-id]");
+    if (!action || !wrapper || action.classList.contains("sn-ep__action--reminder")) return false;
+    const unit = wrapper.closest(".sn-ep__action-row") || wrapper;
+    const group = unit.parentElement;
+    if (!group?.classList?.contains("sn-ep__group-buttons")) return false;
+    const units = [...group.children].filter((item) => {
+      if (!item.matches?.(".sn-ep-editable-wrap[data-button-id], .sn-ep__action-row")) return false;
+      return !item.querySelector?.(".sn-ep__action--reminder");
+    });
+    const index = units.indexOf(unit);
+    if (index < 0) return false;
+    const nextIndex = event.key === "ArrowUp" ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= units.length) {
+      event.preventDefault();
+      return true;
+    }
+    const target = units[nextIndex];
+    if (event.key === "ArrowUp") group.insertBefore(unit, target);
+    else group.insertBefore(unit, target.nextElementSibling);
+    persistLauncherOrder(rootWindow.document, rootWindow);
+    action.focus();
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+  function handleDocumentClick(event, doc) {
+    const actionElement = event.target?.closest?.("[data-action]");
+    if (!actionElement) return;
+    const action = String(actionElement.dataset.action || "");
+    if (action === "generate-menu-toggle") {
+      generateMenuOpenByDocument.set(doc, actionElement.getAttribute("aria-expanded") === "true");
+      enhanceGenerateMenu(doc);
+      return;
+    }
+    if (actionElement.closest(".sn-ep")) {
+      generateMenuOpenByDocument.set(doc, false);
+      enhanceGenerateMenu(doc);
+    }
+  }
+  function handleDocumentPointerDown(event) {
+    const toggle = event.target?.closest?.('.sn-ep__tab[data-action="ep-toggle"]');
+    if (!toggle) return;
+    event.stopPropagation();
+  }
+  function handleDocumentKeydown(event, rootWindow) {
+    const doc = rootWindow.document;
+    if (event.key === "Escape") {
+      if (generateMenuOpenByDocument.get(doc) === true) {
+        generateMenuOpenByDocument.set(doc, false);
+        enhanceGenerateMenu(doc);
+      }
+      const dialog = event.target?.closest?.(".sn-assistant-modal__dialog");
+      const backdrop = dialog?.closest?.(".sn-assistant-modal")?.querySelector?.(".sn-assistant-modal__backdrop");
+      if (backdrop) {
+        event.preventDefault();
+        backdrop.click();
+        return;
+      }
+    }
+    if (handleLauncherReorderKeydown(event, rootWindow)) return;
+    handleTablistKeydown(event);
+  }
+  function installAccessibilityGuards(rootWindow) {
+    const doc = rootWindow?.document;
+    const Observer = rootWindow?.MutationObserver;
+    if (!doc?.documentElement || typeof Observer !== "function") return () => {
+    };
+    enhance(doc);
+    const onKeydown = (event) => handleDocumentKeydown(event, rootWindow);
+    const onClick = (event) => handleDocumentClick(event, doc);
+    const onPointerDown = (event) => handleDocumentPointerDown(event);
+    doc.addEventListener("keydown", onKeydown);
+    doc.addEventListener("click", onClick);
+    doc.addEventListener("pointerdown", onPointerDown, true);
+    const observer = new Observer((records) => {
+      records.forEach((record) => record.removedNodes.forEach(restoreRemovedDialogFocus));
+      enhance(doc);
+    });
+    observer.observe(doc.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "hidden"]
+    });
+    return () => {
+      observer.disconnect();
+      doc.removeEventListener("keydown", onKeydown);
+      doc.removeEventListener("click", onClick);
+      doc.removeEventListener("pointerdown", onPointerDown, true);
+    };
+  }
+
+  // Assistant/runtime/assignedWorkWatcher.js
+  var DYNAMIC_ME2 = "assigned_toDYNAMIC90d1921e5f510100a9ad2572f2b477fe";
+  var WATCH_INTERVAL_MS = 6e4;
+  var INITIAL_DELAY_MS = 4e3;
+  var MAX_ROWS_PER_TABLE = 50;
+  var TABLES3 = Object.freeze([
+    {
+      table: "incident",
+      label: "INC",
+      query: `active=true^${DYNAMIC_ME2}^stateNOT IN6,7,8^ORDERBYDESCsys_updated_on`
+    },
+    {
+      table: "sc_req_item",
+      label: "RITM",
+      // State values vary more between catalog implementations than Incident or
+      // SCTASK. `active=true` is the stable cross-instance condition and avoids
+      // accidentally excluding a legitimate assigned RITM by numeric state.
+      query: `active=true^${DYNAMIC_ME2}^ORDERBYDESCsys_updated_on`
+    },
+    {
+      table: "sc_task",
+      label: "SCTASK",
+      query: `active=true^${DYNAMIC_ME2}^stateNOT IN3,4,5,7^ORDERBYDESCsys_updated_on`
+    }
+  ]);
+  function serviceNowValue(value2) {
+    if (value2 === null || value2 === void 0) return "";
+    if (typeof value2 === "object") {
+      return cleanText(value2.display_value ?? value2.displayValue ?? value2.value ?? value2.name ?? "");
+    }
+    return cleanText(value2);
+  }
+  function getUserToken2(rootWindow) {
+    return rootWindow?.g_ck || rootWindow?.frames?.[0]?.g_ck || "";
+  }
+  function buildListUrl(table, query) {
+    const params = new URLSearchParams({
+      sysparm_query: query,
+      sysparm_fields: "sys_id,number,short_description,state,sys_updated_on",
+      sysparm_display_value: "all",
+      sysparm_exclude_reference_link: "true",
+      // The watcher does not need a total-row count, so avoid the extra COUNT
+      // query ServiceNow can perform for table-list requests.
+      sysparm_no_count: "true",
+      sysparm_limit: String(MAX_ROWS_PER_TABLE)
+    });
+    return `/api/now/table/${table}?${params.toString()}`;
+  }
+  async function fetchRows({ rootWindow, fetchImpl, table, query }) {
+    const token = getUserToken2(rootWindow);
+    const headers = { Accept: "application/json" };
+    if (token) headers["X-UserToken"] = token;
+    const response = await fetchImpl(buildListUrl(table, query), {
+      method: "GET",
+      credentials: "same-origin",
+      headers
+    });
+    if (!response?.ok) throw new Error(`${table} assigned-work fetch failed: ${response?.status || "unknown"}`);
+    const json = await response.json();
+    return (Array.isArray(json?.result) ? json.result : []).map((raw) => ({
+      table,
+      sysId: serviceNowValue(raw?.sys_id),
+      number: serviceNowValue(raw?.number),
+      shortDescription: serviceNowValue(raw?.short_description),
+      state: serviceNowValue(raw?.state),
+      updated: serviceNowValue(raw?.sys_updated_on)
+    })).filter((row) => row.sysId && row.number);
+  }
+  function recordKey(row) {
+    return `${row.table}:${row.sysId}`;
+  }
+  function recordUrl(row) {
+    return `/nav_to.do?uri=/${encodeURIComponent(row.table)}.do?sys_id=${encodeURIComponent(row.sysId)}`;
+  }
+  function openRecord(rootWindow, row) {
+    try {
+      rootWindow.location.href = recordUrl(row);
+    } catch {
+      try {
+        rootWindow.open?.(`/${row.table}.do?sys_id=${encodeURIComponent(row.sysId)}`, "_blank", "noopener");
+      } catch {
+      }
+    }
+  }
+  function createSoundController(rootWindow, state, logger) {
+    let audioContext = null;
+    function ensureContext() {
+      if (audioContext) return audioContext;
+      const Ctx = rootWindow?.AudioContext || rootWindow?.webkitAudioContext;
+      if (typeof Ctx !== "function") return null;
+      try {
+        audioContext = new Ctx();
+        return audioContext;
+      } catch (error2) {
+        logger?.info?.("assigned-work:sound-unavailable", { error: error2?.message || String(error2) });
+        return null;
+      }
+    }
+    function unlock() {
+      const ctx = ensureContext();
+      if (!ctx) return;
+      try {
+        ctx.resume?.().catch?.(() => {
+        });
+      } catch {
+      }
+    }
+    function tone(freq, duration, delay2 = 0, volume = 0.045) {
+      const ctx = ensureContext();
+      if (!ctx) return;
+      try {
+        ctx.resume?.().catch?.(() => {
+        });
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay2);
+        gain.gain.setValueAtTime(1e-4, ctx.currentTime + delay2);
+        gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + delay2 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(1e-4, ctx.currentTime + delay2 + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay2);
+        osc.stop(ctx.currentTime + delay2 + duration + 0.02);
+      } catch (error2) {
+        logger?.info?.("assigned-work:sound-blocked", { error: error2?.message || String(error2) });
+      }
+    }
+    function play() {
+      if (state?.settings?.toggles?.headerCountsSound === false) return;
+      const type = state?.settings?.headerCountsSoundType || "beep";
+      if (type === "chime") {
+        tone(740, 0.12, 0, 0.05);
+        tone(988, 0.16, 0.13, 0.045);
+      } else {
+        tone(660, 0.13, 0, 0.05);
+      }
+    }
+    function destroy() {
+      try {
+        audioContext?.close?.().catch?.(() => {
+        });
+      } catch {
+      }
+      audioContext = null;
+    }
+    return { unlock, play, destroy };
+  }
+  function desktopNotify(rootWindow, row) {
+    const NotificationCtor = rootWindow?.Notification;
+    if (typeof NotificationCtor !== "function" || NotificationCtor.permission !== "granted") return false;
+    try {
+      const notification = new NotificationCtor(`New assigned ticket \xB7 ${row.number}`, {
+        body: row.shortDescription || row.state || "New ServiceNow work assigned to you",
+        tag: `sn-assistant:${recordKey(row)}`,
+        renotify: false
+      });
+      notification.onclick = () => {
+        try {
+          rootWindow.focus?.();
+        } catch {
+        }
+        openRecord(rootWindow, row);
+        try {
+          notification.close?.();
+        } catch {
+        }
+      };
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  function inAppNotify(rootWindow, state, row) {
+    const doc = state?.host?.document || rootWindow?.document;
+    if (!doc) return;
+    const detail = row.shortDescription ? ` \u2014 ${row.shortDescription}` : "";
+    showToast(doc, {
+      message: `New assigned ticket: ${row.number}${detail}`,
+      tone: "info",
+      duration: 12e3,
+      action: {
+        label: "Open",
+        onClick: () => openRecord(rootWindow, row)
+      }
+    });
+  }
+  function notifyRows(rootWindow, state, sound, rows) {
+    if (!rows.length) return;
+    sound.play();
+    rows.slice(0, 3).forEach((row) => {
+      inAppNotify(rootWindow, state, row);
+      desktopNotify(rootWindow, row);
+    });
+    if (rows.length > 3) {
+      const doc = state?.host?.document || rootWindow.document;
+      showToast(doc, {
+        message: `${rows.length - 3} more newly assigned tickets detected`,
+        tone: "info",
+        duration: 1e4
+      });
+    }
+  }
+  function installAssignedWorkWatcher({
+    rootWindow,
+    state,
+    logger,
+    fetchImpl = null,
+    intervalMs = WATCH_INTERVAL_MS,
+    initialDelayMs = INITIAL_DELAY_MS
+  } = {}) {
+    const fetcher = fetchImpl || rootWindow?.fetch?.bind?.(rootWindow) || globalThis.fetch;
+    if (!rootWindow?.document || typeof fetcher !== "function") return () => {
+    };
+    const seen = /* @__PURE__ */ new Set();
+    const seededTables = /* @__PURE__ */ new Set();
+    const lastCountByTable = /* @__PURE__ */ new Map();
+    let stopped = false;
+    let scanInFlight = false;
+    let intervalId = 0;
+    let initialTimer = 0;
+    const sound = createSoundController(rootWindow, state, logger);
+    const unlockSound = () => sound.unlock();
+    rootWindow.document.addEventListener("pointerdown", unlockSound, { once: true, capture: true });
+    rootWindow.document.addEventListener("keydown", unlockSound, { once: true, capture: true });
+    async function scan(reason = "interval") {
+      if (stopped || scanInFlight) return { ok: false, kind: stopped ? "stopped" : "in-flight" };
+      if (rootWindow?.navigator?.onLine === false) return { ok: true, kind: "offline-skip" };
+      scanInFlight = true;
+      try {
+        const tableResults = await Promise.all(TABLES3.map(async (def) => {
+          try {
+            const rows2 = await fetchRows({ rootWindow, fetchImpl: fetcher, ...def });
+            return { ok: true, table: def.table, rows: rows2 };
+          } catch (error2) {
+            logger?.warn?.("assigned-work:table-fetch-failed", {
+              reason,
+              table: def.table,
+              error: error2?.message || String(error2)
+            });
+            return { ok: false, table: def.table, rows: [], error: error2 };
+          }
+        }));
+        const successful = tableResults.filter((result) => result.ok);
+        if (!successful.length) {
+          return { ok: false, kind: "fetch-failed", errors: tableResults.map((result) => result.error).filter(Boolean) };
+        }
+        const rows = successful.flatMap((result) => result.rows);
+        const newlySeen = [];
+        const countIncreasedByTable = /* @__PURE__ */ new Map();
+        successful.forEach((result) => {
+          const firstSuccessfulRead = !seededTables.has(result.table);
+          const previousCount = lastCountByTable.get(result.table) ?? result.rows.length;
+          countIncreasedByTable.set(result.table, !firstSuccessfulRead && result.rows.length > previousCount);
+          result.rows.forEach((row) => {
+            const key = recordKey(row);
+            if (!firstSuccessfulRead && !seen.has(key)) newlySeen.push(row);
+            seen.add(key);
+          });
+          if (firstSuccessfulRead) {
+            seededTables.add(result.table);
+            logger?.info?.("assigned-work:table-seeded", { table: result.table, count: result.rows.length });
+          }
+          lastCountByTable.set(result.table, result.rows.length);
+        });
+        const exactAlertRows = newlySeen.filter((row) => {
+          if (state?.ui?.assistantHidden) return true;
+          if (row.table === "sc_req_item") return true;
+          return countIncreasedByTable.get(row.table) !== true;
+        });
+        if (exactAlertRows.length) {
+          logger?.info?.("assigned-work:new", {
+            reason,
+            tickets: exactAlertRows.map((row) => row.number),
+            mode: state?.ui?.assistantHidden ? "hidden" : "counter-gap"
+          });
+          notifyRows(rootWindow, state, sound, exactAlertRows);
+        }
+        if (rootWindow.document.hidden) {
+          newlySeen.filter((row) => !exactAlertRows.includes(row)).forEach((row) => desktopNotify(rootWindow, row));
+        }
+        const allTablesSeeded = TABLES3.every((def) => seededTables.has(def.table));
+        return {
+          ok: true,
+          kind: allTablesSeeded ? "fetched" : "partial",
+          rows,
+          newRows: newlySeen,
+          alertedRows: exactAlertRows,
+          unavailableTables: tableResults.filter((result) => !result.ok).map((result) => result.table)
+        };
+      } finally {
+        scanInFlight = false;
+      }
+    }
+    initialTimer = rootWindow.setTimeout(() => scan("initial"), Math.max(0, initialDelayMs));
+    intervalId = rootWindow.setInterval(() => scan("interval"), Math.max(15e3, intervalMs));
+    return () => {
+      stopped = true;
+      if (initialTimer) rootWindow.clearTimeout(initialTimer);
+      if (intervalId) rootWindow.clearInterval(intervalId);
+      rootWindow.document.removeEventListener("pointerdown", unlockSound, true);
+      rootWindow.document.removeEventListener("keydown", unlockSound, true);
+      sound.destroy();
+    };
+  }
+
+  // Assistant/runtime/notificationSettingsControl.js
+  var CONTROL_ATTR = "data-sn-assistant-notification-control";
+  var SOUND_SELECTOR = 'select[name="headerCountsSoundType"]';
+  function notificationState(rootWindow) {
+    const NotificationCtor = rootWindow?.Notification;
+    if (rootWindow?.isSecureContext === false) {
+      return { kind: "insecure", label: "Desktop alerts require HTTPS", disabled: true };
+    }
+    if (typeof NotificationCtor !== "function") {
+      return { kind: "unsupported", label: "Desktop alerts unavailable", disabled: true };
+    }
+    if (NotificationCtor.permission === "granted") {
+      return { kind: "granted", label: "Test desktop alert", disabled: false };
+    }
+    if (NotificationCtor.permission === "denied") {
+      return { kind: "denied", label: "Desktop alerts blocked in browser", disabled: true };
+    }
+    return { kind: "default", label: "Enable desktop alerts", disabled: false };
+  }
+  function createTestNotification(rootWindow) {
+    try {
+      const notification = new rootWindow.Notification("SN Assistant notifications enabled", {
+        body: "New assigned INC, RITM and SCTASK records can appear as desktop alerts.",
+        tag: "sn-assistant:test-notification"
+      });
+      rootWindow.setTimeout(() => {
+        try {
+          notification.close?.();
+        } catch {
+        }
+      }, 5e3);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  function updateControl(rootWindow, control) {
+    const button = control.querySelector("button");
+    const status = control.querySelector("[data-notification-permission-status]");
+    const state = notificationState(rootWindow);
+    if (button) {
+      button.textContent = state.label;
+      button.disabled = state.disabled;
+      button.dataset.permissionState = state.kind;
+    }
+    if (status) {
+      const statusLabel = {
+        granted: "Enabled for this ServiceNow site.",
+        default: "Optional. The browser will ask once after you click Enable.",
+        denied: "Permission was denied. Re-enable it from the browser site permissions.",
+        insecure: "System notifications are only available from a secure HTTPS context.",
+        unsupported: "This browser/runtime does not expose the Notifications API."
+      }[state.kind] || "";
+      status.textContent = statusLabel;
+    }
+  }
+  function ensureControl(rootWindow, logger) {
+    const doc = rootWindow?.document;
+    if (!doc || doc.querySelector(`[${CONTROL_ATTR}]`)) return;
+    const soundSelect = doc.querySelector(SOUND_SELECTOR);
+    const anchor = soundSelect?.closest?.(".sn-assistant-field");
+    if (!anchor?.parentElement) return;
+    const control = doc.createElement("div");
+    control.className = "sn-assistant-field";
+    control.setAttribute(CONTROL_ATTR, "true");
+    control.innerHTML = `
+    <span class="sn-assistant-field__label">Desktop notifications</span>
+    <button type="button" class="sn-assistant-button sn-assistant-button--secondary" data-notification-permission-action></button>
+    <span data-notification-permission-status style="display:block;margin-top:6px;font-size:11px;line-height:1.4;color:var(--sn-assistant-muted);"></span>
+    <span style="display:block;margin-top:4px;font-size:10px;line-height:1.4;color:var(--sn-assistant-muted);">
+      Background watcher: INC \xB7 RITM \xB7 SCTASK every 60s. Uses your current ServiceNow session; no API key or password is stored.
+    </span>
+  `;
+    anchor.insertAdjacentElement("afterend", control);
+    updateControl(rootWindow, control);
+    control.querySelector("[data-notification-permission-action]")?.addEventListener("click", async () => {
+      const state = notificationState(rootWindow);
+      const docForToast = rootWindow.document;
+      if (state.kind === "granted") {
+        const ok = createTestNotification(rootWindow);
+        showToast(docForToast, {
+          message: ok ? "Desktop notification test sent" : "Desktop notification test could not be shown",
+          tone: ok ? "success" : "error"
+        });
+        return;
+      }
+      if (state.kind !== "default") return;
+      try {
+        const permission = await rootWindow.Notification.requestPermission();
+        updateControl(rootWindow, control);
+        if (permission === "granted") {
+          createTestNotification(rootWindow);
+          showToast(docForToast, { message: "Desktop notifications enabled", tone: "success" });
+        } else {
+          showToast(docForToast, { message: "Desktop notifications were not enabled", tone: "info" });
+        }
+      } catch (error2) {
+        logger?.warn?.("desktop-notifications:permission-failed", { error: error2?.message || String(error2) });
+        showToast(docForToast, { message: "Browser notification permission could not be requested", tone: "error" });
+        updateControl(rootWindow, control);
+      }
+    });
+  }
+  function addedNodeContainsSoundSetting(node) {
+    if (!node || node.nodeType !== 1) return false;
+    return node.matches?.(SOUND_SELECTOR) || Boolean(node.querySelector?.(SOUND_SELECTOR));
+  }
+  function installNotificationSettingsControl({ rootWindow, logger } = {}) {
+    const doc = rootWindow?.document;
+    const Observer = rootWindow?.MutationObserver;
+    if (!doc?.documentElement || typeof Observer !== "function") return () => {
+    };
+    ensureControl(rootWindow, logger);
+    const observer = new Observer((records) => {
+      const relevant = records.some((record) => [...record.addedNodes].some(addedNodeContainsSoundSetting));
+      if (relevant) ensureControl(rootWindow, logger);
+    });
+    observer.observe(doc.documentElement, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }
+
   // Assistant/assistant.js
   var GLOBAL_KEY = "__SN_ASSISTANT__";
   function startAssistant() {
@@ -40065,7 +40191,13 @@ ${text2}` : text2;
       state,
       logger
     });
+    const releaseAccessibilityGuards = installAccessibilityGuards(rootWindow);
+    const releaseAssignedWorkWatcher = installAssignedWorkWatcher({ rootWindow, state, logger });
+    const releaseNotificationSettingsControl = installNotificationSettingsControl({ rootWindow, logger });
     function destroy(reason = "destroy") {
+      releaseNotificationSettingsControl();
+      releaseAssignedWorkWatcher();
+      releaseAccessibilityGuards();
       bootstrap.destroy(reason);
       if (globalStore.instance === instance) {
         delete globalStore.instance;
