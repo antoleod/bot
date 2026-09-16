@@ -789,15 +789,15 @@
     "node_modules/pako/lib/zlib/crc32.js"(exports, module) {
       "use strict";
       function makeTable() {
-        var c, table = [];
+        var c, table2 = [];
         for (var n = 0; n < 256; n++) {
           c = n;
           for (var k = 0; k < 8; k++) {
             c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
           }
-          table[n] = c;
+          table2[n] = c;
         }
-        return table;
+        return table2;
       }
       var crcTable = makeTable();
       function crc32(crc, buf, len3, pos) {
@@ -2591,7 +2591,7 @@
         64,
         64
       ];
-      module.exports = function inflate_table(type, lens, lens_index, codes, table, table_index, work, opts) {
+      module.exports = function inflate_table(type, lens, lens_index, codes, table2, table_index, work, opts) {
         var bits = opts.bits;
         var len3 = 0;
         var sym = 0;
@@ -2631,8 +2631,8 @@
           root = max;
         }
         if (max === 0) {
-          table[table_index++] = 1 << 24 | 64 << 16 | 0;
-          table[table_index++] = 1 << 24 | 64 << 16 | 0;
+          table2[table_index++] = 1 << 24 | 64 << 16 | 0;
+          table2[table_index++] = 1 << 24 | 64 << 16 | 0;
           opts.bits = 1;
           return 0;
         }
@@ -2707,7 +2707,7 @@
           min = fill2;
           do {
             fill2 -= incr;
-            table[next + (huff >> drop) + fill2] = here_bits << 24 | here_op << 16 | here_val | 0;
+            table2[next + (huff >> drop) + fill2] = here_bits << 24 | here_op << 16 | here_val | 0;
           } while (fill2 !== 0);
           incr = 1 << len3 - 1;
           while (huff & incr) {
@@ -2746,11 +2746,11 @@
               return 1;
             }
             low = huff & mask;
-            table[low] = root << 24 | curr << 16 | next - table_index | 0;
+            table2[low] = root << 24 | curr << 16 | next - table_index | 0;
           }
         }
         if (huff !== 0) {
-          table[next + huff] = len3 - drop << 24 | 64 << 16 | 0;
+          table2[next + huff] = len3 - drop << 24 | 64 << 16 | 0;
         }
         opts.bits = root;
         return 0;
@@ -4255,8 +4255,8 @@
   // Assistant/core/helpers.js
   function cleanText(value2) {
     if (value2 === null || value2 === void 0) return "";
-    const text2 = String(value2).replace(/\u00a0/g, " ").trim();
-    return text2 === "undefined" || text2 === "null" ? "" : text2;
+    const text3 = String(value2).replace(/\u00a0/g, " ").trim();
+    return text3 === "undefined" || text3 === "null" ? "" : text3;
   }
   function normalizeText(value2) {
     return cleanText(value2).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
@@ -4295,18 +4295,18 @@
     }
   }
   function escapeCssIdentifier(value2) {
-    const text2 = cleanText(value2);
+    const text3 = cleanText(value2);
     if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
-      return CSS.escape(text2);
+      return CSS.escape(text3);
     }
-    return text2.replace(/([ !"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, "\\$1");
+    return text3.replace(/([ !"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, "\\$1");
   }
   function escapeHtml(value2) {
     return cleanText(value2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-  function createRecordKey({ table, sysId, ticketNumber }) {
+  function createRecordKey({ table: table2, sysId, ticketNumber }) {
     const primary = cleanText(sysId) || cleanText(ticketNumber) || "unknown";
-    return `${cleanText(table) || "unknown"}::${primary}`;
+    return `${cleanText(table2) || "unknown"}::${primary}`;
   }
   function formatToday(language = "en") {
     const locale = language === "fr" ? "fr-FR" : "en-GB";
@@ -4665,14 +4665,14 @@
       }
     }
   };
-  function isSupportedTable(table) {
-    return Boolean(TABLES[table]);
+  function isSupportedTable(table2) {
+    return Boolean(TABLES[table2]);
   }
-  function getTableConfig(table) {
-    return TABLES[table] || null;
+  function getTableConfig(table2) {
+    return TABLES[table2] || null;
   }
-  function getTableLabel(table) {
-    return TABLES[table]?.label || titleCase(table);
+  function getTableLabel(table2) {
+    return TABLES[table2]?.label || titleCase(table2);
   }
 
   // Assistant/sn/cmdb.js
@@ -4693,8 +4693,8 @@
   function getCurrentCmdbCi(rootWindow = getRootWindow()) {
     try {
       let isTicketLike2 = function(value2) {
-        const text2 = cleanText(value2).toUpperCase();
-        return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text2);
+        const text3 = cleanText(value2).toUpperCase();
+        return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text3);
       }, isSysId2 = function(value2) {
         return /^[0-9a-f]{32}$/i.test(cleanText(value2));
       }, read = function(selector) {
@@ -4827,37 +4827,37 @@
 
   // Assistant/sn/fields.js
   function parseDisplayName(displayValue) {
-    const text2 = cleanText(displayValue);
-    if (!text2) return { firstName: "", lastName: "", fullName: "" };
-    if (text2.includes(",")) {
-      const [lastName, firstName2] = text2.split(",").map((segment) => cleanText(segment));
+    const text3 = cleanText(displayValue);
+    if (!text3) return { firstName: "", lastName: "", fullName: "" };
+    if (text3.includes(",")) {
+      const [lastName, firstName2] = text3.split(",").map((segment) => cleanText(segment));
       return {
         firstName: firstName2,
         lastName,
         fullName: [firstName2, lastName].filter(Boolean).join(" ").trim()
       };
     }
-    const parts = text2.split(/\s+/).filter(Boolean);
+    const parts = text3.split(/\s+/).filter(Boolean);
     return {
       firstName: parts[0] || "",
       lastName: parts.slice(1).join(" "),
-      fullName: text2
+      fullName: text3
     };
   }
   function looksLikeEmail(value2) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanText(value2));
   }
   function looksLikeRecordIdentifier(value2) {
-    const text2 = cleanText(value2).toUpperCase();
-    if (!text2) return false;
-    return /^[0-9A-F]{32}$/.test(text2) || /^(INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text2);
+    const text3 = cleanText(value2).toUpperCase();
+    if (!text3) return false;
+    return /^[0-9A-F]{32}$/.test(text3) || /^(INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text3);
   }
   function isLikelyPersonName(value2) {
-    const text2 = cleanText(value2);
-    if (!text2 || looksLikeEmail(text2) || looksLikeRecordIdentifier(text2)) {
+    const text3 = cleanText(value2);
+    if (!text3 || looksLikeEmail(text3) || looksLikeRecordIdentifier(text3)) {
       return false;
     }
-    return /[A-Za-zÀ-ÿ]/.test(text2);
+    return /[A-Za-zÀ-ÿ]/.test(text3);
   }
   function deriveNameFromEmail(email2) {
     const localPart = cleanText(email2).split("@")[0] || "";
@@ -4884,8 +4884,8 @@
     }
     return "";
   }
-  function extractDateFromText(text2) {
-    const value2 = cleanText(text2);
+  function extractDateFromText(text3) {
+    const value2 = cleanText(text3);
     if (!value2) return "";
     const isoMatch = value2.match(/\b(\d{4}-\d{2}-\d{2})\b/);
     if (isoMatch?.[1]) return isoMatch[1];
@@ -4893,8 +4893,8 @@
     if (slashMatch?.[1]) return slashMatch[1];
     return "";
   }
-  function extractReturnDateFromText(text2) {
-    const value2 = cleanText(text2);
+  function extractReturnDateFromText(text3) {
+    const value2 = cleanText(text3);
     if (!value2) return "";
     const isoMatch = value2.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
     if (isoMatch) {
@@ -4903,8 +4903,8 @@
     const slashMatch = value2.match(/\b(\d{2}\/\d{2}\/\d{4})\b/);
     return slashMatch?.[1] || "";
   }
-  function extractEquipmentFromDescription(text2 = "") {
-    const raw = cleanText(text2);
+  function extractEquipmentFromDescription(text3 = "") {
+    const raw = cleanText(text3);
     if (!raw) return { equipmentAssetTag: "", equipmentModel: "", equipmentSummary: "" };
     const assetPattern = /\b((?:\d{2})?PI\d{6,}|[A-Z]{2,}\d{8,})\b/i;
     const equipmentItems = raw.split(/\r?\n/).map(cleanText).filter(Boolean).map((line) => {
@@ -5027,10 +5027,10 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
   }
-  function getTicketNumber(table, rootWindow = getRootWindow()) {
+  function getTicketNumber(table2, rootWindow = getRootWindow()) {
     return safeGetValue("number", rootWindow) || getFirstValue(
       [
-        `#${escapeCssIdentifier(table)}\\.number`,
+        `#${escapeCssIdentifier(table2)}\\.number`,
         "#number",
         'input[name="number"]',
         'input[id="number"]'
@@ -5038,10 +5038,10 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
   }
-  function getShortDescription(table, rootWindow = getRootWindow()) {
+  function getShortDescription(table2, rootWindow = getRootWindow()) {
     return safeGetValue("short_description", rootWindow) || getFirstValue(
       [
-        `#${escapeCssIdentifier(table)}\\.short_description`,
+        `#${escapeCssIdentifier(table2)}\\.short_description`,
         "#short_description",
         'input[name="short_description"]',
         'textarea[name="short_description"]'
@@ -5049,18 +5049,18 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
   }
-  function getDescription(table, rootWindow = getRootWindow()) {
+  function getDescription(table2, rootWindow = getRootWindow()) {
     return safeGetValue("description", rootWindow) || getFirstValue(
       [
-        `#${escapeCssIdentifier(table)}\\.description`,
+        `#${escapeCssIdentifier(table2)}\\.description`,
         "#description",
         'textarea[name="description"]'
       ],
       rootWindow
     );
   }
-  function getConfigurationItem(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getConfigurationItem(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     if (!config) return "";
     const displayValue = cleanText(safeGetDisplayValue("cmdb_ci", rootWindow));
     const fieldValue = cleanText(getFieldDisplayValue("cmdb_ci", rootWindow));
@@ -5068,7 +5068,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     const rawValue = cleanText(safeGetValue("cmdb_ci", rootWindow));
     const resolved = (displayValue && !looksLikeRecordIdentifier(displayValue) ? displayValue : "") || (fieldValue && !looksLikeRecordIdentifier(fieldValue) ? fieldValue : "") || (selectorValue && !looksLikeRecordIdentifier(selectorValue) ? selectorValue : "") || (rawValue && !looksLikeRecordIdentifier(rawValue) ? rawValue : "");
     console.debug("[SN Assistant][CMDB_FIELD_SOURCE]", {
-      table,
+      table: table2,
       displayValue,
       fieldValue,
       selectorValue,
@@ -5077,8 +5077,8 @@ Asset tag: ${item.equipmentAssetTag}`;
     });
     return resolved;
   }
-  function getDeviceModel(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getDeviceModel(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [
       "model",
       "u_model",
@@ -5101,12 +5101,12 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
     if (cleanText(fieldValue)) return cleanText(fieldValue);
-    const configurationItem = getConfigurationItem(table, rootWindow);
+    const configurationItem = getConfigurationItem(table2, rootWindow);
     if (cleanText(configurationItem)) return configurationItem;
     return "";
   }
-  function getPhoneNumber(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getPhoneNumber(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [
       "phone",
       "u_phone",
@@ -5138,8 +5138,8 @@ Asset tag: ${item.equipmentAssetTag}`;
     );
     return cleanText(fieldValue);
   }
-  function getLocation(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getLocation(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [
       ...config?.locationFieldCandidates || [],
       "request_item.request.location",
@@ -5166,8 +5166,8 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
   }
-  function getStateValue(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getStateValue(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [...config?.stateFieldCandidates || [], "state", "u_state"];
     const choiceDisplay = getChoiceFieldDisplayValue("state", rootWindow) || getChoiceFieldDisplayValue("u_state", rootWindow);
     if (cleanText(choiceDisplay)) {
@@ -5193,16 +5193,16 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return cleanText(directDisplayValue || directValue);
   }
-  function getPriority(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getPriority(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [...config?.priorityFieldCandidates || [], "priority", "u_priority"];
     return getFirstFieldValue(candidates, rootWindow, { display: true }) || getFirstValue(
       ['input[name="priority"]', 'input[name="u_priority"]', 'select[name="priority"]', 'select[name="u_priority"]'],
       rootWindow
     );
   }
-  function getAssignmentGroup(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getAssignmentGroup(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [...config?.assignmentGroupFieldCandidates || [], "assignment_group", "u_assignment_group"];
     return getFirstFieldValue(candidates, rootWindow, { display: true }) || getFirstValue(
       [
@@ -5214,8 +5214,8 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
   }
-  function getRequestItem(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getRequestItem(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [
       ...config?.requestItemFieldCandidates || [],
       "request_item.request.number",
@@ -5239,8 +5239,8 @@ Asset tag: ${item.equipmentAssetTag}`;
     const match = cleanText(raw).toUpperCase().match(/\bRITM\d{4,}\b/);
     return match?.[0] || cleanText(raw);
   }
-  function getFollowUp(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function getFollowUp(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const candidates = [
       ...config?.followUpFieldCandidates || [],
       "request_item.request.follow_up",
@@ -5269,14 +5269,14 @@ Asset tag: ${item.equipmentAssetTag}`;
       rootWindow
     );
   }
-  function getDueDate(table, rootWindow = getRootWindow()) {
+  function getDueDate(table2, rootWindow = getRootWindow()) {
     const directValue = safeGetValue("due_date", rootWindow) || safeGetValue("u_due_date", rootWindow) || safeGetValue("expected_date", rootWindow) || safeGetValue("planned_end_date", rootWindow) || safeGetValue("end_date", rootWindow) || getFieldDisplayValue("due_date", rootWindow) || getFieldDisplayValue("u_due_date", rootWindow);
     if (cleanText(directValue)) {
       return cleanText(directValue);
     }
     const textCandidates = [
-      getShortDescription(table, rootWindow),
-      getDescription(table, rootWindow)
+      getShortDescription(table2, rootWindow),
+      getDescription(table2, rootWindow)
     ];
     for (const candidate of textCandidates) {
       const extracted = extractDateFromText(candidate);
@@ -5284,8 +5284,8 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return "";
   }
-  function resolveUserFromForm(table, rootWindow = getRootWindow()) {
-    const config = getTableConfig(table);
+  function resolveUserFromForm(table2, rootWindow = getRootWindow()) {
+    const config = getTableConfig(table2);
     const user = {
       firstName: "",
       lastName: "",
@@ -5395,13 +5395,13 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
   }
   function looksLikeTicketIdentifier(value2) {
-    const text2 = cleanText(value2).toUpperCase();
-    return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text2);
+    const text3 = cleanText(value2).toUpperCase();
+    return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text3);
   }
   function findParentTicketNumber(values2 = []) {
     for (const value2 of values2) {
-      const text2 = cleanText(value2).toUpperCase();
-      const match = text2.match(/\b(?:RITM|INC|REQ)\d{4,}\b/);
+      const text3 = cleanText(value2).toUpperCase();
+      const match = text3.match(/\b(?:RITM|INC|REQ)\d{4,}\b/);
       if (match?.[0]) return match[0];
     }
     return "";
@@ -5488,33 +5488,33 @@ Asset tag: ${item.equipmentAssetTag}`;
     return "";
   }
   function getCurrentContext(rootWindow = getRootWindow()) {
-    const table = detectTable(rootWindow);
-    const rawTicketNumber = getTicketNumber(table, rootWindow);
-    const requestItemNumber = table === "sc_task" ? resolveScTaskRequestItemNumber(rootWindow) : "";
+    const table2 = detectTable(rootWindow);
+    const rawTicketNumber = getTicketNumber(table2, rootWindow);
+    const requestItemNumber = table2 === "sc_task" ? resolveScTaskRequestItemNumber(rootWindow) : "";
     const ticketNumber = requestItemNumber || rawTicketNumber;
     const customerTicketNumber = requestItemNumber || "";
     const validTicketNumber = customerTicketNumber || ticketNumber;
     const sysId = detectSysId(rootWindow);
     const pageKey = detectPageKey(rootWindow);
-    const recordKey2 = createRecordKey({ table, sysId, ticketNumber });
-    const supported = isSupportedTable(table);
-    const user = resolveUserFromForm(table, rootWindow);
+    const recordKey2 = createRecordKey({ table: table2, sysId, ticketNumber });
+    const supported = isSupportedTable(table2);
+    const user = resolveUserFromForm(table2, rootWindow);
     const currentCmdbCi = getCurrentCmdbCi(rootWindow);
     const visibleCmdbCi = readVisibleCmdbCi(rootWindow);
-    const fieldConfigurationItem = cleanText(getConfigurationItem(table, rootWindow));
+    const fieldConfigurationItem = cleanText(getConfigurationItem(table2, rootWindow));
     const configurationItem = cleanText(
       (!looksLikeTicketIdentifier(fieldConfigurationItem) ? fieldConfigurationItem : "") || (!looksLikeTicketIdentifier(visibleCmdbCi) ? visibleCmdbCi : "") || (!looksLikeTicketIdentifier(currentCmdbCi.display) ? currentCmdbCi.display : "") || (!looksLikeTicketIdentifier(currentCmdbCi.value) ? currentCmdbCi.value : "")
     );
-    const description = getDescription(table, rootWindow);
-    const shortDescription = getShortDescription(table, rootWindow);
-    const rawModel = getDeviceModel(table, rootWindow);
+    const description = getDescription(table2, rootWindow);
+    const shortDescription = getShortDescription(table2, rootWindow);
+    const rawModel = getDeviceModel(table2, rootWindow);
     const deviceModel = looksLikeRecordIdentifier(rawModel) ? "" : rawModel;
-    const rawPhone = getPhoneNumber(table, rootWindow) || user?.phone || "";
+    const rawPhone = getPhoneNumber(table2, rootWindow) || user?.phone || "";
     const phone = looksLikeRecordIdentifier(rawPhone) ? "" : rawPhone;
-    const rawState = getStateValue(table, rootWindow);
+    const rawState = getStateValue(table2, rootWindow);
     const state = looksLikeRecordIdentifier(rawState) ? "" : rawState;
-    const sourceNumber = table === "sc_task" ? requestItemNumber || findParentTicketNumber([
-      getRequestItem(table, rootWindow),
+    const sourceNumber = table2 === "sc_task" ? requestItemNumber || findParentTicketNumber([
+      getRequestItem(table2, rootWindow),
       safeGetDisplayValue("request_item", rootWindow),
       safeGetValue("request_item", rootWindow),
       safeGetDisplayValue("request", rootWindow),
@@ -5546,18 +5546,18 @@ Asset tag: ${item.equipmentAssetTag}`;
       safeGetDisplayValue("u_on_hold_reason", rootWindow) || safeGetValue("u_on_hold_reason", rootWindow) || safeGetDisplayValue("hold_reason", rootWindow) || safeGetValue("hold_reason", rootWindow) || safeGetDisplayValue("on_hold_reason", rootWindow) || safeGetValue("on_hold_reason", rootWindow)
     );
     return {
-      ready: Boolean(table || ticketNumber || sysId || state),
+      ready: Boolean(table2 || ticketNumber || sysId || state),
       supported,
-      table,
-      tableLabel: getTableLabel(table),
-      tableConfig: getTableConfig(table),
+      table: table2,
+      tableLabel: getTableLabel(table2),
+      tableConfig: getTableConfig(table2),
       sysId,
       pageKey,
       recordKey: recordKey2,
       ticketNumber,
       recordNumber: ticketNumber,
-      sourceTaskNumber: table === "sc_task" ? cleanText(rawTicketNumber) : "",
-      source_task_number: table === "sc_task" ? cleanText(rawTicketNumber) : "",
+      sourceTaskNumber: table2 === "sc_task" ? cleanText(rawTicketNumber) : "",
+      source_task_number: table2 === "sc_task" ? cleanText(rawTicketNumber) : "",
       customerTicketNumber,
       customer_ticket_number: customerTicketNumber,
       validTicketNumber,
@@ -5570,7 +5570,7 @@ Asset tag: ${item.equipmentAssetTag}`;
       equipment_asset_tag: equipment.equipmentAssetTag,
       equipmentSummary: equipment.equipmentSummary,
       equipment_summary: equipment.equipmentSummary,
-      recordType: table === "sc_task" && sourceNumber.startsWith("RITM") ? "RITM" : "",
+      recordType: table2 === "sc_task" && sourceNumber.startsWith("RITM") ? "RITM" : "",
       sourceNumber,
       sourceType,
       source: sourceType ? "parent" : "",
@@ -5581,7 +5581,7 @@ Asset tag: ${item.equipmentAssetTag}`;
       resolution: solution,
       resolutionNotes: solution,
       resolution_notes: solution,
-      dueDate: getDueDate(table, rootWindow),
+      dueDate: getDueDate(table2, rootWindow),
       configurationItem,
       configurationItemDisplay: cleanText((!looksLikeTicketIdentifier(fieldConfigurationItem) ? fieldConfigurationItem : "") || (!looksLikeTicketIdentifier(currentCmdbCi.display) ? currentCmdbCi.display : "") || (!looksLikeTicketIdentifier(visibleCmdbCi) ? visibleCmdbCi : "") || configurationItem),
       configurationItemValue: cleanText((!looksLikeTicketIdentifier(currentCmdbCi.value) ? currentCmdbCi.value : "") || configurationItem),
@@ -5590,12 +5590,12 @@ Asset tag: ${item.equipmentAssetTag}`;
       model: deviceModel,
       deviceModel,
       phone,
-      location: getLocation(table, rootWindow),
+      location: getLocation(table2, rootWindow),
       state,
-      priority: getPriority(table, rootWindow),
-      assignmentGroup: getAssignmentGroup(table, rootWindow),
-      requestItem: getRequestItem(table, rootWindow),
-      followUp: getFollowUp(table, rootWindow),
+      priority: getPriority(table2, rootWindow),
+      assignmentGroup: getAssignmentGroup(table2, rootWindow),
+      requestItem: getRequestItem(table2, rootWindow),
+      followUp: getFollowUp(table2, rootWindow),
       category,
       subcategory,
       businessApplication,
@@ -6469,12 +6469,12 @@ Asset tag: ${item.equipmentAssetTag}`;
   function normalizeRecentTicket(entry) {
     if (!entry || typeof entry !== "object") return null;
     const number = cleanText(entry.number);
-    const table = cleanText(entry.table);
+    const table2 = cleanText(entry.table);
     const shortDescription = cleanText(entry.shortDescription);
     const url = cleanText(entry.url);
     const visitedAt = cleanText(entry.visitedAt);
     if (!number) return null;
-    return { number, table, shortDescription, url, visitedAt };
+    return { number, table: table2, shortDescription, url, visitedAt };
   }
   function loadRecentTickets(rootWindow) {
     const storage = getLocalStorage(rootWindow);
@@ -6732,9 +6732,9 @@ Asset tag: ${item.equipmentAssetTag}`;
   });
 
   // Assistant/core/navigation.js
-  function openMyAssignedList(table) {
-    const query = table === "incident" ? "active=true^assigned_toDYNAMIC90d1921e5f510100a9ad2572f2b477fe^stateNOT IN6,7,8" : "active=true^assigned_toDYNAMIC90d1921e5f510100a9ad2572f2b477fe^stateNOT IN3,4,5,7";
-    const listPath = table === "incident" ? "incident_list.do" : "sc_task_list.do";
+  function openMyAssignedList(table2) {
+    const query = table2 === "incident" ? "active=true^assigned_toDYNAMIC90d1921e5f510100a9ad2572f2b477fe^stateNOT IN6,7,8" : "active=true^assigned_toDYNAMIC90d1921e5f510100a9ad2572f2b477fe^stateNOT IN3,4,5,7";
+    const listPath = table2 === "incident" ? "incident_list.do" : "sc_task_list.do";
     const url = `/${listPath}?sysparm_query=${encodeURIComponent(query)}`;
     try {
       window.top.location.href = url;
@@ -6975,7 +6975,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     { group: "no_answer", keywords: ["no answer", "pas de r\xE9ponse", "unreachable", "injoignable"] }
   ];
   function detectSmartGroup(ticket = {}, metadata = {}) {
-    const text2 = normalizeText([
+    const text3 = normalizeText([
       ticket.shortDescription,
       ticket.short_description,
       ticket.description,
@@ -6983,7 +6983,7 @@ Asset tag: ${item.equipmentAssetTag}`;
       metadata.description
     ].filter(Boolean).join(" "));
     for (const { group, keywords } of SMART_KEYWORD_GROUPS) {
-      const score = scoreKeywords(text2, keywords);
+      const score = scoreKeywords(text3, keywords);
       if (score > 0) return group;
     }
     return "generic";
@@ -7013,11 +7013,11 @@ Asset tag: ${item.equipmentAssetTag}`;
     ivote_support: 130,
     generic: 0
   };
-  function tokenize(text2) {
-    return normalizeText(text2).split(/[^a-z0-9]+/i).map((segment) => segment.trim()).filter(Boolean);
+  function tokenize(text3) {
+    return normalizeText(text3).split(/[^a-z0-9]+/i).map((segment) => segment.trim()).filter(Boolean);
   }
-  function scoreKeywords(text2, keywords = []) {
-    const normalized = normalizeText(text2);
+  function scoreKeywords(text3, keywords = []) {
+    const normalized = normalizeText(text3);
     return keywords.reduce((score, keyword) => {
       const needle = normalizeText(keyword);
       return needle && normalized.includes(needle) ? score + Math.max(1, needle.split(" ").length) : score;
@@ -7056,9 +7056,9 @@ Asset tag: ${item.equipmentAssetTag}`;
       metadata.text
     ].filter(Boolean).map(cleanText).join(" "));
   }
-  function inferTicketType(ticket = {}, text2 = "") {
-    const table = normalizeText(ticket.table);
-    if (TYPE_BY_TABLE[table]) return TYPE_BY_TABLE[table];
+  function inferTicketType(ticket = {}, text3 = "") {
+    const table2 = normalizeText(ticket.table);
+    if (TYPE_BY_TABLE[table2]) return TYPE_BY_TABLE[table2];
     const number = normalizeText(ticket.ticketNumber || ticket.recordNumber || ticket.ticket || ticket.number);
     const prefix = TYPE_BY_PREFIX.find(({ prefix: prefix2 }) => number.startsWith(prefix2.toLowerCase()));
     if (prefix) return prefix.type;
@@ -7066,12 +7066,12 @@ Asset tag: ${item.equipmentAssetTag}`;
     if (["inc", "incident"].includes(explicit)) return "INC";
     if (["ritm", "request item"].includes(explicit)) return "RITM";
     if (["sc_task", "sctask", "task"].includes(explicit)) return "SCTASK";
-    if (text2.includes("delivery") || text2.includes("appointment") || text2.includes("handover")) return "SCTASK";
-    if (text2.includes("request") || text2.includes("install")) return "RITM";
+    if (text3.includes("delivery") || text3.includes("appointment") || text3.includes("handover")) return "SCTASK";
+    if (text3.includes("request") || text3.includes("install")) return "RITM";
     return "INC";
   }
-  function detectDeviceType(ticket = {}, text2 = "") {
-    const source = normalizeText([ticket.deviceType, ticket.configurationItem, text2].filter(Boolean).join(" "));
+  function detectDeviceType(ticket = {}, text3 = "") {
+    const source = normalizeText([ticket.deviceType, ticket.configurationItem, text3].filter(Boolean).join(" "));
     if (/(ipad)/.test(source)) return "iPad";
     if (/(iphone)/.test(source)) return "iPhone";
     if (/(smartphone|mobile phone|cell phone)/.test(source)) return "Smartphone";
@@ -7115,16 +7115,16 @@ Asset tag: ${item.equipmentAssetTag}`;
       metadata.parent
     ];
     for (const candidate of candidates) {
-      const text2 = cleanText(candidate).toUpperCase();
-      const match = text2.match(/\b(?:RITM|INC)\d{4,}\b/);
+      const text3 = cleanText(candidate).toUpperCase();
+      const match = text3.match(/\b(?:RITM|INC)\d{4,}\b/);
       if (match?.[0]) {
         return match[0];
       }
     }
     return "";
   }
-  function detectSoftwareName(ticket = {}, text2 = "") {
-    const source = normalizeText([ticket.softwareName, ticket.configurationItem, text2].filter(Boolean).join(" "));
+  function detectSoftwareName(ticket = {}, text3 = "") {
+    const source = normalizeText([ticket.softwareName, ticket.configurationItem, text3].filter(Boolean).join(" "));
     if (/(microsoft teams|teams)/.test(source)) return "Teams";
     if (/(outlook|exchange)/.test(source)) return "Outlook";
     if (/(sharepoint)/.test(source)) return "SharePoint";
@@ -7136,8 +7136,8 @@ Asset tag: ${item.equipmentAssetTag}`;
     if (/(mailbox|shared mailbox)/.test(source)) return "Mailbox";
     return "";
   }
-  function detectLocation(ticket = {}, text2 = "") {
-    const source = [ticket.location, text2].filter(Boolean).join(" ");
+  function detectLocation(ticket = {}, text3 = "") {
+    const source = [ticket.location, text3].filter(Boolean).join(" ");
     const match = source.match(/\b(?:meeting room|room|office|building|floor|desk|site)\s+[A-Za-z0-9][A-Za-z0-9\- ]*/i) || source.match(/\b[A-Z]{2,}(?:-[A-Z0-9]{2,}){1,}\b/);
     if (match) return cleanText(match[0]);
     if (normalizeText(source).includes("meeting room")) return "Meeting room";
@@ -7145,9 +7145,9 @@ Asset tag: ${item.equipmentAssetTag}`;
     if (normalizeText(source).includes("remote")) return "Remote";
     return "";
   }
-  function detectSeverity(ticket = {}, text2 = "") {
+  function detectSeverity(ticket = {}, text3 = "") {
     const priority = normalizeText(ticket.priority || ticket.severity || "");
-    const normalized = normalizeText(text2);
+    const normalized = normalizeText(text3);
     if (["1", "p1", "critical"].includes(priority) || normalized.includes("critical")) return "critical";
     if (["2", "p2", "high"].includes(priority) || normalized.includes("urgent") || normalized.includes("asap") || normalized.includes("immediately")) return "urgent";
     if (["4", "p4", "low"].includes(priority)) return "low";
@@ -7158,14 +7158,14 @@ Asset tag: ${item.equipmentAssetTag}`;
     if (severity === "urgent") return "urgent";
     return "routine";
   }
-  function detectLanguage(ticket = {}, text2 = "") {
-    const normalized = normalizeText([ticket.language, ticket.locale, ticket.shortDescription, ticket.description, text2].filter(Boolean).join(" "));
+  function detectLanguage(ticket = {}, text3 = "") {
+    const normalized = normalizeText([ticket.language, ticket.locale, ticket.shortDescription, ticket.description, text3].filter(Boolean).join(" "));
     if (["rendez-vous", "utilisatrice", "parametres", "e-mails", "imprimante", "clavier"].some((hint) => normalized.includes(hint))) return "fr";
     if (["usuario", "correo", "calendario", "cita", "portatil", "impresora"].some((hint) => normalized.includes(hint))) return "es";
     return "en";
   }
-  function detectVipStatus(ticket = {}, text2 = "") {
-    return [ticket.vip, ticket.isVip, ticket.user?.vip, ticket.user?.isVip, ticket.user?.role, ticket.assignmentGroup, text2].some((entry) => entry === true || normalizeText(entry).includes("vip"));
+  function detectVipStatus(ticket = {}, text3 = "") {
+    return [ticket.vip, ticket.isVip, ticket.user?.vip, ticket.user?.isVip, ticket.user?.role, ticket.assignmentGroup, text3].some((entry) => entry === true || normalizeText(entry).includes("vip"));
   }
   function detectTicketAgeDays(ticket = {}, metadata = {}) {
     const raw = cleanText(ticket.ticketAgeDays || ticket.ageDays || metadata.ticketAgeDays || metadata.ageDays || ticket.openedAt || ticket.sys_created_on || ticket.createdOn || ticket.created_on);
@@ -7221,36 +7221,36 @@ Asset tag: ${item.equipmentAssetTag}`;
         return "Review the request and confirm the next support step.";
     }
   }
-  function hasAny(text2, phrases = []) {
-    const normalized = normalizeText(text2);
+  function hasAny(text3, phrases = []) {
+    const normalized = normalizeText(text3);
     return phrases.some((phrase) => normalized.includes(normalizeText(phrase)));
   }
-  function resolveDirectIntent(text2, metadata = {}) {
+  function resolveDirectIntent(text3, metadata = {}) {
     const deviceType = cleanText(metadata.deviceType);
     const softwareName = cleanText(metadata.softwareName);
     const deviceContext = [deviceType, softwareName, metadata.location].filter(Boolean).join(" ");
-    if (hasAny(text2, ["workspace", "new workspace", "desk move", "office move", "quality check after move", "quality check"])) return "workspace_quality_check";
-    if (hasAny(text2, ["lost", "stolen", "missing", "theft", "perdu", "vole"])) return "loss_or_theft";
-    if (hasAny(text2, ["validation", "eligibility", "eligible", "approval", "under review"])) return "validation_approval";
-    if (hasAny(text2, ["recover", "retrieve", "return", "collect", "pickup", "pick up", "bring back", "handover", "hand over", "collect equipment", "retrieve device", "return laptop", "return equipment", "device collection"]) && hasAny(text2, ["device", "equipment", "laptop", "tablet", "phone", "mobile", "iphone", "computer", "asset", "material"])) return "asset_recovery";
-    if (hasAny(text2, ["appointment", "visit", "schedule", "rendez-vous", "rdv", "intervention planned"])) {
-      if (hasAny(text2, ["deliver", "delivery", "livraison", "remise", "handover", "ready for delivery", "preparation", "prepare", "loan", "replacement"]) && hasAny(text2, ["laptop", "desktop", "smartphone", "phone", "mobile", "tablet", "ipad", "iphone", "device", "item", "hybrid"])) {
+    if (hasAny(text3, ["workspace", "new workspace", "desk move", "office move", "quality check after move", "quality check"])) return "workspace_quality_check";
+    if (hasAny(text3, ["lost", "stolen", "missing", "theft", "perdu", "vole"])) return "loss_or_theft";
+    if (hasAny(text3, ["validation", "eligibility", "eligible", "approval", "under review"])) return "validation_approval";
+    if (hasAny(text3, ["recover", "retrieve", "return", "collect", "pickup", "pick up", "bring back", "handover", "hand over", "collect equipment", "retrieve device", "return laptop", "return equipment", "device collection"]) && hasAny(text3, ["device", "equipment", "laptop", "tablet", "phone", "mobile", "iphone", "computer", "asset", "material"])) return "asset_recovery";
+    if (hasAny(text3, ["appointment", "visit", "schedule", "rendez-vous", "rdv", "intervention planned"])) {
+      if (hasAny(text3, ["deliver", "delivery", "livraison", "remise", "handover", "ready for delivery", "preparation", "prepare", "loan", "replacement"]) && hasAny(text3, ["laptop", "desktop", "smartphone", "phone", "mobile", "tablet", "ipad", "iphone", "device", "item", "hybrid"])) {
         return "request_delivery";
       }
       return "appointment";
     }
-    if (hasAny(text2, ["deliver", "delivery", "livraison", "remise", "handover", "ready for delivery", "preparation", "prepare", "loan", "replacement"]) && hasAny(text2, ["laptop", "desktop", "smartphone", "phone", "mobile", "tablet", "ipad", "iphone", "device", "item", "hybrid"])) return "request_delivery";
-    if (hasAny(text2, ["certificate"])) return "request_user_action";
-    if (hasAny(text2, ["password", "reset", "unlock", "shared mailbox", "mailbox", "sharepoint", "eu login", "login", "authentication"]) || hasAny(text2, ["access"]) && !hasAny(text2, ["install", "installation", "software", "application", "update", "web2print", "adobe", "teams", "outlook", "calendar"])) return "account_access";
-    if (hasAny(text2, ["vpn", "wifi", "wi-fi", "network", "connection", "connectivity", "sync", "drops", "drop", "no connection", "cannot connect", "wired", "ethernet", "disconnect", "disconnects"])) return "connectivity_issue";
-    if (hasAny(text2, ["outlook", "calendar", "teams"]) && hasAny(text2, ["freeze", "frozen", "crash", "not responding", "scheduling assistant", "profile"])) return "incident_active";
-    if (hasAny(text2, ["screen", "keyboard", "monitor", "webcam", "printer", "battery", "sim", "dock", "docking", "audio", "speaker"]) && hasAny(text2, ["broken", "not working", "not detected", "stuck", "flickering", "missing", "response"])) return "hardware_issue";
-    if (hasAny(text2, ["install", "installation", "software", "application", "license", "licence", "update", "adobe", "web2print"]) || hasAny(text2, ["outlook", "calendar", "teams", "email", "sharepoint"]) && hasAny(text2, ["request", "access", "update", "support"])) return "software_request";
-    if (hasAny(text2, ["signature"]) && hasAny(text2, ["email", "outlook", "mail"])) return "incident_active";
-    if (hasAny(text2, ["issue", "problem", "not working", "error", "fail", "failed", "broken", "stuck", "flickering", "cannot access", "unable to", "crash", "down", "outbox"])) {
-      if (hasAny(text2, ["screen", "keyboard", "monitor", "webcam", "printer", "battery", "sim", "dock", "docking", "audio", "speaker"])) return "hardware_issue";
-      if (hasAny(text2, ["vpn", "wifi", "network", "connection", "sync"])) return "connectivity_issue";
-      if (hasAny(text2, ["outlook", "calendar", "teams", "email", "sharepoint", "sap", "adobe", "web2print"])) return "incident_active";
+    if (hasAny(text3, ["deliver", "delivery", "livraison", "remise", "handover", "ready for delivery", "preparation", "prepare", "loan", "replacement"]) && hasAny(text3, ["laptop", "desktop", "smartphone", "phone", "mobile", "tablet", "ipad", "iphone", "device", "item", "hybrid"])) return "request_delivery";
+    if (hasAny(text3, ["certificate"])) return "request_user_action";
+    if (hasAny(text3, ["password", "reset", "unlock", "shared mailbox", "mailbox", "sharepoint", "eu login", "login", "authentication"]) || hasAny(text3, ["access"]) && !hasAny(text3, ["install", "installation", "software", "application", "update", "web2print", "adobe", "teams", "outlook", "calendar"])) return "account_access";
+    if (hasAny(text3, ["vpn", "wifi", "wi-fi", "network", "connection", "connectivity", "sync", "drops", "drop", "no connection", "cannot connect", "wired", "ethernet", "disconnect", "disconnects"])) return "connectivity_issue";
+    if (hasAny(text3, ["outlook", "calendar", "teams"]) && hasAny(text3, ["freeze", "frozen", "crash", "not responding", "scheduling assistant", "profile"])) return "incident_active";
+    if (hasAny(text3, ["screen", "keyboard", "monitor", "webcam", "printer", "battery", "sim", "dock", "docking", "audio", "speaker"]) && hasAny(text3, ["broken", "not working", "not detected", "stuck", "flickering", "missing", "response"])) return "hardware_issue";
+    if (hasAny(text3, ["install", "installation", "software", "application", "license", "licence", "update", "adobe", "web2print"]) || hasAny(text3, ["outlook", "calendar", "teams", "email", "sharepoint"]) && hasAny(text3, ["request", "access", "update", "support"])) return "software_request";
+    if (hasAny(text3, ["signature"]) && hasAny(text3, ["email", "outlook", "mail"])) return "incident_active";
+    if (hasAny(text3, ["issue", "problem", "not working", "error", "fail", "failed", "broken", "stuck", "flickering", "cannot access", "unable to", "crash", "down", "outbox"])) {
+      if (hasAny(text3, ["screen", "keyboard", "monitor", "webcam", "printer", "battery", "sim", "dock", "docking", "audio", "speaker"])) return "hardware_issue";
+      if (hasAny(text3, ["vpn", "wifi", "network", "connection", "sync"])) return "connectivity_issue";
+      if (hasAny(text3, ["outlook", "calendar", "teams", "email", "sharepoint", "sap", "adobe", "web2print"])) return "incident_active";
       if (deviceContext) return "hardware_issue";
       return "incident_active";
     }
@@ -7269,23 +7269,23 @@ Asset tag: ${item.equipmentAssetTag}`;
       context.cmdb_ci
     ];
     for (const candidate of candidates) {
-      const text2 = cleanText(candidate);
-      if (!text2) continue;
-      if (/^[0-9a-f]{32}$/i.test(text2)) continue;
-      if (/^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/i.test(text2)) continue;
-      return text2;
+      const text3 = cleanText(candidate);
+      if (!text3) continue;
+      if (/^[0-9a-f]{32}$/i.test(text3)) continue;
+      if (/^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/i.test(text3)) continue;
+      return text3;
     }
     return "";
   }
-  function resolveBestIntent(text2, ticketType, metadata = {}) {
-    const directIntent = resolveDirectIntent(text2, metadata);
+  function resolveBestIntent(text3, ticketType, metadata = {}) {
+    const directIntent = resolveDirectIntent(text3, metadata);
     if (directIntent) {
       return { intent: directIntent, confidence: 5 };
     }
-    if (!text2) return { intent: ticketType === "INC" ? "incident_active" : ticketType === "SCTASK" ? "request_delivery" : "generic", confidence: 0 };
+    if (!text3) return { intent: ticketType === "INC" ? "incident_active" : ticketType === "SCTASK" ? "request_delivery" : "generic", confidence: 0 };
     const contextBoost = [metadata.deviceType, metadata.softwareName, metadata.location, metadata.state, metadata.priority, metadata.assignmentGroup, metadata.requestItem, metadata.followUp].filter(Boolean).join(" ");
     const scores = TYPE_KEYWORDS.map((rule) => {
-      const base = scoreKeywords(text2, rule.keywords);
+      const base = scoreKeywords(text3, rule.keywords);
       const boost = scoreKeywords(contextBoost, rule.keywords);
       const ticketBoost = ticketType === "INC" && rule.type === "incident_active" ? 1 : 0;
       return { type: rule.type, score: base + boost + ticketBoost, priority: INTENT_PRIORITY[rule.type] || 0 };
@@ -7294,17 +7294,17 @@ Asset tag: ${item.equipmentAssetTag}`;
     return best.score ? { intent: best.type, confidence: best.score } : { intent: "generic", confidence: 0 };
   }
   function detectContext(ticket = {}, metadata = {}) {
-    const text2 = buildSearchText(ticket, metadata);
-    const ticketType = inferTicketType(ticket, text2);
+    const text3 = buildSearchText(ticket, metadata);
+    const ticketType = inferTicketType(ticket, text3);
     const validTicketNumber = getValidTicket(ticket, metadata);
     const validTicketType = validTicketNumber.startsWith("RITM") ? "RITM" : validTicketNumber.startsWith("INC") ? "INC" : "";
-    const severity = detectSeverity(ticket, text2);
+    const severity = detectSeverity(ticket, text3);
     const urgencyLevel = detectUrgencyLevel(severity);
-    const deviceType = detectDeviceType(ticket, text2);
-    const softwareName = detectSoftwareName(ticket, text2);
-    const location = detectLocation(ticket, text2);
-    const language = detectLanguage(ticket, text2);
-    const vip = detectVipStatus(ticket, text2);
+    const deviceType = detectDeviceType(ticket, text3);
+    const softwareName = detectSoftwareName(ticket, text3);
+    const location = detectLocation(ticket, text3);
+    const language = detectLanguage(ticket, text3);
+    const vip = detectVipStatus(ticket, text3);
     const ticketAgeDays = detectTicketAgeDays(ticket, metadata);
     const state = cleanText(ticket.state || metadata.state);
     const priority = cleanText(ticket.priority || metadata.priority);
@@ -7313,13 +7313,13 @@ Asset tag: ${item.equipmentAssetTag}`;
     const followUp = cleanText(ticket.followUp || ticket.follow_up || metadata.followUp);
     const requestedFor = cleanText(ticket.requestedFor || ticket.requested_for || metadata.requestedFor);
     const configurationItem = cleanText(ticket.configurationItem || ticket.cmdb_ci || metadata.configurationItem || metadata.ci);
-    const { intent, confidence } = resolveBestIntent(text2, ticketType, { ...metadata, deviceType, softwareName, location, state, priority, assignmentGroup, requestItem, followUp });
+    const { intent, confidence } = resolveBestIntent(text3, ticketType, { ...metadata, deviceType, softwareName, location, state, priority, assignmentGroup, requestItem, followUp });
     return {
       ticketType,
       intent,
       confidence,
-      text: text2,
-      tokens: tokenize(text2),
+      text: text3,
+      tokens: tokenize(text3),
       table: cleanText(ticket.table),
       shortDescription: cleanText(ticket.shortDescription || ticket.short_description),
       description: cleanText(ticket.description || ticket.desc),
@@ -7358,11 +7358,11 @@ Asset tag: ${item.equipmentAssetTag}`;
   function isGenericEmailTemplate(template = {}) {
     return ["generic_ticket_follow_up", "incident_follow_up"].includes(cleanText(template.id));
   }
-  function matchRuleTemplate(text2, rules = [], templates = []) {
+  function matchRuleTemplate(text3, rules = [], templates = []) {
     let bestTemplateId = "";
     let bestScore = 0;
     rules.forEach((rule) => {
-      const score = scoreKeywords(text2, rule.keywords);
+      const score = scoreKeywords(text3, rule.keywords);
       if (score > bestScore) {
         bestScore = score;
         bestTemplateId = rule.templateId;
@@ -7380,10 +7380,10 @@ Asset tag: ${item.equipmentAssetTag}`;
     const closeScores = bestScore > 0 && Math.abs(bestScore - secondScore) <= 1;
     return tooShort || generic || lowConfidence || closeScores;
   }
-  function getEmailTemplateCandidates(text2, rules = [], templates = [], limit = 3) {
+  function getEmailTemplateCandidates(text3, rules = [], templates = [], limit = 3) {
     const scored = rules.map((rule) => ({
       templateId: rule.templateId,
-      score: scoreKeywords(text2, rule.keywords),
+      score: scoreKeywords(text3, rule.keywords),
       template: findTemplateById(templates, rule.templateId)
     })).filter((entry) => entry.template).sort((left, right) => right.score - left.score);
     const unique = [];
@@ -7404,7 +7404,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     return unique;
   }
   function resolveDetectedEmailTemplateId(templateId = "", context = {}, mapToExisting = {}) {
-    const text2 = normalizeText(context.text || [
+    const text3 = normalizeText(context.text || [
       context.shortDescription,
       context.description,
       context.category,
@@ -7413,9 +7413,9 @@ Asset tag: ${item.equipmentAssetTag}`;
       context.deviceType
     ].filter(Boolean).join(" "));
     if (templateId === "asset_recovery_before_due_date" || context.intent === "asset_recovery") {
-      const hasRecoveryAction = /\b(recover|retrieve|return|collect|pickup|pick up|bring back|handover|hand over)\b/.test(text2);
-      const hasMobileDevice = /\b(phone|mobile|iphone|tablet|smartphone)\b/.test(text2);
-      const hasItMaterial = /\b(device|equipment|material|computer|laptop|asset|pc)\b/.test(text2);
+      const hasRecoveryAction = /\b(recover|retrieve|return|collect|pickup|pick up|bring back|handover|hand over)\b/.test(text3);
+      const hasMobileDevice = /\b(phone|mobile|iphone|tablet|smartphone)\b/.test(text3);
+      const hasItMaterial = /\b(device|equipment|material|computer|laptop|asset|pc)\b/.test(text3);
       if (hasRecoveryAction && hasMobileDevice) return "recover_mobile_devices_before_due_date";
       if (hasRecoveryAction && hasItMaterial) return "recover_it_material_before_due_date";
     }
@@ -7536,7 +7536,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     return raw || "reported issue";
   }
   function detectTemplate(context = {}) {
-    const text2 = normalizeText([
+    const text3 = normalizeText([
       context.shortDescription,
       context.description,
       context.category,
@@ -7561,8 +7561,8 @@ Asset tag: ${item.equipmentAssetTag}`;
       ["access_rights", /(sharepoint|confluence|teams|permission|folder access)/],
       ["accessory", /(headset|charger|keyboard|mouse|webcam|surface pen)/]
     ];
-    for (const [templateId, re] of rules) if (re.test(text2)) return { templateId, confidence: "high" };
-    return { templateId: "generic", confidence: text2 ? "low" : "low" };
+    for (const [templateId, re] of rules) if (re.test(text3)) return { templateId, confidence: "high" };
+    return { templateId: "generic", confidence: text3 ? "low" : "low" };
   }
   function buildSubject(context = {}) {
     const ticket = cleanText(context.ticketNumber || context.recordNumber || "your ticket");
@@ -10837,8 +10837,8 @@ word-wrap:break-word'>\r
     return String(value2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
   function textBodyToHtml(body = "") {
-    const text2 = String(body || "").replace(/\r\n/g, "\n");
-    const paragraphs = text2.split(/\n{2,}/).map((paragraph) => paragraph.split("\n").map(escapeHtml2).join("<br>")).filter((paragraph) => paragraph.trim());
+    const text3 = String(body || "").replace(/\r\n/g, "\n");
+    const paragraphs = text3.split(/\n{2,}/).map((paragraph) => paragraph.split("\n").map(escapeHtml2).join("<br>")).filter((paragraph) => paragraph.trim());
     return paragraphs.map((paragraph) => `<p>${paragraph}</p>`).join("");
   }
   function loadSignature() {
@@ -10889,19 +10889,19 @@ word-wrap:break-word'>\r
     return firstSentence.length > 140 ? `${firstSentence.slice(0, 137).trim()}...` : firstSentence;
   }
   function extractLastName(fullName) {
-    const text2 = cleanText(fullName);
-    if (!text2) return "";
-    if (text2.includes(",")) {
-      const [lastName] = text2.split(",").map((segment) => cleanText(segment));
+    const text3 = cleanText(fullName);
+    if (!text3) return "";
+    if (text3.includes(",")) {
+      const [lastName] = text3.split(",").map((segment) => cleanText(segment));
       return lastName;
     }
-    const parts = text2.split(/\s+/).filter(Boolean);
+    const parts = text3.split(/\s+/).filter(Boolean);
     return parts.slice(1).join(" ") || parts[0] || "";
   }
   function extractDeviceFromDescription(description) {
-    const text2 = cleanText(description);
-    if (!text2) return "";
-    const lines = text2.split(/\r?\n/).map((line) => cleanText(line)).filter(Boolean);
+    const text3 = cleanText(description);
+    if (!text3) return "";
+    const lines = text3.split(/\r?\n/).map((line) => cleanText(line)).filter(Boolean);
     for (const line of lines) {
       const afterLabel = line.match(/(?:^|\b)(?:device|device type|model|equipment|item)\s*[:\-]\s*(.+)$/i);
       if (afterLabel?.[1]) {
@@ -10912,7 +10912,7 @@ word-wrap:break-word'>\r
     if (firstLine && /\b(device|model|iphone|ipad|laptop|desktop|phone|tablet|pc)\b/i.test(firstLine) && !looksLikePiIdentifier(firstLine) && !looksLikeRecordIdentifier2(firstLine)) {
       return firstLine.replace(/^(?:device|device type|model|equipment|item)\s*[:\-]\s*/i, "").trim();
     }
-    return text2;
+    return text3;
   }
   function compactDeviceLabel(value2) {
     return cleanText(value2).replace(/\s*\(\s*\)\s*$/, "").trim();
@@ -10950,13 +10950,13 @@ word-wrap:break-word'>\r
     return chunks.join(separator).trim();
   }
   function looksLikeRecordIdentifier2(value2) {
-    const text2 = cleanText(value2).toUpperCase();
-    if (!text2) return false;
-    return /^[0-9A-F]{32}$/.test(text2) || /^(INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text2) || /^[A-Z]{2,}\d{4,}$/.test(text2);
+    const text3 = cleanText(value2).toUpperCase();
+    if (!text3) return false;
+    return /^[0-9A-F]{32}$/.test(text3) || /^(INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text3) || /^[A-Z]{2,}\d{4,}$/.test(text3);
   }
   function looksLikeTicketIdentifier2(value2) {
-    const text2 = cleanText(value2).toUpperCase();
-    return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text2);
+    const text3 = cleanText(value2).toUpperCase();
+    return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text3);
   }
   function looksLikeSysId(value2) {
     return /^[0-9a-f]{32}$/i.test(cleanText(value2));
@@ -10985,11 +10985,11 @@ word-wrap:break-word'>\r
     return parts.filter(Boolean).join(", ");
   }
   function parseAppointmentDate(value2) {
-    const text2 = cleanText(value2);
-    if (!text2) return null;
-    const parsed = new Date(text2);
+    const text3 = cleanText(value2);
+    if (!text3) return null;
+    const parsed = new Date(text3);
     if (!Number.isNaN(parsed.getTime())) return parsed;
-    const match = text2.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    const match = text3.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
     if (!match) return null;
     const date = new Date(
       Number.parseInt(match[1], 10),
@@ -11009,15 +11009,15 @@ word-wrap:break-word'>\r
     return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }
   function resolveAppointmentDeviceTerms(sourceText = "") {
-    const text2 = cleanText(sourceText).toLowerCase();
-    if (/iphone/.test(text2)) {
+    const text3 = cleanText(sourceText).toLowerCase();
+    if (/iphone/.test(text3)) {
       return {
         appointment_device_label: "iPhone",
         appointment_device_subject: "corporate iPhone",
         appointment_device_configuration: "iPhone"
       };
     }
-    if (/(tablet|ipad)/.test(text2)) {
+    if (/(tablet|ipad)/.test(text3)) {
       return {
         appointment_device_label: "tablet",
         appointment_device_subject: "corporate tablet",
@@ -11031,34 +11031,34 @@ word-wrap:break-word'>\r
     };
   }
   function getDynamicResolutionText(shortDescription = "") {
-    const text2 = cleanText(shortDescription).toLowerCase();
-    if (text2.includes("screen") || text2.includes("damage") || text2.includes("broken")) {
+    const text3 = cleanText(shortDescription).toLowerCase();
+    if (text3.includes("screen") || text3.includes("damage") || text3.includes("broken")) {
       return "Your device has been replaced with a new one following the reported damage.";
     }
-    if (text2.includes("battery")) {
+    if (text3.includes("battery")) {
       return "The battery issue has been resolved and the device is now functioning properly.";
     }
-    if (text2.includes("wifi") || text2.includes("network") || text2.includes("connection")) {
+    if (text3.includes("wifi") || text3.includes("network") || text3.includes("connection")) {
       return "The connectivity issue has been resolved and the service is now working normally.";
     }
-    if (text2.includes("outlook") || text2.includes("email")) {
+    if (text3.includes("outlook") || text3.includes("email")) {
       return "The email issue has been resolved and your mailbox is now functioning correctly.";
     }
-    if (text2.includes("phone") || text2.includes("mobile")) {
+    if (text3.includes("phone") || text3.includes("mobile")) {
       return "The issue with your mobile device has been resolved and the device is now operational.";
     }
-    if (text2.includes("laptop") || text2.includes("pc")) {
+    if (text3.includes("laptop") || text3.includes("pc")) {
       return "The issue with your computer has been resolved and the device is now functioning normally.";
     }
     return "The reported issue has been resolved and the service has been restored.";
   }
   function isLikelyPersonName2(value2) {
-    const text2 = cleanText(value2);
-    if (!text2 || text2.length < 2) return false;
-    if (looksLikeRecordIdentifier2(text2)) return false;
-    if (/^(?:sctask|task|ritm|req|inc|chg|prb|sr|kb)\b/i.test(text2)) return false;
-    if (!/[a-z]/i.test(text2)) return false;
-    return !/^(?:unknown|n\/a|null|undefined)$/i.test(text2);
+    const text3 = cleanText(value2);
+    if (!text3 || text3.length < 2) return false;
+    if (looksLikeRecordIdentifier2(text3)) return false;
+    if (/^(?:sctask|task|ritm|req|inc|chg|prb|sr|kb)\b/i.test(text3)) return false;
+    if (!/[a-z]/i.test(text3)) return false;
+    return !/^(?:unknown|n\/a|null|undefined)$/i.test(text3);
   }
   function toDisplayNameFromEmail(email2) {
     const local = cleanText(email2).split("@")[0];
@@ -11096,9 +11096,9 @@ word-wrap:break-word'>\r
     return isLikelyPersonName2(fromEmail) ? fromEmail : "";
   }
   function looksLikePiIdentifier(value2) {
-    const text2 = cleanText(value2);
-    if (!text2) return false;
-    return /^(?:\d{2}PI\d{8,}|PI\d{6,}|[A-Z]{1,4}\d{8,})$/i.test(text2);
+    const text3 = cleanText(value2);
+    if (!text3) return false;
+    return /^(?:\d{2}PI\d{8,}|PI\d{6,}|[A-Z]{1,4}\d{8,})$/i.test(text3);
   }
   function resolveDeviceModelValue(context = {}) {
     const configurationCandidates = [
@@ -11360,14 +11360,14 @@ ${body}`) : body;
     ".modal",
     ".glide_box"
   ];
-  function getPreviewButtonCandidates({ table = "", previewButtonId = "", previewFieldCandidates = [] } = {}) {
+  function getPreviewButtonCandidates({ table: table2 = "", previewButtonId = "", previewFieldCandidates = [] } = {}) {
     const candidates = [cleanText(previewButtonId)];
     previewFieldCandidates.forEach((fieldName) => {
       const safeFieldName = cleanText(fieldName);
       if (!safeFieldName) return;
       candidates.push(`viewr.${safeFieldName}`);
-      if (table) {
-        candidates.push(`viewr.${cleanText(table)}.${safeFieldName}`);
+      if (table2) {
+        candidates.push(`viewr.${cleanText(table2)}.${safeFieldName}`);
       }
     });
     return Array.from(new Set(candidates.filter(Boolean)));
@@ -11637,8 +11637,8 @@ ${body}`) : body;
     }
     return { ok: false, targetField: "" };
   }
-  async function copyToClipboard(text2, hostDocument = document) {
-    const value2 = cleanText(text2);
+  async function copyToClipboard(text3, hostDocument = document) {
+    const value2 = cleanText(text3);
     if (!value2) return false;
     try {
       const hookResult = window.__SN_ASSISTANT_TEST_HOOKS__?.onCopyToClipboard?.(value2);
@@ -11883,8 +11883,8 @@ ${value2}` : value2;
     }
     return { ok: false, verified: false, targetField: "", source: "dom" };
   }
-  function writeWorkNoteToField(text2, context = {}, { append = true } = {}) {
-    const value2 = cleanText(text2);
+  function writeWorkNoteToField(text3, context = {}, { append = true } = {}) {
+    const value2 = cleanText(text3);
     if (!value2) return { ok: false, verified: false, targetField: "", kind: "empty" };
     const bestGForm = getBestGForm();
     try {
@@ -11977,21 +11977,21 @@ ${value2}` : value2;
     return Number.isFinite(Number(usageMap?.[templateId])) ? Number(usageMap[templateId]) : 0;
   }
   function getWorkNoteTemplateRelevance(template = {}, context = {}) {
-    const text2 = normalizeSearchText([
+    const text3 = normalizeSearchText([
       context?.shortDescription,
       context?.description,
       context?.state,
       context?.intent
     ].filter(Boolean).join(" "));
-    if (!text2) return 0;
+    if (!text3) return 0;
     const corpus2 = buildWorkNoteSearchText(template);
     let score = 0;
-    if (/schedule smartphone delivery|smartphone delivery|iphone delivery|phone delivery/.test(text2) && /(phone|smartphone|delivery|handover|device_ready|device_delivered|swap_phone)/.test(corpus2)) score += 9;
-    if (/\bswap\b/.test(text2) && /\bswap\b/.test(corpus2)) score += 6;
-    if (/\b(pc|laptop|desktop)\b/.test(text2) && /\b(pc|laptop|desktop)\b/.test(corpus2)) score += 4;
-    if (/\b(phone|smartphone|iphone|mobile)\b/.test(text2) && /\b(phone|smartphone|iphone|mobile)\b/.test(corpus2)) score += 4;
-    if (/\bappointment|schedule|availability\b/.test(text2) && /\bappointment|delivery|handover\b/.test(corpus2)) score += 2;
-    if (/\breminder\b/.test(text2) && /\breminder\b/.test(corpus2)) score += 2;
+    if (/schedule smartphone delivery|smartphone delivery|iphone delivery|phone delivery/.test(text3) && /(phone|smartphone|delivery|handover|device_ready|device_delivered|swap_phone)/.test(corpus2)) score += 9;
+    if (/\bswap\b/.test(text3) && /\bswap\b/.test(corpus2)) score += 6;
+    if (/\b(pc|laptop|desktop)\b/.test(text3) && /\b(pc|laptop|desktop)\b/.test(corpus2)) score += 4;
+    if (/\b(phone|smartphone|iphone|mobile)\b/.test(text3) && /\b(phone|smartphone|iphone|mobile)\b/.test(corpus2)) score += 4;
+    if (/\bappointment|schedule|availability\b/.test(text3) && /\bappointment|delivery|handover\b/.test(corpus2)) score += 2;
+    if (/\breminder\b/.test(text3) && /\breminder\b/.test(corpus2)) score += 2;
     return score;
   }
   function sortTemplatesForContext(templates = [], usageMap = {}, context = {}) {
@@ -12730,8 +12730,8 @@ ${value2}` : value2;
   function currentNumber(context) {
     return value(context?.number ?? context?.ticketNumber ?? context?.sourceNumber ?? context?.recordNumber);
   }
-  function badge(table) {
-    return { incident: "INC", sc_req_item: "RITM", sc_request: "REQ", sc_task: "SCTASK" }[table] || String(table || "").toUpperCase().slice(0, 6);
+  function badge(table2) {
+    return { incident: "INC", sc_req_item: "RITM", sc_request: "REQ", sc_task: "SCTASK" }[table2] || String(table2 || "").toUpperCase().slice(0, 6);
   }
   function stateClass(state) {
     const s = value(state).toLowerCase();
@@ -12782,13 +12782,13 @@ ${value2}` : value2;
     return `<span class="sn-assistant-tickets-table__state-pill sn-assistant-tickets-table__state-pill--${stateClass(s)}" title="${escapeHtml(s)}">${escapeHtml(s)}</span>`;
   }
   function renderCard(t, context, { closed = false, previewHidden = false } = {}) {
-    const table = value(t.table), number = value(t.number), desc = value(t.shortDesc ?? t.short_description), sysId = value(t.sysId ?? t.sys_id);
+    const table2 = value(t.table), number = value(t.number), desc = value(t.shortDesc ?? t.short_description), sysId = value(t.sysId ?? t.sys_id);
     const isCurrent = currentNumber(context) === number;
     return `<div class="sn-assistant-ticket-card-wrap ${previewHidden ? "is-preview-hidden" : ""}" data-preview-item>
-    <button type="button" class="sn-assistant-all-ticket ${isCurrent ? "is-current" : ""}" data-action="user-tickets-open" data-table="${escapeHtml(table)}" data-sys-id="${escapeHtml(sysId)}" title="${escapeHtml(desc || number)}">
-      <span class="sn-assistant-all-ticket__node sn-assistant-all-ticket__node--${escapeHtml(table)}" aria-hidden="true"></span>
+    <button type="button" class="sn-assistant-all-ticket ${isCurrent ? "is-current" : ""}" data-action="user-tickets-open" data-table="${escapeHtml(table2)}" data-sys-id="${escapeHtml(sysId)}" title="${escapeHtml(desc || number)}">
+      <span class="sn-assistant-all-ticket__node sn-assistant-all-ticket__node--${escapeHtml(table2)}" aria-hidden="true"></span>
       <span class="sn-assistant-all-ticket__body">
-        <span class="sn-assistant-all-ticket__topline"><span><span class="sn-assistant-tickets-table__badge sn-assistant-tickets-table__badge--${escapeHtml(table)}">${escapeHtml(badge(table))}</span> <strong>${escapeHtml(number)}</strong></span>${renderState(t.state)}</span>
+        <span class="sn-assistant-all-ticket__topline"><span><span class="sn-assistant-tickets-table__badge sn-assistant-tickets-table__badge--${escapeHtml(table2)}">${escapeHtml(badge(table2))}</span> <strong>${escapeHtml(number)}</strong></span>${renderState(t.state)}</span>
         ${desc ? `<span class="sn-assistant-all-ticket__description">${escapeHtml(desc)}</span>` : ""}
         <span class="sn-assistant-all-ticket__meta"><span>${escapeHtml(assigned(t))}</span><span>${escapeHtml(ticketDate(t, closed) || "-")}</span></span>
       </span>
@@ -12895,7 +12895,7 @@ ${value2}` : value2;
     root.addEventListener("click", async (event) => {
       const target = event.target.closest("[data-action]");
       if (!target || !root.contains(target)) return;
-      const { action, sysId, table } = target.dataset;
+      const { action, sysId, table: table2 } = target.dataset;
       if (action === "user-tickets-close") {
         handlers.onCloseUserTickets();
         return;
@@ -12955,12 +12955,12 @@ ${value2}` : value2;
         }
         return;
       }
-      if (action === "user-tickets-open" && sysId && table) {
+      if (action === "user-tickets-open" && sysId && table2) {
         try {
-          window.top.location.href = `/nav_to.do?uri=/${table}.do?sys_id=${sysId}`;
+          window.top.location.href = `/nav_to.do?uri=/${table2}.do?sys_id=${sysId}`;
         } catch {
           try {
-            window.open(`/${table}.do?sys_id=${sysId}`, "_blank");
+            window.open(`/${table2}.do?sys_id=${sysId}`, "_blank");
           } catch {
           }
         }
@@ -13611,11 +13611,11 @@ ${value2}` : value2;
     </div>
   `;
   }
-  function hasUnfilledPlaceholders(text2) {
-    return /\{\{[^}]+\}\}/.test(String(text2 || ""));
+  function hasUnfilledPlaceholders(text3) {
+    return /\{\{[^}]+\}\}/.test(String(text3 || ""));
   }
-  function renderBodyWithHighlights(text2) {
-    const escaped = escapeHtml(String(text2 || ""));
+  function renderBodyWithHighlights(text3) {
+    const escaped = escapeHtml(String(text3 || ""));
     return escaped.replace(
       /\{\{([^}]+)\}\}/g,
       (_, name) => `<mark class="sn-assistant-preview__unfilled">{{${escapeHtml(name)}}}</mark>`
@@ -14298,19 +14298,19 @@ ${value2}` : value2;
     return String(value2 || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
   function classifyTemplateSubcategory(mainCategory, template) {
-    const text2 = normalizeSearchText2([template?.id, template?.label, template?.subject, template?.body].filter(Boolean).join(" "));
+    const text3 = normalizeSearchText2([template?.id, template?.label, template?.subject, template?.body].filter(Boolean).join(" "));
     if (mainCategory === "email" || mainCategory === "reminder") {
-      if (/delivery|handover|swap|loan|smartphone|tablet|laptop/.test(text2)) return "delivery";
-      if (/follow-up|follow up|reminder|availability|schedule|appointment/.test(text2)) return "follow-up";
-      if (/mdm|mobile device management|intune|jamf/.test(text2)) return "mdm";
-      if (/return|retrieval|collection|recover/.test(text2)) return "return";
-      if (/access|login|mailbox|sharepoint|eu login|official mail|byod/.test(text2)) return "access";
-      if (/battery|printer|sim card|hardware|equipment|device/.test(text2)) return "hardware";
+      if (/delivery|handover|swap|loan|smartphone|tablet|laptop/.test(text3)) return "delivery";
+      if (/follow-up|follow up|reminder|availability|schedule|appointment/.test(text3)) return "follow-up";
+      if (/mdm|mobile device management|intune|jamf/.test(text3)) return "mdm";
+      if (/return|retrieval|collection|recover/.test(text3)) return "return";
+      if (/access|login|mailbox|sharepoint|eu login|official mail|byod/.test(text3)) return "access";
+      if (/battery|printer|sim card|hardware|equipment|device/.test(text3)) return "hardware";
       return "other";
     }
     if (mainCategory === "work_note") {
-      if (/appointment|delivery|handover/.test(text2)) return "delivery";
-      if (/email|reminder|feedback|follow-up|follow up/.test(text2)) return "follow-up";
+      if (/appointment|delivery|handover/.test(text3)) return "delivery";
+      if (/email|reminder|feedback|follow-up|follow up/.test(text3)) return "follow-up";
       return "other";
     }
     return "all";
@@ -15493,9 +15493,9 @@ ${value2}` : value2;
     toast.className = `sn-assistant-toast sn-assistant-toast--${tone}`;
     if (action && action.label) {
       toast.classList.add("sn-assistant-toast--with-action");
-      const text2 = hostDocument.createElement("span");
-      text2.className = "sn-assistant-toast__message";
-      text2.textContent = String(message || "");
+      const text3 = hostDocument.createElement("span");
+      text3.className = "sn-assistant-toast__message";
+      text3.textContent = String(message || "");
       const button = hostDocument.createElement("button");
       button.type = "button";
       button.className = "sn-assistant-toast__action";
@@ -15507,7 +15507,7 @@ ${value2}` : value2;
           if (toast.isConnected) toast.remove();
         }
       });
-      toast.appendChild(text2);
+      toast.appendChild(text3);
       toast.appendChild(button);
     } else {
       toast.textContent = String(message || "");
@@ -15980,8 +15980,8 @@ ${value2}` : value2;
     return "generic";
   }
   function isIncident(c = {}, g = null) {
-    const table = cleanText(c.table || g?.getTableName?.()).toLowerCase(), number = cleanText(c.ticketNumber || c.recordNumber || readField(g, "number"));
-    return table === "incident" || /^INC\d+$/i.test(number);
+    const table2 = cleanText(c.table || g?.getTableName?.()).toLowerCase(), number = cleanText(c.ticketNumber || c.recordNumber || readField(g, "number"));
+    return table2 === "incident" || /^INC\d+$/i.test(number);
   }
   function getIncidentFacts(c = {}, g = null) {
     const shortDescription = cleanText(c.shortDescription || c.short_description || readField(g, "short_description")), description = cleanText(c.description || readField(g, "description")), workNotes = cleanText(c.workNotes || c.work_notes || c.latestWorkNote || c.latest_work_note || readAny(g, ["work_notes", "comments_and_work_notes"])), solution = getSolutionText(c, g), closeCode = cleanText(c.closeCode || c.close_code || readField(g, "close_code")), confirmation = /\b(user|caller|end user).{0,35}\b(confirm(?:ed|s)?|working as expected|works now|resolved)\b/i.test(`${workNotes}
@@ -16009,10 +16009,10 @@ ${solution}`);
     el.dispatchEvent(new sn.Event("change", { bubbles: true }));
     el.dispatchEvent(new sn.Event("blur", { bubbles: true }));
   }
-  function tryDomWrite({ rootWindow, table, field, value: value2 }) {
+  function tryDomWrite({ rootWindow, table: table2, field, value: value2 }) {
     const sn = getServiceNowWindow(rootWindow), doc = sn?.document;
     if (!doc) return false;
-    for (const sel of [`[name="${field}"]`, `textarea[name="${field}"]`, `input[name="${field}"]`, `#${field}`, `#${table}.${field}`, `#sys_display\\.${table}\\.${field}`]) {
+    for (const sel of [`[name="${field}"]`, `textarea[name="${field}"]`, `input[name="${field}"]`, `#${field}`, `#${table2}.${field}`, `#sys_display\\.${table2}\\.${field}`]) {
       const el = doc.querySelector(sel);
       if (el) {
         setNativeValue(sn, el, value2);
@@ -16027,15 +16027,15 @@ ${solution}`);
       const best = getBestGForm(rootWindow), g = best?.gForm, existing = cleanText(readField(g, "close_notes") || readField(g, "u_close_notes"));
       if (existing) return { ok: true, kind: "already-set" };
       const incident = isIncident(context, g), solution = getSolutionText(context, g), groups = getTemplateGroups(settings), { template } = selectCloseNoteTemplate(groups.close_note || [], context, context);
-      const smartText = cleanText(buildSmartCloseNote({ context, gForm: g, rootWindow })), templateText = !incident && !solution ? cleanText(template ? renderTemplate(template, { context, settings })?.body || "" : "") : "", text2 = cleanText(incident ? smartText : solution || templateText || smartText);
-      if (!text2) return { ok: false, kind: "no-template" };
-      const inserted = insertRenderedTemplate({ body: text2, category: "close_note", target: "close_notes" }, context), templateId = incident ? "smart-incident-close" : solution ? "existing-solution" : template?.id || "smart-close-note", source = incident ? "smart-incident" : solution ? "solution" : templateText ? "template" : "smart-generated";
+      const smartText = cleanText(buildSmartCloseNote({ context, gForm: g, rootWindow })), templateText = !incident && !solution ? cleanText(template ? renderTemplate(template, { context, settings })?.body || "" : "") : "", text3 = cleanText(incident ? smartText : solution || templateText || smartText);
+      if (!text3) return { ok: false, kind: "no-template" };
+      const inserted = insertRenderedTemplate({ body: text3, category: "close_note", target: "close_notes" }, context), templateId = incident ? "smart-incident-close" : solution ? "existing-solution" : template?.id || "smart-close-note", source = incident ? "smart-incident" : solution ? "solution" : templateText ? "template" : "smart-generated";
       if (inserted?.ok) return { ok: true, kind: "filled", templateId, source, targetField: inserted.targetField };
       if (typeof g?.setValue === "function") {
-        g.setValue("close_notes", text2);
+        g.setValue("close_notes", text3);
         return { ok: true, kind: "filled", templateId, source, targetField: "close_notes" };
       }
-      const table = cleanText(g?.getTableName?.() || context?.table || ""), a = tryDomWrite({ rootWindow, table, field: "close_notes", value: text2 }), b = a ? false : tryDomWrite({ rootWindow, table, field: "u_close_notes", value: text2 });
+      const table2 = cleanText(g?.getTableName?.() || context?.table || ""), a = tryDomWrite({ rootWindow, table: table2, field: "close_notes", value: text3 }), b = a ? false : tryDomWrite({ rootWindow, table: table2, field: "u_close_notes", value: text3 });
       return a || b ? { ok: true, kind: "filled", templateId, source, targetField: a ? "close_notes" : "u_close_notes" } : { ok: false, kind: "no-target" };
     } catch (error2) {
       return { ok: false, kind: "error", error: error2 };
@@ -16075,12 +16075,12 @@ ${solution}`);
     if (Array.isArray(value2)) {
       return value2.flatMap(normalizeKeywordList).filter(Boolean);
     }
-    const text2 = cleanText(value2);
-    if (!text2) return [];
-    return text2.split(/[|,]/).map((item) => normalizeMatchText(item)).filter(Boolean);
+    const text3 = cleanText(value2);
+    if (!text3) return [];
+    return text3.split(/[|,]/).map((item) => normalizeMatchText(item)).filter(Boolean);
   }
-  function containsKeyword(text2 = "", keyword = "") {
-    const source = normalizeMatchText(text2);
+  function containsKeyword(text3 = "", keyword = "") {
+    const source = normalizeMatchText(text3);
     const needle = normalizeMatchText(keyword);
     if (!source || !needle) return false;
     return new RegExp(`(?:^|\\b)${escapeRegex(needle)}(?:\\b|$)`, "i").test(source);
@@ -16364,8 +16364,8 @@ ${solution}`);
   function normalize(value2 = "") {
     return String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[\s_/:|()\[\],.;]+/g, " ").replace(/\s*-\s*/g, " ").replace(/\s{2,}/g, " ").trim();
   }
-  function has(text2, pattern) {
-    return pattern.test(normalize(text2));
+  function has(text3, pattern) {
+    return pattern.test(normalize(text3));
   }
   var RULES = [
     {
@@ -16588,16 +16588,16 @@ ${solution}`);
     return cleanText(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
   }
   function humanizeShortDescription(value2 = "") {
-    let text2 = cleanText(value2).replace(/[.?!]+$/g, "").trim();
-    if (!text2) return "the issue you reported";
+    let text3 = cleanText(value2).replace(/[.?!]+$/g, "").trim();
+    if (!text3) return "the issue you reported";
     for (const pattern of SHORT_DESCRIPTION_PREFIXES) {
-      const cleaned = text2.replace(pattern, "").trim();
-      if (cleaned !== text2) {
-        text2 = cleaned;
+      const cleaned = text3.replace(pattern, "").trim();
+      if (cleaned !== text3) {
+        text3 = cleaned;
         break;
       }
     }
-    return text2 || "the issue you reported";
+    return text3 || "the issue you reported";
   }
   function getTicketNumber2(c = {}) {
     return cleanText(c.validTicketNumber || c.customerTicketNumber || c.requestItem || c.ticketNumber || c.recordNumber);
@@ -16636,7 +16636,7 @@ ${description}`) };
     return a.map((x) => `Asset tag: ${x.assetTag}${x.model ? ` \u2014 ${x.model}` : ""}`).join("\n");
   }
   function incidentClosureState(c = {}) {
-    const number = getTicketNumber2(c), table = normalize2(c.table), closeCode = normalize2(c.closeCode || c.close_code), state = normalize2(c.stateDisplay || c.state), resolvedAt = cleanText(c.resolvedAt || c.resolved_at), isInc = table === "incident" || /^INC\d+$/i.test(number), closing = Boolean(closeCode || resolvedAt || /resolved|closed|cancelled|canceled/.test(state));
+    const number = getTicketNumber2(c), table2 = normalize2(c.table), closeCode = normalize2(c.closeCode || c.close_code), state = normalize2(c.stateDisplay || c.state), resolvedAt = cleanText(c.resolvedAt || c.resolved_at), isInc = table2 === "incident" || /^INC\d+$/i.test(number), closing = Boolean(closeCode || resolvedAt || /resolved|closed|cancelled|canceled/.test(state));
     return { isInc, closing, closeCode, state };
   }
   function composeIncidentClosure(c = {}) {
@@ -16649,13 +16649,13 @@ ${work}`, confirmed = /\b(user|caller|end user).{0,45}\b(confirm(?:ed|s)?|workin
   function classifyContext(c = {}) {
     const closure = incidentClosureState(c);
     if (closure.isInc && closure.closing) return { family: "incident-closure", confidence: 1 };
-    const short = cleanText(c.shortDescription || c.short_description), description = cleanText(c.description), text2 = normalize2([short, description, c.category, c.subcategory, c.applicationSoftware, c.application].filter(Boolean).join(" ")), hold = normalize2(c.onHoldReason || c.on_hold_reason), state = normalize2(c.state), shortText = normalize2(short), descriptionText = normalize2(description);
-    if (/recover.*(?:it material|equipment)|equipment retrieval|return.*(?:equipment|material)/.test(text2)) return { family: "equipment-retrieval", confidence: 0.99 };
+    const short = cleanText(c.shortDescription || c.short_description), description = cleanText(c.description), text3 = normalize2([short, description, c.category, c.subcategory, c.applicationSoftware, c.application].filter(Boolean).join(" ")), hold = normalize2(c.onHoldReason || c.on_hold_reason), state = normalize2(c.state), shortText = normalize2(short), descriptionText = normalize2(description);
+    if (/recover.*(?:it material|equipment)|equipment retrieval|return.*(?:equipment|material)/.test(text3)) return { family: "equipment-retrieval", confidence: 0.99 };
     if (/awaiting vendor|waiting vendor|vendor/.test(hold) && /on hold|hold|pending/.test(state)) return { family: "waiting-vendor", confidence: 0.98 };
-    if (/\b(slow|slowness|performance|lag|freeze)\b/.test(text2) && /\b(laptop|computer|pc)\b/.test(text2)) return { family: "device-performance", confidence: 0.96 };
-    if (/^access\s+/.test(shortText) || /\b(?:permission|require access|need access)\b/.test(descriptionText) && /\b(?:software|application)\b/.test(text2)) return { family: "software-access-request", confidence: 0.96 };
-    if (/\b(permission denied|access denied|cannot access|unable to access)\b/.test(text2)) return { family: "access", confidence: 0.9 };
-    if (/\b(error|issue|problem|not working|failed|crash|unavailable)\b/.test(text2) && /\b(application|software|outlook|word|adobe|system|service)\b/.test(text2)) return { family: "software-troubleshooting", confidence: 0.84 };
+    if (/\b(slow|slowness|performance|lag|freeze)\b/.test(text3) && /\b(laptop|computer|pc)\b/.test(text3)) return { family: "device-performance", confidence: 0.96 };
+    if (/^access\s+/.test(shortText) || /\b(?:permission|require access|need access)\b/.test(descriptionText) && /\b(?:software|application)\b/.test(text3)) return { family: "software-access-request", confidence: 0.96 };
+    if (/\b(permission denied|access denied|cannot access|unable to access)\b/.test(text3)) return { family: "access", confidence: 0.9 };
+    if (/\b(error|issue|problem|not working|failed|crash|unavailable)\b/.test(text3) && /\b(application|software|outlook|word|adobe|system|service)\b/.test(text3)) return { family: "software-troubleshooting", confidence: 0.84 };
     return { family: "generic-follow-up", confidence: 0.55 };
   }
   function composeEquipmentRetrieval(c = {}, mode = "initial") {
@@ -16787,11 +16787,11 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   var MAILTO_SAFE_LENGTH = 1900;
   function validateCloseNotes(closeNotesText) {
     const issues = [];
-    const text2 = cleanText(closeNotesText || "");
-    if (!text2) {
+    const text3 = cleanText(closeNotesText || "");
+    if (!text3) {
       issues.push("Close notes are empty. Add a close note before resolving.");
     }
-    const unresolvedMatches = text2.match(PLACEHOLDER_PATTERN) || [];
+    const unresolvedMatches = text3.match(PLACEHOLDER_PATTERN) || [];
     if (unresolvedMatches.length > 0) {
       issues.push(
         `Close notes contain ${unresolvedMatches.length} unresolved placeholder(s): ${unresolvedMatches.slice(0, 3).join(", ")}`
@@ -17001,8 +17001,8 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
       return "";
     }
   }
-  function getFieldPriority(table) {
-    if (table === "sc_task") {
+  function getFieldPriority(table2) {
+    if (table2 === "sc_task") {
       return [
         "sc_task.request_item.request.requested_for",
         "request_item.request.requested_for",
@@ -17014,13 +17014,13 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
         "assigned_to"
       ];
     }
-    if (table === "incident") {
+    if (table2 === "incident") {
       return ["u_affected_end_user", "caller_id", "opened_for", "requested_for", "opened_by", "assigned_to"];
     }
-    if (table === "sc_req_item") {
+    if (table2 === "sc_req_item") {
       return ["requested_for", "request.requested_for", "opened_by", "requested_by", "variables.requested_for", "assigned_to"];
     }
-    if (table === "sc_request") {
+    if (table2 === "sc_request") {
       return ["requested_for", "opened_for", "requested_by", "user", "assigned_to"];
     }
     return [
@@ -17042,12 +17042,12 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   function getCurrentRecordFingerprint(rootWindow = getRootWindow()) {
     const best = getBestGForm(rootWindow);
     const gForm = best?.gForm;
-    let table = "";
+    let table2 = "";
     let sysId = "";
     let number = "";
     let url = "";
     try {
-      table = cleanText(gForm?.getTableName?.()).toLowerCase();
+      table2 = cleanText(gForm?.getTableName?.()).toLowerCase();
     } catch {
     }
     try {
@@ -17062,14 +17062,14 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
       url = cleanText(rootWindow?.location?.href || window.location.href);
     } catch {
     }
-    return { table, sysId, number, url };
+    return { table: table2, sysId, number, url };
   }
   function createRecordKeyFromFingerprint(fingerprint = {}) {
-    const table = cleanText(fingerprint.table || "").toLowerCase() || "unknown";
+    const table2 = cleanText(fingerprint.table || "").toLowerCase() || "unknown";
     const sysId = cleanText(fingerprint.sysId || "");
     const number = cleanText(fingerprint.number || "");
     const url = cleanText(fingerprint.url || window.location.href);
-    return `${table}:${sysId || number || url}`;
+    return `${table2}:${sysId || number || url}`;
   }
   function resolveUserInfoTarget(context = {}, rootWindow = getRootWindow()) {
     const best = getBestGForm(rootWindow);
@@ -17079,8 +17079,8 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
     for (const win of windows) {
       const gForm = win?.g_form;
       if (!gForm?.getValue) continue;
-      const table = getTableName(gForm);
-      const fields = getFieldPriority(table);
+      const table2 = getTableName(gForm);
+      const fields = getFieldPriority(table2);
       const labelFallback = (label) => {
         for (const doc of getAccessibleDocuments(rootWindow)) {
           const labels = Array.from(doc.querySelectorAll("label"));
@@ -17104,14 +17104,14 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
           email: cleanText(disp.includes("@") ? disp : ""),
           displayName: disp,
           sysId: isSysId(raw) ? raw : "",
-          sourceTable: table,
+          sourceTable: table2,
           sourceField: field,
           confidence: field === "assigned_to" ? "low" : "high"
         };
         console.debug(`[UserInfo] Resolved user from ${field}: ${result.userId || result.sysId}`);
         return result;
       }
-      if (table === "sc_task") {
+      if (table2 === "sc_task") {
         const requestedFor = labelFallback("requested for");
         if (requestedFor && !isTicketLike(requestedFor)) {
           const userId = requestedFor.includes("@") ? requestedFor.split("@")[0] : requestedFor;
@@ -17120,7 +17120,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
             email: requestedFor.includes("@") ? requestedFor : "",
             displayName: requestedFor,
             sysId: "",
-            sourceTable: table,
+            sourceTable: table2,
             sourceField: "label:Requested for",
             confidence: "medium"
           };
@@ -18537,14 +18537,14 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
       Number(match[6] || 0)
     );
   }
-  function queryOne(GlideRecord, table, field, value2) {
+  function queryOne(GlideRecord, table2, field, value2) {
     return new Promise((resolve) => {
       if (typeof GlideRecord !== "function" || !value2) {
         resolve(null);
         return;
       }
       try {
-        const gr = new GlideRecord(table);
+        const gr = new GlideRecord(table2);
         gr.addQuery(field, value2);
         gr.query((r) => resolve(r && r.next() ? r : null));
       } catch {
@@ -18776,23 +18776,23 @@ Are you sure you want to download this calendar event?`
     return `${safeTicket}.pdf`;
   }
   function splitPersonName(value2) {
-    const text2 = cleanText(value2);
-    if (!text2) {
+    const text3 = cleanText(value2);
+    if (!text3) {
       return { firstName: "", lastName: "", fullName: "" };
     }
-    if (text2.includes(",")) {
-      const [lastName, firstName2] = text2.split(",").map((segment) => cleanText(segment));
+    if (text3.includes(",")) {
+      const [lastName, firstName2] = text3.split(",").map((segment) => cleanText(segment));
       return {
         firstName: firstName2,
         lastName,
         fullName: [firstName2, lastName].filter(Boolean).join(" ").trim()
       };
     }
-    const parts = text2.split(/\s+/).filter(Boolean);
+    const parts = text3.split(/\s+/).filter(Boolean);
     return {
       firstName: parts[0] || "",
       lastName: parts.slice(1).join(" "),
-      fullName: text2
+      fullName: text3
     };
   }
   function buildSummaryLine(context = {}) {
@@ -18923,8 +18923,8 @@ Are you sure you want to download this calendar event?`
     for (const documentRef of getAccessibleDocuments(rootWindow)) {
       try {
         const form = documentRef.querySelector("#sys_form, form[name='sys_form'], #sysparm_form, form");
-        const table = cleanText(form?.getAttribute?.("data-table") || form?.dataset?.table || "").toLowerCase();
-        if (table) return table;
+        const table2 = cleanText(form?.getAttribute?.("data-table") || form?.dataset?.table || "").toLowerCase();
+        if (table2) return table2;
       } catch (error2) {
       }
     }
@@ -18938,8 +18938,8 @@ Are you sure you want to download this calendar event?`
     return "";
   }
   function looksLikeTicketIdentifier3(value2) {
-    const text2 = cleanText(value2).toUpperCase();
-    return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text2);
+    const text3 = cleanText(value2).toUpperCase();
+    return /^(?:INC|RITM|REQ|SCTASK|TASK|CHG|PRB|SR|KB)\d{4,}$/.test(text3);
   }
   function looksLikeSysId2(value2) {
     return /^[0-9a-f]{32}$/i.test(cleanText(value2));
@@ -18977,17 +18977,17 @@ Are you sure you want to download this calendar event?`
     return "";
   }
   function cleanConfigurationItem(value2) {
-    const text2 = cleanText(value2);
-    if (!text2) return "";
-    if (looksLikeTicketIdentifier3(text2)) return "";
-    if (looksLikeSysId2(text2)) return "";
-    if (/^requested for$/i.test(text2)) return "";
-    if (/window\.NOW/i.test(text2)) return "";
-    if (/A new record with this value will be created automatically/i.test(text2)) return "";
-    return text2;
+    const text3 = cleanText(value2);
+    if (!text3) return "";
+    if (looksLikeTicketIdentifier3(text3)) return "";
+    if (looksLikeSysId2(text3)) return "";
+    if (/^requested for$/i.test(text3)) return "";
+    if (/window\.NOW/i.test(text3)) return "";
+    if (/A new record with this value will be created automatically/i.test(text3)) return "";
+    return text3;
   }
-  function findTicketNumber(text2 = "", types = ["INC", "RITM", "REQ", "SCTASK"]) {
-    const value2 = cleanText(text2).toUpperCase();
+  function findTicketNumber(text3 = "", types = ["INC", "RITM", "REQ", "SCTASK"]) {
+    const value2 = cleanText(text3).toUpperCase();
     const match = value2.match(new RegExp(`\\b(?:${types.join("|")})\\d{4,}\\b`, "i"));
     return match?.[0] || "";
   }
@@ -19478,39 +19478,39 @@ Are you sure you want to download this calendar event?`
   var escapeRegExp = function(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   };
-  var cleanText4 = function(text2) {
-    return text2.replace(/\t|\u0085|\u2028|\u2029/g, "    ").replace(/[\b\v]/g, "");
+  var cleanText4 = function(text3) {
+    return text3.replace(/\t|\u0085|\u2028|\u2029/g, "    ").replace(/[\b\v]/g, "");
   };
   var escapedNewlineChars = ["\\n", "\\f", "\\r", "\\u000B"];
-  var isNewlineChar = function(text2) {
-    return /^[\n\f\r\u000B]$/.test(text2);
+  var isNewlineChar = function(text3) {
+    return /^[\n\f\r\u000B]$/.test(text3);
   };
-  var lineSplit = function(text2) {
-    return text2.split(/[\n\f\r\u000B]/);
+  var lineSplit = function(text3) {
+    return text3.split(/[\n\f\r\u000B]/);
   };
-  var mergeLines = function(text2) {
-    return text2.replace(/[\n\f\r\u000B]/g, " ");
+  var mergeLines = function(text3) {
+    return text3.replace(/[\n\f\r\u000B]/g, " ");
   };
-  var charAtIndex = function(text2, index) {
-    var cuFirst = text2.charCodeAt(index);
+  var charAtIndex = function(text3, index) {
+    var cuFirst = text3.charCodeAt(index);
     var cuSecond;
     var nextIndex = index + 1;
     var length = 1;
     if (
       // Check if it's the start of a surrogate pair.
       cuFirst >= 55296 && cuFirst <= 56319 && // high surrogate
-      text2.length > nextIndex
+      text3.length > nextIndex
     ) {
-      cuSecond = text2.charCodeAt(nextIndex);
+      cuSecond = text3.charCodeAt(nextIndex);
       if (cuSecond >= 56320 && cuSecond <= 57343)
         length = 2;
     }
-    return [text2.slice(index, index + length), length];
+    return [text3.slice(index, index + length), length];
   };
-  var charSplit = function(text2) {
+  var charSplit = function(text3) {
     var chars3 = [];
-    for (var idx4 = 0, len3 = text2.length; idx4 < len3; ) {
-      var _a = charAtIndex(text2, idx4), c = _a[0], cLen = _a[1];
+    for (var idx4 = 0, len3 = text3.length; idx4 < len3; ) {
+      var _a = charAtIndex(text3, idx4), c = _a[0], cLen = _a[1];
       chars3.push(c);
       idx4 += cLen;
     }
@@ -19529,9 +19529,9 @@ Are you sure you want to download this calendar event?`
     var breakRules = escapedRules.join("|");
     return new RegExp("(" + newlineCharUnion + ")|((.*?)(" + breakRules + "))", "gm");
   };
-  var breakTextIntoLines = function(text2, wordBreaks, maxWidth, computeWidthOfText) {
+  var breakTextIntoLines = function(text3, wordBreaks, maxWidth, computeWidthOfText) {
     var regex = buildWordBreakRegex(wordBreaks);
-    var words = cleanText4(text2).match(regex);
+    var words = cleanText4(text3).match(regex);
     var currLine = "";
     var currWidth = 0;
     var lines = [];
@@ -22972,10 +22972,10 @@ Are you sure you want to download this calendar event?`
         return pdfDocEncodingDecode(bytes);
       };
       PDFHexString2.prototype.decodeDate = function() {
-        var text2 = this.decodeText();
-        var date = parseDate(text2);
+        var text3 = this.decodeText();
+        var date = parseDate(text3);
         if (!date)
-          throw new InvalidPDFDateStringError(text2);
+          throw new InvalidPDFDateStringError(text3);
         return date;
       };
       PDFHexString2.prototype.asString = function() {
@@ -23022,16 +23022,16 @@ Are you sure you want to download this calendar event?`
         this.fontName = this.font.FontName;
         this.customName = customName;
       }
-      StandardFontEmbedder2.prototype.encodeText = function(text2) {
-        var glyphs = this.encodeTextAsGlyphs(text2);
+      StandardFontEmbedder2.prototype.encodeText = function(text3) {
+        var glyphs = this.encodeTextAsGlyphs(text3);
         var hexCodes = new Array(glyphs.length);
         for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
           hexCodes[idx4] = toHexString(glyphs[idx4].code);
         }
         return PDFHexString_default.of(hexCodes.join(""));
       };
-      StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
-        var glyphs = this.encodeTextAsGlyphs(text2);
+      StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text3, size) {
+        var glyphs = this.encodeTextAsGlyphs(text3);
         var totalWidth = 0;
         for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
           var left = glyphs[idx4].name;
@@ -23078,8 +23078,8 @@ Are you sure you want to download this calendar event?`
       StandardFontEmbedder2.prototype.widthOfGlyph = function(glyphName) {
         return this.font.getWidthOfGlyph(glyphName) || 250;
       };
-      StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text2) {
-        var codePoints = Array.from(text2);
+      StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text3) {
+        var codePoints = Array.from(text3);
         var glyphs = new Array(codePoints.length);
         for (var idx4 = 0, len3 = codePoints.length; idx4 < len3; idx4++) {
           var codePoint = toCodePoint(codePoints[idx4]);
@@ -23242,10 +23242,10 @@ Are you sure you want to download this calendar event?`
         return pdfDocEncodingDecode(bytes);
       };
       PDFString2.prototype.decodeDate = function() {
-        var text2 = this.decodeText();
-        var date = parseDate(text2);
+        var text3 = this.decodeText();
+        var date = parseDate(text3);
         if (!date)
-          throw new InvalidPDFDateStringError(text2);
+          throw new InvalidPDFDateStringError(text3);
         return date;
       };
       PDFString2.prototype.asString = function() {
@@ -23322,16 +23322,16 @@ Are you sure you want to download this calendar event?`
           });
         });
       };
-      CustomFontEmbedder2.prototype.encodeText = function(text2) {
-        var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
+      CustomFontEmbedder2.prototype.encodeText = function(text3) {
+        var glyphs = this.font.layout(text3, this.fontFeatures).glyphs;
         var hexCodes = new Array(glyphs.length);
         for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
           hexCodes[idx4] = toHexStringOfMinLength(glyphs[idx4].id, 4);
         }
         return PDFHexString_default.of(hexCodes.join(""));
       };
-      CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
-        var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
+      CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text3, size) {
+        var glyphs = this.font.layout(text3, this.fontFeatures).glyphs;
         var totalWidth = 0;
         for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
           totalWidth += glyphs[idx4].advanceWidth * this.scale;
@@ -23543,8 +23543,8 @@ Are you sure you want to download this calendar event?`
           });
         });
       };
-      CustomFontSubsetEmbedder2.prototype.encodeText = function(text2) {
-        var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
+      CustomFontSubsetEmbedder2.prototype.encodeText = function(text3) {
+        var glyphs = this.font.layout(text3, this.fontFeatures).glyphs;
         var hexCodes = new Array(glyphs.length);
         for (var idx4 = 0, len3 = glyphs.length; idx4 < len3; idx4++) {
           var glyph = glyphs[idx4];
@@ -23952,8 +23952,8 @@ Are you sure you want to download this calendar event?`
         if (out.tabs[type] == null) out.tabs[type] = {};
         var nz = bin.nextZero(data, offset);
         var keyw = bin.readASCII(data, offset, nz - offset);
-        var text2 = bin.readASCII(data, nz + 1, offset + len3 - nz - 1);
-        out.tabs[type][keyw] = text2;
+        var text3 = bin.readASCII(data, nz + 1, offset + len3 - nz - 1);
+        out.tabs[type][keyw] = text3;
       } else if (type == "iTXt") {
         if (out.tabs[type] == null) out.tabs[type] = {};
         var nz = 0, off = offset;
@@ -23968,8 +23968,8 @@ Are you sure you want to download this calendar event?`
         nz = bin.nextZero(data, off);
         var tkeyw = bin.readUTF8(data, off, nz - off);
         off = nz + 1;
-        var text2 = bin.readUTF8(data, off, len3 - (off - offset));
-        out.tabs[type][keyw] = text2;
+        var text3 = bin.readUTF8(data, off, len3 - (off - offset));
+        out.tabs[type][keyw] = text3;
       } else if (type == "PLTE") {
         out.tabs[type] = bin.readBytes(data, offset, len3);
       } else if (type == "hIST") {
@@ -26438,10 +26438,10 @@ Are you sure you want to download this calendar event?`
         this.codeSize = codeSize -= bits;
         return b;
       };
-      FlateStream2.prototype.getCode = function(table) {
+      FlateStream2.prototype.getCode = function(table2) {
         var str = this.stream;
-        var codes = table[0];
-        var maxLen = table[1];
+        var codes = table2[0];
+        var maxLen = table2[1];
         var codeSize = this.codeSize;
         var codeBuf = this.codeBuf;
         var b;
@@ -29610,8 +29610,8 @@ Are you sure you want to download this calendar event?`
   var nextLine = function() {
     return PDFOperator_default.of(PDFOperatorNames_default.NextLine);
   };
-  var showText = function(text2) {
-    return PDFOperator_default.of(PDFOperatorNames_default.ShowText, [text2]);
+  var showText = function(text3) {
+    return PDFOperator_default.of(PDFOperatorNames_default.ShowText, [text3]);
   };
   var beginText = function() {
     return PDFOperator_default.of(PDFOperatorNames_default.BeginText);
@@ -30796,9 +30796,9 @@ Are you sure you want to download this calendar event?`
       remainder: void 0
     };
   };
-  var layoutMultilineText = function(text2, _a) {
+  var layoutMultilineText = function(text3, _a) {
     var alignment = _a.alignment, fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds;
-    var lines = lineSplit(cleanText4(text2));
+    var lines = lineSplit(cleanText4(text3));
     if (fontSize === void 0 || fontSize === 0) {
       fontSize = computeFontSize(lines, font, bounds, true);
     }
@@ -30840,9 +30840,9 @@ Are you sure you want to download this calendar event?`
       }
     };
   };
-  var layoutCombedText = function(text2, _a) {
+  var layoutCombedText = function(text3, _a) {
     var fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds, cellCount = _a.cellCount;
-    var line = mergeLines(cleanText4(text2));
+    var line = mergeLines(cleanText4(text3));
     if (line.length > cellCount) {
       throw new CombedTextLayoutError(line.length, cellCount);
     }
@@ -30888,9 +30888,9 @@ Are you sure you want to download this calendar event?`
       }
     };
   };
-  var layoutSinglelineText = function(text2, _a) {
+  var layoutSinglelineText = function(text3, _a) {
     var alignment = _a.alignment, fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds;
-    var line = mergeLines(cleanText4(text2));
+    var line = mergeLines(cleanText4(text3));
     if (fontSize === void 0 || fontSize === 0) {
       fontSize = computeFontSize([line], font, bounds);
     }
@@ -31101,7 +31101,7 @@ Are you sure you want to download this calendar event?`
     var rectangle = widget.getRectangle();
     var ap = widget.getAppearanceCharacteristics();
     var bs = widget.getBorderStyle();
-    var text2 = (_a = textField.getText()) !== null && _a !== void 0 ? _a : "";
+    var text3 = (_a = textField.getText()) !== null && _a !== void 0 ? _a : "";
     var borderWidth = (_b = bs === null || bs === void 0 ? void 0 : bs.getWidth()) !== null && _b !== void 0 ? _b : 0;
     var rotation = reduceRotation(ap === null || ap === void 0 ? void 0 : ap.getRotation());
     var _e = adjustDimsForRotation(rectangle, rotation), width = _e.width, height = _e.height;
@@ -31119,7 +31119,7 @@ Are you sure you want to download this calendar event?`
       height: height - (borderWidth + padding) * 2
     };
     if (textField.isMultiline()) {
-      var layout = layoutMultilineText(text2, {
+      var layout = layoutMultilineText(text3, {
         alignment: textField.getAlignment(),
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
@@ -31128,7 +31128,7 @@ Are you sure you want to download this calendar event?`
       textLines = layout.lines;
       fontSize = layout.fontSize;
     } else if (textField.isCombed()) {
-      var layout = layoutCombedText(text2, {
+      var layout = layoutCombedText(text3, {
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
         bounds,
@@ -31137,7 +31137,7 @@ Are you sure you want to download this calendar event?`
       textLines = layout.cells;
       fontSize = layout.fontSize;
     } else {
-      var layout = layoutSinglelineText(text2, {
+      var layout = layoutSinglelineText(text3, {
         alignment: textField.getAlignment(),
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
@@ -31177,7 +31177,7 @@ Are you sure you want to download this calendar event?`
     var rectangle = widget.getRectangle();
     var ap = widget.getAppearanceCharacteristics();
     var bs = widget.getBorderStyle();
-    var text2 = (_a = dropdown.getSelected()[0]) !== null && _a !== void 0 ? _a : "";
+    var text3 = (_a = dropdown.getSelected()[0]) !== null && _a !== void 0 ? _a : "";
     var borderWidth = (_b = bs === null || bs === void 0 ? void 0 : bs.getWidth()) !== null && _b !== void 0 ? _b : 0;
     var rotation = reduceRotation(ap === null || ap === void 0 ? void 0 : ap.getRotation());
     var _d = adjustDimsForRotation(rectangle, rotation), width = _d.width, height = _d.height;
@@ -31192,7 +31192,7 @@ Are you sure you want to download this calendar event?`
       width: width - (borderWidth + padding) * 2,
       height: height - (borderWidth + padding) * 2
     };
-    var _e = layoutSinglelineText(text2, {
+    var _e = layoutSinglelineText(text3, {
       alignment: TextAlignment.Left,
       fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
       font,
@@ -31240,11 +31240,11 @@ Are you sure you want to download this calendar event?`
     var selected = optionList.getSelected();
     if (optionList.isSorted())
       options.sort();
-    var text2 = "";
+    var text3 = "";
     for (var idx4 = 0, len3 = options.length; idx4 < len3; idx4++) {
-      text2 += options[idx4];
+      text3 += options[idx4];
       if (idx4 < len3 - 1)
-        text2 += "\n";
+        text3 += "\n";
     }
     var padding = 1;
     var bounds = {
@@ -31253,7 +31253,7 @@ Are you sure you want to download this calendar event?`
       width: width - (borderWidth + padding) * 2,
       height: height - (borderWidth + padding) * 2
     };
-    var _d = layoutMultilineText(text2, {
+    var _d = layoutMultilineText(text3, {
       alignment: TextAlignment.Left,
       fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
       font,
@@ -31358,15 +31358,15 @@ Are you sure you want to download this calendar event?`
         this.name = embedder.fontName;
         this.embedder = embedder;
       }
-      PDFFont2.prototype.encodeText = function(text2) {
-        assertIs(text2, "text", ["string"]);
+      PDFFont2.prototype.encodeText = function(text3) {
+        assertIs(text3, "text", ["string"]);
         this.modified = true;
-        return this.embedder.encodeText(text2);
+        return this.embedder.encodeText(text3);
       };
-      PDFFont2.prototype.widthOfTextAtSize = function(text2, size) {
-        assertIs(text2, "text", ["string"]);
+      PDFFont2.prototype.widthOfTextAtSize = function(text3, size) {
+        assertIs(text3, "text", ["string"]);
         assertIs(size, "size", ["number"]);
-        return this.embedder.widthOfTextAtSize(text2, size);
+        return this.embedder.widthOfTextAtSize(text3, size);
       };
       PDFFont2.prototype.heightAtSize = function(size, options) {
         var _a;
@@ -32383,16 +32383,16 @@ Are you sure you want to download this calendar event?`
         }
         return value2 === null || value2 === void 0 ? void 0 : value2.decodeText();
       };
-      PDFTextField2.prototype.setText = function(text2) {
-        assertOrUndefined(text2, "text", ["string"]);
+      PDFTextField2.prototype.setText = function(text3) {
+        assertOrUndefined(text3, "text", ["string"]);
         var maxLength = this.getMaxLength();
-        if (maxLength !== void 0 && text2 && text2.length > maxLength) {
-          throw new ExceededMaxLengthError(text2.length, maxLength, this.getName());
+        if (maxLength !== void 0 && text3 && text3.length > maxLength) {
+          throw new ExceededMaxLengthError(text3.length, maxLength, this.getName());
         }
         this.markAsDirty();
         this.disableRichFormatting();
-        if (text2) {
-          this.acroField.setValue(PDFHexString_default.fromText(text2));
+        if (text3) {
+          this.acroField.setValue(PDFHexString_default.fromText(text3));
         } else {
           this.acroField.removeValue();
         }
@@ -32415,9 +32415,9 @@ Are you sure you want to download this calendar event?`
         if (maxLength === void 0) {
           this.acroField.removeMaxLength();
         } else {
-          var text2 = this.getText();
-          if (text2 && text2.length > maxLength) {
-            throw new InvalidMaxLengthError(text2.length, maxLength, this.getName());
+          var text3 = this.getText();
+          if (text3 && text3.length > maxLength) {
+            throw new InvalidMaxLengthError(text3.length, maxLength, this.getName());
           }
           this.acroField.setMaxLength(maxLength);
         }
@@ -32756,10 +32756,10 @@ Are you sure you want to download this calendar event?`
         assertIs(name, "name", ["string"]);
         var nameParts = splitFieldName(name);
         var parent = this.findOrCreateNonTerminals(nameParts.nonTerminal);
-        var text2 = PDFAcroText_default.create(this.doc.context);
-        text2.setPartialName(nameParts.terminal);
-        addFieldToParent(parent, [text2, text2.ref], nameParts.terminal);
-        return PDFTextField_default.of(text2, text2.ref, this.doc);
+        var text3 = PDFAcroText_default.create(this.doc.context);
+        text3.setPartialName(nameParts.terminal);
+        addFieldToParent(parent, [text3, text3.ref], nameParts.terminal);
+        return PDFTextField_default.of(text3, text3.ref, this.doc);
       };
       PDFForm2.prototype.flatten = function(options) {
         if (options === void 0) {
@@ -34118,12 +34118,12 @@ Are you sure you want to download this calendar event?`
         var contentStream = this.getContentStream();
         contentStream.push.apply(contentStream, operator);
       };
-      PDFPage2.prototype.drawText = function(text2, options) {
+      PDFPage2.prototype.drawText = function(text3, options) {
         var _a, _b, _c, _d, _e, _f, _g;
         if (options === void 0) {
           options = {};
         }
-        assertIs(text2, "text", ["string"]);
+        assertIs(text3, "text", ["string"]);
         assertOrUndefined(options.color, "options.color", [[Object, "Color"]]);
         assertRangeOrUndefined(options.opacity, "opacity.opacity", 0, 1);
         assertOrUndefined(options.font, "options.font", [[PDFFont_default, "PDFFont"]]);
@@ -34143,7 +34143,7 @@ Are you sure you want to download this calendar event?`
         var textWidth = function(t) {
           return newFont.widthOfTextAtSize(t, fontSize);
         };
-        var lines = options.maxWidth === void 0 ? lineSplit(cleanText4(text2)) : breakTextIntoLines(text2, wordBreaks, options.maxWidth, textWidth);
+        var lines = options.maxWidth === void 0 ? lineSplit(cleanText4(text3)) : breakTextIntoLines(text3, wordBreaks, options.maxWidth, textWidth);
         var encodedLines = new Array(lines.length);
         for (var idx4 = 0, len3 = lines.length; idx4 < len3; idx4++) {
           encodedLines[idx4] = newFont.encodeText(lines[idx4]);
@@ -34563,9 +34563,9 @@ Are you sure you want to download this calendar event?`
         this.acroField.setFontSize(fontSize);
         this.markAsDirty();
       };
-      PDFButton2.prototype.addToPage = function(text2, page, options) {
+      PDFButton2.prototype.addToPage = function(text3, page, options) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-        assertOrUndefined(text2, "text", ["string"]);
+        assertOrUndefined(text3, "text", ["string"]);
         assertOrUndefined(page, "page", [[PDFPage_default, "PDFPage"]]);
         assertFieldAppearanceOptions(options);
         var widget = this.createWidget({
@@ -34578,7 +34578,7 @@ Are you sure you want to download this calendar event?`
           borderColor: options === null || options === void 0 ? void 0 : options.borderColor,
           borderWidth: (_j = options === null || options === void 0 ? void 0 : options.borderWidth) !== null && _j !== void 0 ? _j : 0,
           rotate: (_k = options === null || options === void 0 ? void 0 : options.rotate) !== null && _k !== void 0 ? _k : degrees(0),
-          caption: text2,
+          caption: text3,
           hidden: options === null || options === void 0 ? void 0 : options.hidden,
           page: page.ref
         });
@@ -34766,9 +34766,9 @@ Are you sure you want to download this calendar event?`
   }
   function sanitizeConfigurationItem(...values2) {
     for (const value2 of values2) {
-      const text2 = cleanText(value2);
-      if (!text2 || looksLikeTicketIdentifier4(text2) || looksLikeSysId3(text2)) continue;
-      return text2;
+      const text3 = cleanText(value2);
+      if (!text3 || looksLikeTicketIdentifier4(text3) || looksLikeSysId3(text3)) continue;
+      return text3;
     }
     return "";
   }
@@ -34859,11 +34859,11 @@ Are you sure you want to download this calendar event?`
     return !cleanText(context.selected_ci_name);
   }
   function writePdfWorkNote(resolvedContext = {}, logger = null) {
-    const table = cleanText(resolvedContext.table || resolvedContext.pageType);
-    if (!table) return { ok: false, reason: "missing-table" };
+    const table2 = cleanText(resolvedContext.table || resolvedContext.pageType);
+    if (!table2) return { ok: false, reason: "missing-table" };
     return writeWorkNoteToField(
       "Form has been successfully created and is now available for use.",
-      { ...resolvedContext, table },
+      { ...resolvedContext, table: table2 },
       { append: true }
     );
   }
@@ -35072,9 +35072,9 @@ Are you sure you want to download this calendar event?`
   ];
   var DEFAULT_ACTION_TEXT = "General troubleshooting and validation were performed.";
   function inferActionDone(shortDescription = "") {
-    const text2 = cleanText(shortDescription).toLowerCase();
+    const text3 = cleanText(shortDescription).toLowerCase();
     for (const { pattern, text: actionText } of ACTION_HEURISTICS) {
-      if (pattern.test(text2)) return actionText;
+      if (pattern.test(text3)) return actionText;
     }
     return DEFAULT_ACTION_TEXT;
   }
@@ -35269,10 +35269,10 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       table: safe(() => found.g_form.getTableName(), "")
     };
   }
-  function getHiddenOriginalValue(doc, table, field) {
+  function getHiddenOriginalValue(doc, table2, field) {
     const selectors = [
-      `input[id="sys_original.${table}.${field}"]`,
-      `input[name="sys_original.${table}.${field}"]`,
+      `input[id="sys_original.${table2}.${field}"]`,
+      `input[name="sys_original.${table2}.${field}"]`,
       `input[id*="sys_original."][id$=".${field}"]`,
       `input[name*="sys_original."][name$=".${field}"]`,
       `input[id*="request_item.request.requested_for"][id*="sys_original."]`,
@@ -35288,11 +35288,11 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   function getCurrentTicketUser(rootWindow) {
     const ctx = getActiveGFormContext(rootWindow);
     if (!ctx) return null;
-    const { g_form, doc, table } = ctx;
+    const { g_form, doc, table: table2 } = ctx;
     for (const field of USER_FIELDS) {
       const sys_id = clean(safe(() => g_form.getValue(field), ""));
       if (RX_SYSID.test(sys_id)) {
-        const displayInput = doc.getElementById(`sys_display.${table}.${field}`) || doc.getElementById(`sys_display.${field}`);
+        const displayInput = doc.getElementById(`sys_display.${table2}.${field}`) || doc.getElementById(`sys_display.${field}`);
         return {
           field,
           sys_id,
@@ -35300,7 +35300,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
           source: "g_form"
         };
       }
-      const hidden = getHiddenOriginalValue(doc, table, field);
+      const hidden = getHiddenOriginalValue(doc, table2, field);
       if (RX_SYSID.test(hidden)) {
         return {
           field,
@@ -35310,7 +35310,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
         };
       }
     }
-    const special = getHiddenOriginalValue(doc, table, "request_item.request.requested_for");
+    const special = getHiddenOriginalValue(doc, table2, "request_item.request.requested_for");
     if (RX_SYSID.test(special)) {
       return {
         field: "request_item.request.requested_for",
@@ -35372,9 +35372,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   function normalizeHeader(value2 = "") {
     return value2.toLowerCase().replace(/\s+/g, " ").replace(/[_-]+/g, " ").trim();
   }
-  function buildHeaderMap(table) {
+  function buildHeaderMap(table2) {
     const map = /* @__PURE__ */ new Map();
-    const headers = Array.from(table.querySelectorAll("thead th, tr.list_header th, th"));
+    const headers = Array.from(table2.querySelectorAll("thead th, tr.list_header th, th"));
     headers.forEach((header, index) => {
       const key = normalizeHeader(text(header));
       if (key && !map.has(key)) map.set(key, index);
@@ -35388,16 +35388,16 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     }
     return fallback >= 0 ? cells[fallback] || "" : "";
   }
-  function findStateIndex(table) {
-    const headers = Array.from(table.querySelectorAll("thead th, tr.list_header th, th")).map(text).filter(Boolean);
+  function findStateIndex(table2) {
+    const headers = Array.from(table2.querySelectorAll("thead th, tr.list_header th, th")).map(text).filter(Boolean);
     return headers.findIndex((h) => /^state$/i.test(h));
   }
   function parseIncidentRows(doc) {
-    const table = doc.querySelector("table.list2_table, table.list_table, table");
-    if (!table) return [];
-    const headerMap = buildHeaderMap(table);
-    const stateIdx = findStateIndex(table);
-    return Array.from(table.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
+    const table2 = doc.querySelector("table.list2_table, table.list_table, table");
+    if (!table2) return [];
+    const headerMap = buildHeaderMap(table2);
+    const stateIdx = findStateIndex(table2);
+    return Array.from(table2.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
       const cells = Array.from(r.querySelectorAll("td")).map(text);
       const a = r.querySelector('a[href*=".do?sys_id="], a[href*="sys_id="]');
       return {
@@ -35416,11 +35416,11 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     }).filter((x) => x.number && x.sysId && !CLOSED_RX.test(x.state));
   }
   function parseRitmRows(doc) {
-    const table = doc.querySelector("table.list2_table, table.list_table, table");
-    if (!table) return [];
-    const headerMap = buildHeaderMap(table);
-    const stateIdx = findStateIndex(table);
-    return Array.from(table.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
+    const table2 = doc.querySelector("table.list2_table, table.list_table, table");
+    if (!table2) return [];
+    const headerMap = buildHeaderMap(table2);
+    const stateIdx = findStateIndex(table2);
+    return Array.from(table2.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
       const cells = Array.from(r.querySelectorAll("td")).map(text);
       const a = r.querySelector('a[href*=".do?sys_id="], a[href*="sys_id="]');
       return {
@@ -35440,11 +35440,11 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     }).filter((x) => x.number && x.sysId && !CLOSED_RX.test(x.state));
   }
   function parseScTaskRows(doc, ritmSysId, ritmNumber) {
-    const table = doc.querySelector("table.list2_table, table.list_table, table");
-    if (!table) return [];
-    const headerMap = buildHeaderMap(table);
-    const stateIdx = findStateIndex(table);
-    return Array.from(table.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
+    const table2 = doc.querySelector("table.list2_table, table.list_table, table");
+    if (!table2) return [];
+    const headerMap = buildHeaderMap(table2);
+    const stateIdx = findStateIndex(table2);
+    return Array.from(table2.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
       const cells = Array.from(r.querySelectorAll("td")).map(text);
       const a = r.querySelector('a[href*=".do?sys_id="], a[href*="sys_id="]');
       return {
@@ -35462,11 +35462,11 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     }).filter((x) => x.number && x.sys_id && !CLOSED_RX.test(x.state));
   }
   function parseCiRows(doc) {
-    const table = doc.querySelector("table.list2_table, table.list_table, table");
-    if (!table) return [];
-    const headerMap = buildHeaderMap(table);
-    const stateIdx = findStateIndex(table);
-    return Array.from(table.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
+    const table2 = doc.querySelector("table.list2_table, table.list_table, table");
+    if (!table2) return [];
+    const headerMap = buildHeaderMap(table2);
+    const stateIdx = findStateIndex(table2);
+    return Array.from(table2.querySelectorAll("tbody tr, tr.list_row")).filter((r) => !r.querySelector("th")).map((r) => {
       const cells = Array.from(r.querySelectorAll("td")).map(text);
       const a = r.querySelector('a[href*=".do?sys_id="], a[href*="sys_id="]');
       return {
@@ -35652,11 +35652,11 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     })(top);
     return result;
   }
-  function getHiddenSysId(doc, table, field) {
+  function getHiddenSysId(doc, table2, field) {
     if (!doc?.querySelector) return "";
     const selectors = [
-      `input[id="sys_original.${table}.${field}"]`,
-      `input[name="sys_original.${table}.${field}"]`,
+      `input[id="sys_original.${table2}.${field}"]`,
+      `input[name="sys_original.${table2}.${field}"]`,
       `input[id*="sys_original."][id$=".${field}"]`,
       `input[name*="sys_original."][name$=".${field}"]`
     ];
@@ -35666,18 +35666,18 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     }
     return "";
   }
-  function getDisplayValue(doc, table, field, gForm) {
+  function getDisplayValue(doc, table2, field, gForm) {
     const fromForm = clean2(safe2(() => gForm?.getDisplayValue?.(field), ""));
     if (fromForm && !RX_SYSID2.test(fromForm)) return fromForm;
     return clean2(
-      safe2(() => doc?.getElementById?.(`sys_display.${table}.${field}`)?.value, "") || safe2(() => doc?.getElementById?.(`sys_display.${field}`)?.value, "")
+      safe2(() => doc?.getElementById?.(`sys_display.${table2}.${field}`)?.value, "") || safe2(() => doc?.getElementById?.(`sys_display.${field}`)?.value, "")
     );
   }
-  function findRequestedForInput(doc, table) {
+  function findRequestedForInput(doc, table2) {
     if (!doc?.querySelectorAll) return null;
     const selectors = [
-      `input[id*="${table}."][id*="requested_for"]`,
-      `input[name*="${table}."][name*="requested_for"]`,
+      `input[id*="${table2}."][id*="requested_for"]`,
+      `input[name*="${table2}."][name*="requested_for"]`,
       'input[id*="request_item"][id*="requested_for"]',
       'input[name*="request_item"][name*="requested_for"]',
       'input[id$=".requested_for"]',
@@ -35695,19 +35695,19 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
         return {
           sysId: value2,
           display: "",
-          field: rawId.replace(/^sys_original\./, "").replace(new RegExp(`^${table}\\.`), ""),
+          field: rawId.replace(/^sys_original\./, "").replace(new RegExp(`^${table2}\\.`), ""),
           source: "requested_for_hidden_input"
         };
       }
     }
     return null;
   }
-  function sysIdFromPreviewLink(doc, table) {
-    const ids = table === "sc_task" ? [
+  function sysIdFromPreviewLink(doc, table2) {
+    const ids = table2 === "sc_task" ? [
       "viewr.sc_task.request_item.request.requested_for",
       "viewr.sc_task.request_item.requested_for",
       "viewr.sc_task.requested_for"
-    ] : table === "sc_req_item" ? ["viewr.sc_req_item.requested_for", "viewr.sc_req_item.request.requested_for"] : table === "incident" ? ["viewr.incident.u_affected_end_user", "viewr.incident.u_affected_user", "viewr.incident.caller_id"] : [];
+    ] : table2 === "sc_req_item" ? ["viewr.sc_req_item.requested_for", "viewr.sc_req_item.request.requested_for"] : table2 === "incident" ? ["viewr.incident.u_affected_end_user", "viewr.incident.u_affected_user", "viewr.incident.caller_id"] : [];
     for (const id of ids) {
       const el = safe2(() => doc?.getElementById?.(id), null);
       const href = clean2(el?.href || safe2(() => el?.getAttribute?.("href"), ""));
@@ -35727,37 +35727,37 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     for (const win of collectWindows(rootWindow)) {
       const gForm = safe2(() => win.g_form, null);
       if (!gForm?.getValue) continue;
-      const table = clean2(safe2(() => gForm.getTableName?.(), "")).toLowerCase();
-      const fields = SUBJECT_FIELDS_BY_TABLE[table] || [];
+      const table2 = clean2(safe2(() => gForm.getTableName?.(), "")).toLowerCase();
+      const fields = SUBJECT_FIELDS_BY_TABLE[table2] || [];
       const doc = safe2(() => win.document, null);
       for (const field of fields) {
         const raw = clean2(safe2(() => gForm.getValue(field), ""));
         if (RX_SYSID2.test(raw)) {
           return {
             sysId: raw,
-            display: getDisplayValue(doc, table, field, gForm),
+            display: getDisplayValue(doc, table2, field, gForm),
             field,
-            table,
+            table: table2,
             source: "g_form"
           };
         }
-        const hidden = getHiddenSysId(doc, table, field);
+        const hidden = getHiddenSysId(doc, table2, field);
         if (RX_SYSID2.test(hidden)) {
           return {
             sysId: hidden,
-            display: getDisplayValue(doc, table, field, gForm),
+            display: getDisplayValue(doc, table2, field, gForm),
             field,
-            table,
+            table: table2,
             source: "hidden_original"
           };
         }
       }
-      if (["sc_task", "sc_req_item", "sc_request"].includes(table)) {
-        const requestedFor = findRequestedForInput(doc, table);
-        if (requestedFor?.sysId) return { ...requestedFor, table };
+      if (["sc_task", "sc_req_item", "sc_request"].includes(table2)) {
+        const requestedFor = findRequestedForInput(doc, table2);
+        if (requestedFor?.sysId) return { ...requestedFor, table: table2 };
       }
-      const preview = sysIdFromPreviewLink(doc, table);
-      if (preview?.sysId) return { ...preview, table };
+      const preview = sysIdFromPreviewLink(doc, table2);
+      if (preview?.sysId) return { ...preview, table: table2 };
     }
     return null;
   }
@@ -35788,8 +35788,8 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     }
     return "";
   }
-  function normalizeTicketRecord(record = {}, { table = "", type = "" } = {}) {
-    const normalizedTable = normalizeServiceNowValue(record.table) || table;
+  function normalizeTicketRecord(record = {}, { table: table2 = "", type = "" } = {}) {
+    const normalizedTable = normalizeServiceNowValue(record.table) || table2;
     const requestItem = record.request_item ?? record.requestItem;
     const explicitParentNumber = normalizeServiceNowValue(record.parentRitmNumber ?? record.parent_ritm_number);
     const explicitParentSysId = normalizeServiceNowValue(record.parentRitmSysId ?? record.parent_ritm_sys_id);
@@ -36035,9 +36035,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   function setFindCiPdfSourceSysId(state, sysId) {
     state.ui.findCiPdfSourceSysId = sysId || "";
   }
-  function applyWorkNoteTemplate(state, { templateId, text: text2, generatedTemplateId }) {
+  function applyWorkNoteTemplate(state, { templateId, text: text3, generatedTemplateId }) {
     state.ui.workNotesTemplateId = templateId || "";
-    state.ui.workNotesText = text2 || "";
+    state.ui.workNotesText = text3 || "";
     state.ui.workNotesSource = "template";
     state.ui.workNotesGeneratedTemplateId = generatedTemplateId || templateId || "";
   }
@@ -36253,9 +36253,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
         scheduleRecovery("find-ci-select", 0);
       },
       onCopyFindCi(sysId, name) {
-        const text2 = name || sysId;
-        if (!text2) return;
-        copyToClipboard(text2, state.host.document).then((copied) => {
+        const text3 = name || sysId;
+        if (!text3) return;
+        copyToClipboard(text3, state.host.document).then((copied) => {
           store.dispatch(setFindCiCopiedSysId, copied ? sysId || "" : "");
           if (!copied) {
             showToast(state.host.document, {
@@ -36773,8 +36773,8 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   function escapeRegex2(value2) {
     return String(value2 || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
-  function containsAny(text2, values2) {
-    const source = String(text2 || "");
+  function containsAny(text3, values2) {
+    const source = String(text3 || "");
     return values2.some((value2) => {
       const keyword = cleanText(value2);
       if (!keyword) return false;
@@ -36788,7 +36788,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     return cleanText(candidate);
   }
   function extractCleanDevice(description = "") {
-    const text2 = cleanText(description).replace(/\b\d{2}PI[A-Z0-9-]+\b/gi, " ").replace(/\b[A-Z]{2,}\d{3,}\b/g, " ").replace(/\s{2,}/g, " ").trim();
+    const text3 = cleanText(description).replace(/\b\d{2}PI[A-Z0-9-]+\b/gi, " ").replace(/\b[A-Z]{2,}\d{3,}\b/g, " ").replace(/\s{2,}/g, " ").trim();
     const patterns = [
       /\bapple\s+iphone\s+\d{1,2}[a-z]?(?:\s+(?:pro(?:\s+max)?|plus|mini))?(?:\s+\d{2,4}\s*gb)?(?:\s+(?:black|white|blue|green|pink|yellow|red|silver|gold|natural(?:\s+titanium)?|titanium))?\b/i,
       /\bhp\s+elitebook\s+[a-z0-9-]+(?:\s+[a-z0-9-]+){0,2}\b/i,
@@ -36797,7 +36797,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       /\b(?:iphone|ipad|smartphone|laptop|monitor|tablet)(?:\s+[a-z0-9-]+){0,4}\b/i
     ];
     for (const pattern of patterns) {
-      const match = text2.match(pattern);
+      const match = text3.match(pattern);
       if (match?.[0]) {
         const candidate = cleanDeviceCandidate(match[0]);
         if (candidate) return candidate;
@@ -36810,30 +36810,30 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     return match?.[0] || cleanText(value2);
   }
   function normalizeUserName(value2 = "") {
-    const text2 = cleanText(typeof value2 === "object" && value2 !== null ? value2.fullName || value2.display || value2.name || "" : value2).replace(/\s{2,}/g, " ").trim();
-    if (/^(?:SCTASK|INC|RITM|REQ|CHG|PRB|SR|KB)\d{4,}$/i.test(text2)) return "";
-    return text2;
+    const text3 = cleanText(typeof value2 === "object" && value2 !== null ? value2.fullName || value2.display || value2.name || "" : value2).replace(/\s{2,}/g, " ").trim();
+    if (/^(?:SCTASK|INC|RITM|REQ|CHG|PRB|SR|KB)\d{4,}$/i.test(text3)) return "";
+    return text3;
   }
   function extractDeviceName(description = "", shortDescription = "", cmdbCi = "") {
-    const text2 = cleanText([shortDescription, description, cmdbCi].filter(Boolean).join(" "));
-    const exact = text2.match(/attribution\s+et\s+livraison\s+device\s*:\s*([^\n,;]+)/i);
+    const text3 = cleanText([shortDescription, description, cmdbCi].filter(Boolean).join(" "));
+    const exact = text3.match(/attribution\s+et\s+livraison\s+device\s*:\s*([^\n,;]+)/i);
     if (exact?.[1]) {
       const candidate = cleanDeviceCandidate(exact[1]);
       if (candidate) return candidate.toUpperCase();
     }
-    const iphone = text2.match(/\bapple\s+iphone\s+\d{1,2}[a-z]?(?:\s+(?:pro(?:\s+max)?|plus|mini))?(?:\s+\d{2,4}\s*gb)?(?:\s+(?:black|white|blue|green|pink|yellow|red|silver|gold|natural(?:\s+titanium)?|titanium))?\b/i);
+    const iphone = text3.match(/\bapple\s+iphone\s+\d{1,2}[a-z]?(?:\s+(?:pro(?:\s+max)?|plus|mini))?(?:\s+\d{2,4}\s*gb)?(?:\s+(?:black|white|blue|green|pink|yellow|red|silver|gold|natural(?:\s+titanium)?|titanium))?\b/i);
     if (iphone?.[0]) return cleanDeviceCandidate(iphone[0]).toUpperCase();
-    return extractCleanDevice(text2).toUpperCase();
+    return extractCleanDevice(text3).toUpperCase();
   }
   function extractAssetTag(description = "", cmdbCi = "", assetTag = "") {
     const explicit = cleanText(assetTag || cmdbCi);
     if (/^[A-Z0-9-]{8,}$/i.test(explicit)) return explicit.toUpperCase();
-    const text2 = cleanText([description, cmdbCi].join(" "));
-    const match = text2.match(/\b\d{2}PI\d{6,}\b/i) || text2.match(/\b[A-Z0-9]{8,}\b/);
+    const text3 = cleanText([description, cmdbCi].join(" "));
+    const match = text3.match(/\b\d{2}PI\d{6,}\b/i) || text3.match(/\b[A-Z0-9]{8,}\b/);
     return cleanText(match?.[0] || explicit).toUpperCase();
   }
-  function classifyServiceNowTicket(text2 = "") {
-    const t = cleanText(text2).toLowerCase();
+  function classifyServiceNowTicket(text3 = "") {
+    const t = cleanText(text3).toLowerCase();
     if (containsAny(t, RETURN_KEYWORDS)) return CATEGORY.RETURN;
     if (containsAny(t, ACCESS_KEYWORDS)) return CATEGORY.ACCESS;
     if (containsAny(t, REPLACEMENT_KEYWORDS)) return CATEGORY.REPLACEMENT;
@@ -37522,47 +37522,47 @@ ${bundle.email.body}`,
       flatten(template.keywords)
     ].filter(Boolean).join(" "));
   }
-  function has2(text2, pattern) {
-    return pattern.test(text2);
+  function has2(text3, pattern) {
+    return pattern.test(text3);
   }
   function scoreTemplate(template = {}, context = {}) {
     const shortDescription = normalize3(context.shortDescription || context.short_description);
     const description = normalize3(context.description || context.desc);
-    const text2 = shortDescription || description;
-    if (!text2) return 0;
+    const text3 = shortDescription || description;
+    if (!text3) return 0;
     const templateText = corpus(template);
     const id = normalize3(template.id);
     let score = 0;
-    const futureAction = has2(text2, /\b(schedule|appointment|book|arrange|plan|prepare|preparation|ready for|coordinate|availability|deliver(?:y)? scheduled)\b/);
-    const completedAction = has2(text2, /\b(delivered|handed over|collected|received|completed|installed|configured|resolved|fixed|replaced|restored|done)\b/);
+    const futureAction = has2(text3, /\b(schedule|appointment|book|arrange|plan|prepare|preparation|ready for|coordinate|availability|deliver(?:y)? scheduled)\b/);
+    const completedAction = has2(text3, /\b(delivered|handed over|collected|received|completed|installed|configured|resolved|fixed|replaced|restored|done)\b/);
     if (futureAction) {
       if (/appointment_proposed/.test(id)) score += 24;
-      if (/equipment_prepared/.test(id) && /\b(prepare|preparation|ready)\b/.test(text2)) score += 20;
-      if (/smartphone_delivery/.test(id) && /\b(smartphone|phone|iphone|mobile)\b/.test(text2)) score += 18;
+      if (/equipment_prepared/.test(id) && /\b(prepare|preparation|ready)\b/.test(text3)) score += 20;
+      if (/smartphone_delivery/.test(id) && /\b(smartphone|phone|iphone|mobile)\b/.test(text3)) score += 18;
       if (/device_delivered|worknote_device_delivered|device_collected/.test(id)) score -= 25;
     }
     if (completedAction) {
-      if (/device_delivered|worknote_device_delivered/.test(id) && /\b(delivered|handed over|received)\b/.test(text2)) score += 24;
-      if (/device_collected/.test(id) && /\b(collected|collection|picked up|pickup)\b/.test(text2)) score += 22;
-      if (/software_installed/.test(id) && /\b(installed|installation completed)\b/.test(text2)) score += 22;
-      if (/laptop_configured/.test(id) && /\b(configured|setup|set up)\b/.test(text2)) score += 22;
-      if (/peripheral_replaced/.test(id) && /\b(replaced|replacement completed)\b/.test(text2)) score += 22;
-      if (/account_access_restored/.test(id) && /\b(restored|unlocked|password reset)\b/.test(text2)) score += 22;
+      if (/device_delivered|worknote_device_delivered/.test(id) && /\b(delivered|handed over|received)\b/.test(text3)) score += 24;
+      if (/device_collected/.test(id) && /\b(collected|collection|picked up|pickup)\b/.test(text3)) score += 22;
+      if (/software_installed/.test(id) && /\b(installed|installation completed)\b/.test(text3)) score += 22;
+      if (/laptop_configured/.test(id) && /\b(configured|setup|set up)\b/.test(text3)) score += 22;
+      if (/peripheral_replaced/.test(id) && /\b(replaced|replacement completed)\b/.test(text3)) score += 22;
+      if (/account_access_restored/.test(id) && /\b(restored|unlocked|password reset)\b/.test(text3)) score += 22;
     }
-    if (/\b(return|recover|recovery|retrieve|bring back|drop[- ]?off)\b/.test(text2) && /return_equipment/.test(id)) score += 26;
-    if (/\b(no answer|unreachable|no response|injoignable|pas de reponse)\b/.test(text2) && /no_answer/.test(id)) score += 26;
-    if (/\b(waiting|awaiting|feedback|confirmation|reply|response)\b/.test(text2) && /waiting_for_feedback|waiting_for_user/.test(id)) score += 20;
-    if (/\b(contact|contacted|called|email sent|follow[- ]?up)\b/.test(text2) && /user_contacted|email_sent/.test(id)) score += 16;
-    if (/\b(mdm|intune|enrollment|enrolment)\b/.test(text2) && /mdm/.test(id)) score += 22;
-    if (/\b(outlook|scheduling assistant|mail profile)\b/.test(text2) && /outlook/.test(id)) score += 18;
-    if (/\b(gpupdate|group policy|gpo)\b/.test(text2) && /gpupdate/.test(id)) score += 26;
-    if (/\b(vpn|wired|ethernet|network|disconnect)\b/.test(text2) && /ipconfig|vpn/.test(id)) score += 16;
-    if (/\b(headset|headphone|casque)\b/.test(text2) && /headset/.test(id)) score += 20;
-    if (/\b(mouse|keyboard|dock|docking|monitor|screen|webcam)\b/.test(text2) && /peripheral/.test(id)) score += 16;
-    if (/\b(laptop|notebook|pc)\b/.test(text2) && /laptop|equipment/.test(id)) score += 8;
-    if (/\b(tablet|ipad)\b/.test(text2) && /appointment|equipment|device/.test(id)) score += 7;
-    if (/\b(smartphone|phone|iphone|mobile)\b/.test(text2) && /smartphone|device/.test(id)) score += 8;
-    if (/\b(software|application|adobe|sap|teams)\b/.test(text2) && /software/.test(id)) score += 10;
+    if (/\b(return|recover|recovery|retrieve|bring back|drop[- ]?off)\b/.test(text3) && /return_equipment/.test(id)) score += 26;
+    if (/\b(no answer|unreachable|no response|injoignable|pas de reponse)\b/.test(text3) && /no_answer/.test(id)) score += 26;
+    if (/\b(waiting|awaiting|feedback|confirmation|reply|response)\b/.test(text3) && /waiting_for_feedback|waiting_for_user/.test(id)) score += 20;
+    if (/\b(contact|contacted|called|email sent|follow[- ]?up)\b/.test(text3) && /user_contacted|email_sent/.test(id)) score += 16;
+    if (/\b(mdm|intune|enrollment|enrolment)\b/.test(text3) && /mdm/.test(id)) score += 22;
+    if (/\b(outlook|scheduling assistant|mail profile)\b/.test(text3) && /outlook/.test(id)) score += 18;
+    if (/\b(gpupdate|group policy|gpo)\b/.test(text3) && /gpupdate/.test(id)) score += 26;
+    if (/\b(vpn|wired|ethernet|network|disconnect)\b/.test(text3) && /ipconfig|vpn/.test(id)) score += 16;
+    if (/\b(headset|headphone|casque)\b/.test(text3) && /headset/.test(id)) score += 20;
+    if (/\b(mouse|keyboard|dock|docking|monitor|screen|webcam)\b/.test(text3) && /peripheral/.test(id)) score += 16;
+    if (/\b(laptop|notebook|pc)\b/.test(text3) && /laptop|equipment/.test(id)) score += 8;
+    if (/\b(tablet|ipad)\b/.test(text3) && /appointment|equipment|device/.test(id)) score += 7;
+    if (/\b(smartphone|phone|iphone|mobile)\b/.test(text3) && /smartphone|device/.test(id)) score += 8;
+    if (/\b(software|application|adobe|sap|teams)\b/.test(text3) && /software/.test(id)) score += 10;
     const shortTokens = shortDescription.replace(/[^a-z0-9]+/g, " ").split(/\s+/).filter((token) => token.length >= 4);
     for (const token of new Set(shortTokens)) {
       if (templateText.includes(token)) score += 2;
@@ -37605,8 +37605,8 @@ ${bundle.email.body}`,
   var RECENT_PHRASES_MAX = 5;
   var PHRASE_MIN = 6;
   var PHRASE_MAX = 120;
-  function extractPhrases(text2) {
-    return String(text2 || "").split(/\r?\n/).map((line) => cleanText(line)).filter((line) => line.length >= PHRASE_MIN && line.length <= PHRASE_MAX);
+  function extractPhrases(text3) {
+    return String(text3 || "").split(/\r?\n/).map((line) => cleanText(line)).filter((line) => line.length >= PHRASE_MIN && line.length <= PHRASE_MAX);
   }
   function nextRecentPhrases(state, phrase) {
     if (!phrase) return null;
@@ -37695,9 +37695,9 @@ ${addition}` : addition, writeResult = writeWorkNoteToField(addition, currentCon
       },
       onCopyWorkNote() {
         runAction("workNotes", async () => {
-          const model = buildWorkNoteModel(state.context || {}, getEffectiveSettings(), state), text2 = resolveWorkNoteText(state, model);
-          if (!cleanText(text2)) throw new Error("No work note text available");
-          if (!await copyToClipboard(text2, state.host.document)) throw new Error("Clipboard copy failed");
+          const model = buildWorkNoteModel(state.context || {}, getEffectiveSettings(), state), text3 = resolveWorkNoteText(state, model);
+          if (!cleanText(text3)) throw new Error("No work note text available");
+          if (!await copyToClipboard(text3, state.host.document)) throw new Error("Clipboard copy failed");
           showToast(state.host.document, { message: "Work note copied", tone: "info" });
         });
       },
@@ -37705,19 +37705,19 @@ ${addition}` : addition, writeResult = writeWorkNoteToField(addition, currentCon
         runAction("workNotes", async () => {
           const currentContext = state.context || getCurrentContext(rootWindow);
           if (!currentContext?.table && !currentContext?.recordNumber && !currentContext?.ticketNumber) throw new Error("No ticket context detected");
-          const model = buildWorkNoteModel(currentContext, getEffectiveSettings(), state), text2 = resolveWorkNoteText(state, model);
-          if (!cleanText(text2)) {
+          const model = buildWorkNoteModel(currentContext, getEffectiveSettings(), state), text3 = resolveWorkNoteText(state, model);
+          if (!cleanText(text3)) {
             logger.warn("work-notes:write-blocked", { mode, kind: "empty-manual-draft" });
             throw new Error("Work note is empty");
           }
           logger.info("audit:work-note", { ticket: currentContext?.ticketNumber || currentContext?.recordNumber || "unknown", mode, source: state.ui.workNotesSource || "" });
           if (mode === "replace") {
-            const preview = String(text2).slice(0, 80).replace(/\n/g, " ") + (String(text2).length > 80 ? "..." : ""), confirmed = await showConfirmationModal(state.host.document, { title: "Replace Work Notes", description: "This will replace all existing work notes with the new content. This action cannot be undone.", details: [{ label: "Action", value: "Replace all work notes" }, { label: "Preview", value: preview }] });
+            const preview = String(text3).slice(0, 80).replace(/\n/g, " ") + (String(text3).length > 80 ? "..." : ""), confirmed = await showConfirmationModal(state.host.document, { title: "Replace Work Notes", description: "This will replace all existing work notes with the new content. This action cannot be undone.", details: [{ label: "Action", value: "Replace all work notes" }, { label: "Preview", value: preview }] });
             if (!confirmed) return;
           }
-          const result = writeWorkNoteToField(text2, currentContext, { append: mode === "append" });
+          const result = writeWorkNoteToField(text3, currentContext, { append: mode === "append" });
           if (!result.ok) throw new Error(`Work notes could not be written (${result.kind || "unverified"})`);
-          pushPhrase(extractPhrases(text2)[0] || "");
+          pushPhrase(extractPhrases(text3)[0] || "");
           logger.info("work-notes:write", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", mode, targetField: result.targetField || "", appended: Boolean(result.appended), verified: Boolean(result.verified), source: state.ui.workNotesSource || "" });
           if (state.ui.workNotesTemplateId) {
             noteWorkNoteTemplateUsage(state, rootWindow, state.ui.workNotesTemplateId);
@@ -37728,18 +37728,18 @@ ${addition}` : addition, writeResult = writeWorkNoteToField(addition, currentCon
         });
       },
       onCannedPhrase(phrase) {
-        const text2 = cleanText(phrase);
-        if (!text2) return;
+        const text3 = cleanText(phrase);
+        if (!text3) return;
         const current = String(state.ui.workNotesText ?? ""), nextText = cleanText(current) ? `${current}
-${text2}` : text2;
+${text3}` : text3;
         store.dispatch(setWorkNotesText, nextText);
-        pushPhrase(text2);
+        pushPhrase(text3);
         scheduleRecovery("work-notes-text", 0);
       },
       onRemoveQuickPhrase(phrase) {
-        const text2 = cleanText(phrase);
-        if (!text2) return;
-        const recent = Array.isArray(state.ui.workNotesRecentPhrases) ? state.ui.workNotesRecentPhrases : [], next = recent.filter((item) => cleanText(item) !== text2);
+        const text3 = cleanText(phrase);
+        if (!text3) return;
+        const recent = Array.isArray(state.ui.workNotesRecentPhrases) ? state.ui.workNotesRecentPhrases : [], next = recent.filter((item) => cleanText(item) !== text3);
         store.dispatch(setWorkNotesRecentPhrases, next);
         saveRecentWorkNotePhrases(rootWindow, next);
         scheduleRecovery("work-notes-quick-phrase-remove", 0);
@@ -37750,9 +37750,9 @@ ${text2}` : text2;
           if (!currentContext?.table && !currentContext?.recordNumber && !currentContext?.ticketNumber) throw new Error("No ticket context detected");
           const settings = getEffectiveSettings(), model = buildWorkNoteModel(currentContext, settings, state), template = model.templates.find((t) => t.id === cleanText(templateId));
           if (!template) throw new Error("Template not found");
-          const rendered = renderTemplate(template, { context: currentContext, settings }), text2 = cleanText(rendered?.body || "");
-          if (!text2) throw new Error("Template rendered empty");
-          const result = writeWorkNoteToField(text2, currentContext, { append: true });
+          const rendered = renderTemplate(template, { context: currentContext, settings }), text3 = cleanText(rendered?.body || "");
+          if (!text3) throw new Error("Template rendered empty");
+          const result = writeWorkNoteToField(text3, currentContext, { append: true });
           if (!result.ok) throw new Error(`Work notes could not be written (${result.kind || "unverified"})`);
           noteWorkNoteTemplateUsage(state, rootWindow, template.id);
           pushRecentWorkNote(rootWindow, template.id, template.label || "");
@@ -38165,7 +38165,14 @@ ${text2}` : text2;
   }
 
   // Assistant/handlers/launcher.js
-  function createLauncherHandlers({ state, store, rootWindow, scheduleRecovery, scheduleAutoHideTimer, clearAutoHideTimer }) {
+  function createLauncherHandlers({ state, store, rootWindow, scheduleRecovery, scheduleAutoHideTimer, clearAutoHideTimer, logger }) {
+    let lastLoggedMode = "";
+    const logMode = (reason, mode) => {
+      const key = `${reason}:${mode}:${Boolean(state.ui.edgePanelPinned)}`;
+      if (key === lastLoggedMode) return;
+      lastLoggedMode = key;
+      logger?.info?.("[SN Assistant][EdgeMode]", { reason, mode, pinned: Boolean(state.ui.edgePanelPinned), lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
+    };
     const persist = (mode) => {
       if (mode === "icons" || mode === "expanded") state.ui.edgePanelLastUsefulMode = mode;
       savePinState(rootWindow, { pinned: Boolean(state.ui.edgePanelPinned), lastOpenState: mode !== "tab", mode, lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
@@ -38176,57 +38183,49 @@ ${text2}` : text2;
       state.ui.edgePanelMode = mode;
       state.ui.assistantHidden = false;
       persist(mode);
+      logMode(reason, mode);
       if (mode === "tab") scheduleAutoHideTimer();
       else clearAutoHideTimer();
       scheduleRecovery(reason, 0);
     };
-    return {
-      onToggleLauncherEditMode() {
-        store.dispatch(toggleLauncherEditMode);
-        scheduleRecovery("launcher-edit-mode", 0);
-      },
-      onToggleEdgePanelPinned(pinned) {
-        const value2 = Boolean(pinned);
-        store.dispatch(setEdgePanelPinned, value2);
-        persist(state.ui.edgePanelMode || "icons");
-        if (value2) clearAutoHideTimer();
-        else scheduleAutoHideTimer();
-        scheduleRecovery("launcher-pin", 0);
-      },
-      // The side tab restores the last useful presentation instead of always jumping to Expanded.
-      onEdgePanelToggle() {
-        if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons");
-        else setMode("tab");
-      },
-      onEdgePanelIconsToggle() {
-        setMode("icons");
-      },
-      onEdgePanelExpand() {
-        setMode("expanded");
-      },
-      onEdgePanelMinimize() {
-        setMode("tab");
-      },
-      onEdgePanelClose() {
-        if (state.ui.workNotesOpen) store.dispatch(closeWorkNotes);
-        if (state.ui.userInfoOpen) store.dispatch(closeUserInfo);
-        if (state.ui.userTicketsOpen) store.dispatch(closeUserTickets);
-        if (state.ui.findCiOpen) store.dispatch(closeFindCi);
-        if (state.ui.edgePanelPinned) store.dispatch(setEdgePanelPinned, false);
-        state.ui.edgePanelPinned = false;
-        setMode("tab", "ep-close");
-      },
-      onHideLauncherButton(buttonId) {
-        const id = cleanText(buttonId);
-        if (!id || !HIDEABLE_BUTTON_IDS.includes(id)) return;
-        const current = Array.isArray(state.settings?.hiddenButtons) ? state.settings.hiddenButtons : [];
-        if (current.includes(id)) return;
-        const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
-        setSettings(state, next);
-        showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
-        scheduleRecovery("launcher-hide-button", 0);
-      }
-    };
+    return { onToggleLauncherEditMode() {
+      store.dispatch(toggleLauncherEditMode);
+      scheduleRecovery("launcher-edit-mode", 0);
+    }, onToggleEdgePanelPinned(pinned) {
+      const value2 = Boolean(pinned);
+      store.dispatch(setEdgePanelPinned, value2);
+      persist(state.ui.edgePanelMode || "icons");
+      logMode("pin", state.ui.edgePanelMode || "icons");
+      if (value2) clearAutoHideTimer();
+      else scheduleAutoHideTimer();
+      scheduleRecovery("launcher-pin", 0);
+    }, onEdgePanelToggle() {
+      if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons", "tab-restore");
+      else setMode("tab", "minimal");
+    }, onEdgePanelIconsToggle() {
+      setMode("icons", "icons");
+    }, onEdgePanelExpand() {
+      setMode("expanded", "expanded");
+    }, onEdgePanelMinimize() {
+      setMode("tab", "minimal");
+    }, onEdgePanelClose() {
+      if (state.ui.workNotesOpen) store.dispatch(closeWorkNotes);
+      if (state.ui.userInfoOpen) store.dispatch(closeUserInfo);
+      if (state.ui.userTicketsOpen) store.dispatch(closeUserTickets);
+      if (state.ui.findCiOpen) store.dispatch(closeFindCi);
+      if (state.ui.edgePanelPinned) store.dispatch(setEdgePanelPinned, false);
+      state.ui.edgePanelPinned = false;
+      setMode("tab", "close");
+    }, onHideLauncherButton(buttonId) {
+      const id = cleanText(buttonId);
+      if (!id || !HIDEABLE_BUTTON_IDS.includes(id)) return;
+      const current = Array.isArray(state.settings?.hiddenButtons) ? state.settings.hiddenButtons : [];
+      if (current.includes(id)) return;
+      const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
+      setSettings(state, next);
+      showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
+      scheduleRecovery("launcher-hide-button", 0);
+    } };
   }
 
   // Assistant/application/ep/links.js
@@ -38243,12 +38242,12 @@ ${text2}` : text2;
   }
   function buildDefaultLinks(linkCtx) {
     const links = [];
-    const { ticketNumber, sysId, table } = linkCtx;
-    if (table && sysId) {
+    const { ticketNumber, sysId, table: table2 } = linkCtx;
+    if (table2 && sysId) {
       links.push({
         id: "_sn_record",
-        label: `Open ${ticketNumber || table} in ServiceNow`,
-        url: `/${table}.do?sys_id=${encodeURIComponent(sysId)}`
+        label: `Open ${ticketNumber || table2} in ServiceNow`,
+        url: `/${table2}.do?sys_id=${encodeURIComponent(sysId)}`
       });
     }
     if (ticketNumber) {
@@ -38381,38 +38380,51 @@ ${text2}` : text2;
   }
 
   // Assistant/application/assign/getCurrentUser.js
-  function readUserIdFromWindow(win) {
+  function text2(v) {
+    return typeof v === "string" ? v.trim() : "";
+  }
+  function readIdentity(win) {
     try {
-      const user = win?.g_user;
-      if (user) {
-        if (typeof user.userID === "string" && user.userID) return user.userID;
-        if (typeof user.getUserID === "function") {
-          const id = user.getUserID();
-          if (id) return String(id);
-        }
+      const u = win?.g_user;
+      if (u) {
+        let id = text2(u.userID);
+        if (!id && typeof u.getUserID === "function") id = text2(String(u.getUserID() || ""));
+        let display = text2(u.fullName) || text2(u.name) || text2(u.userName) || text2([u.firstName, u.lastName].filter(Boolean).join(" "));
+        if (!display && typeof u.getFullName === "function") display = text2(String(u.getFullName() || ""));
+        if (id || display) return { id, display, source: "g_user" };
       }
     } catch {
     }
     try {
-      if (win?.NOW?.user_id) return String(win.NOW.user_id);
-      if (win?.NOW?.user?.userID) return String(win.NOW.user.userID);
+      const n = win?.NOW || {}, u = n.user || {};
+      const id = text2(n.user_id) || text2(u.userID) || text2(u.sys_id) || text2(u.sysId), display = text2(n.user_display_name) || text2(u.displayName) || text2(u.fullName) || text2(u.name);
+      if (id || display) return { id, display, source: "NOW" };
     } catch {
     }
-    return "";
+    return { id: "", display: "", source: "" };
   }
-  function getCurrentUserSysId(rootWindow = typeof window !== "undefined" ? window : null) {
-    if (!rootWindow) return "";
+  function getCurrentUserIdentity(rootWindow = typeof window !== "undefined" ? window : null) {
+    if (!rootWindow) return { id: "", display: "", source: "" };
     let windows;
     try {
       windows = getAccessibleWindows(rootWindow);
     } catch {
       windows = [rootWindow];
     }
+    let best = { id: "", display: "", source: "" };
     for (const win of windows) {
-      const id = readUserIdFromWindow(win);
-      if (id) return id;
+      const candidate = readIdentity(win);
+      if (candidate.id && candidate.display) return candidate;
+      if (candidate.id && !best.id) best = candidate;
+      else if (candidate.display && !best.display) best = { ...best, display: candidate.display, source: best.source || candidate.source };
     }
-    return "";
+    return best;
+  }
+  function getCurrentUserSysId(rootWindow = typeof window !== "undefined" ? window : null) {
+    return getCurrentUserIdentity(rootWindow).id;
+  }
+  function getCurrentUserDisplayName(rootWindow = typeof window !== "undefined" ? window : null) {
+    return getCurrentUserIdentity(rootWindow).display;
   }
 
   // Assistant/application/assign/assignToMyGroup.js
@@ -38420,147 +38432,119 @@ ${text2}` : text2;
   var ASSIGNEE_SETTLE_MS = 450;
   var FINAL_VERIFY_MS = 650;
   var SYS_ID_RE = /^[0-9a-f]{32}$/i;
-  function getCurrentUserDisplayName(rootWindow) {
-    const w = rootWindow || getRootWindow();
-    return cleanText(w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" "));
-  }
-  function wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-  function getTableName2(gForm) {
+  var wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  function table(g) {
     try {
-      return cleanText(gForm?.getTableName?.());
+      return cleanText(g?.getTableName?.());
     } catch {
       return "";
     }
   }
-  function normalizeDisplay(v) {
+  function norm(v) {
     return cleanText(v).replace(/\s+/g, " ").toLowerCase();
   }
-  function displayLooksResolved(value2, expected = "") {
-    const actual = cleanText(value2), wanted = cleanText(expected);
-    if (!actual || SYS_ID_RE.test(actual)) return false;
-    if (!wanted) return true;
-    const a = normalizeDisplay(actual), e = normalizeDisplay(wanted);
-    return a === e || a.includes(e) || e.includes(a);
+  function displayOK(v, e = "") {
+    const a = cleanText(v), w = cleanText(e);
+    if (!a || SYS_ID_RE.test(a)) return false;
+    if (!w) return true;
+    return norm(a) === norm(w) || norm(a).includes(norm(w)) || norm(w).includes(norm(a));
   }
-  function findDomField(rootWindow, field) {
-    const selectors = [`[id="sys_display.${field}"]`, `[id^="sys_display."][id$=".${field}"]`, `input[name="${field}"]`, `input[id="${field}"]`];
-    for (const doc of getAccessibleDocuments(rootWindow)) {
-      for (const selector of selectors) {
-        const el = doc.querySelector(selector);
-        if (el) return el;
-      }
-    }
-    return null;
-  }
-  function findDisplayField(rootWindow, field) {
-    for (const doc of getAccessibleDocuments(rootWindow)) {
-      const exact = doc.querySelector(`[id="sys_display.${field}"]`);
+  function displayEl(root, field) {
+    for (const d of getAccessibleDocuments(root)) {
+      const exact = d.querySelector(`[id="sys_display.${field}"]`);
       if (exact) return exact;
-      const candidates = [...doc.querySelectorAll(`[id^="sys_display."][id$=".${field}"]`)];
-      if (candidates.length) return candidates[0];
+      const list = [...d.querySelectorAll(`[id^="sys_display."][id$=".${field}"]`)];
+      if (list.length) return list[0];
     }
     return null;
   }
-  function readDisplay(rootWindow, field) {
-    const el = findDisplayField(rootWindow, field);
-    return { value: cleanText(el?.value), elementId: cleanText(el?.id), found: Boolean(el) };
+  function readDisplay(root, field) {
+    const el = displayEl(root, field);
+    return { value: cleanText(el?.value), found: Boolean(el), elementId: cleanText(el?.id) };
   }
-  function dispatchReferenceEvents(el) {
+  function events(el) {
     if (!el) return;
-    const EventCtor = el.ownerDocument?.defaultView?.Event || globalThis.Event;
-    if (typeof EventCtor !== "function") return;
-    ["input", "change", "blur"].forEach((name) => el.dispatchEvent(new EventCtor(name, { bubbles: true })));
+    const E = el.ownerDocument?.defaultView?.Event || globalThis.Event;
+    if (typeof E !== "function") return;
+    ["input", "change", "blur"].forEach((n) => el.dispatchEvent(new E(n, { bubbles: true })));
   }
-  function repairDisplay(rootWindow, field, displayName) {
-    const el = findDisplayField(rootWindow, field);
-    if (!el || !cleanText(displayName)) return false;
-    el.value = displayName;
-    dispatchReferenceEvents(el);
-    return displayLooksResolved(el.value, displayName);
+  function repair(root, field, name) {
+    const el = displayEl(root, field);
+    if (!el || !cleanText(name)) return false;
+    el.value = name;
+    events(el);
+    return displayOK(el.value, name);
   }
-  function readByDom(rootWindow, field, expected) {
-    const el = findDomField(rootWindow, field);
-    if (!el) return { ok: false, value: "", source: "dom", kind: "field-not-found" };
-    const value2 = cleanText(el.value);
-    return { ok: value2 === cleanText(expected), value: value2, source: "dom", elementId: cleanText(el.id), elementName: cleanText(el.name) };
+  function snap(g, root, field) {
+    const d = readDisplay(root, field);
+    return { internal: cleanText(g?.getValue?.(field)), display: d.value, displayFound: d.found, displayElementId: d.elementId };
   }
-  function setByDom(rootWindow, field, value2) {
-    const el = findDomField(rootWindow, field);
-    if (!el) return { ok: false, value: "", source: "dom", kind: "field-not-found" };
-    el.value = value2;
-    dispatchReferenceEvents(el);
-    return readByDom(rootWindow, field, value2);
+  function verify({ g, root, field, id, name, requireDisplay = true }) {
+    const s = snap(g, root, field), internalOk = s.internal === cleanText(id), displayOk = !requireDisplay || displayOK(s.display, name);
+    return { ...s, internalOk, displayOk, ok: internalOk && displayOk };
   }
-  function snapshotReference(gForm, rootWindow, field) {
-    const internal = cleanText(gForm?.getValue?.(field)), display = readDisplay(rootWindow, field);
-    return { internal, display: display.value, displayFound: display.found, displayElementId: display.elementId };
-  }
-  function verifyReference({ gForm, rootWindow, field, expectedSysId, expectedDisplayName, requireDisplay = true }) {
-    const snap = snapshotReference(gForm, rootWindow, field), internalOk = snap.internal === cleanText(expectedSysId), displayOk = !requireDisplay || displayLooksResolved(snap.display, expectedDisplayName);
-    return { ...snap, internalOk, displayOk, ok: internalOk && displayOk };
-  }
-  async function setReferenceSafely({ gForm, rootWindow, field, sysId, displayName, settleMs }) {
-    gForm.setValue(field, sysId, displayName || sysId);
-    await wait(settleMs);
-    let verification = verifyReference({ gForm, rootWindow, field, expectedSysId: sysId, expectedDisplayName: displayName, requireDisplay: Boolean(displayName) });
-    if (verification.internalOk && !verification.displayOk && displayName) {
-      repairDisplay(rootWindow, field, displayName);
+  async function setRef({ g, root, field, id, name, ms }) {
+    g.setValue(field, id, name || id);
+    await wait(ms);
+    let v = verify({ g, root, field, id, name, requireDisplay: Boolean(name) });
+    if (v.internalOk && !v.displayOk && name) {
+      repair(root, field, name);
       await wait(120);
-      verification = verifyReference({ gForm, rootWindow, field, expectedSysId: sysId, expectedDisplayName: displayName, requireDisplay: true });
+      v = verify({ g, root, field, id, name, requireDisplay: true });
     }
-    return verification;
+    return v;
   }
-  async function prefillAssignment({ rootWindow, currentUserSysId, currentUserDisplayName, assignmentGroupSysId = "", assignmentGroupDisplayName = "", keepGroup = false }) {
-    const best = getBestGForm(rootWindow), gForm = best?.gForm;
-    if (gForm && typeof gForm.setValue === "function") {
-      const table = getTableName2(gForm), before = { assignedTo: snapshotReference(gForm, rootWindow, "assigned_to"), assignmentGroup: snapshotReference(gForm, rootWindow, "assignment_group") };
-      let group = { ok: true, skipped: true };
-      if (!keepGroup && assignmentGroupSysId) {
-        group = await setReferenceSafely({ gForm, rootWindow, field: "assignment_group", sysId: assignmentGroupSysId, displayName: assignmentGroupDisplayName, settleMs: GROUP_SETTLE_MS });
-        if (!group.ok) return { ok: false, verified: false, usedGForm: true, table, before, group, kind: group.internalOk ? "group-display-unresolved" : "group-rejected" };
-      }
-      const assignee = await setReferenceSafely({ gForm, rootWindow, field: "assigned_to", sysId: currentUserSysId, displayName: currentUserDisplayName, settleMs: ASSIGNEE_SETTLE_MS });
-      await wait(FINAL_VERIFY_MS);
-      const finalAssignee = verifyReference({ gForm, rootWindow, field: "assigned_to", expectedSysId: currentUserSysId, expectedDisplayName: currentUserDisplayName, requireDisplay: Boolean(currentUserDisplayName) }), finalGroup = keepGroup || !assignmentGroupSysId ? { ok: true, skipped: true } : verifyReference({ gForm, rootWindow, field: "assignment_group", expectedSysId: assignmentGroupSysId, expectedDisplayName: assignmentGroupDisplayName, requireDisplay: Boolean(assignmentGroupDisplayName) });
-      const ok2 = finalAssignee.ok && finalGroup.ok;
-      let kind = "ok";
-      if (!finalAssignee.internalOk) kind = "assignee-rejected";
-      else if (!finalAssignee.displayOk) kind = "assignee-display-unresolved";
-      else if (!finalGroup.internalOk) kind = "group-rejected";
-      else if (!finalGroup.displayOk) kind = "group-display-unresolved";
-      return { ok: ok2, verified: ok2, usedGForm: true, table, before, group, assignee, final: { assignedTo: finalAssignee, assignmentGroup: finalGroup }, kind };
+  async function prefill({ root, currentUserSysId, currentUserDisplayName, groupId = "", groupName = "", keepGroup = false }) {
+    const g = getBestGForm(root)?.gForm;
+    if (!g || typeof g.setValue !== "function") return { ok: false, verified: false, kind: "no-form" };
+    const before = { assignedTo: snap(g, root, "assigned_to"), assignmentGroup: snap(g, root, "assignment_group") };
+    let group = { ok: true, skipped: true };
+    if (!keepGroup && groupId) {
+      group = await setRef({ g, root, field: "assignment_group", id: groupId, name: groupName, ms: GROUP_SETTLE_MS });
+      if (!group.ok) return { ok: false, verified: false, usedGForm: true, table: table(g), before, group, kind: group.internalOk ? "group-display-unresolved" : "group-rejected" };
     }
-    const groupResult = keepGroup || !assignmentGroupDisplayName ? { ok: true, source: "dom" } : setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName), userResult = setByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
+    const assignee = await setRef({ g, root, field: "assigned_to", id: currentUserSysId, name: currentUserDisplayName, ms: ASSIGNEE_SETTLE_MS });
     await wait(FINAL_VERIFY_MS);
-    const groupVerify = keepGroup || !assignmentGroupDisplayName ? groupResult : readByDom(rootWindow, "assignment_group", assignmentGroupDisplayName), userVerify = readByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId), userDisplay = readDisplay(rootWindow, "assigned_to"), displayOk = !currentUserDisplayName || displayLooksResolved(userDisplay.value, currentUserDisplayName), ok = Boolean(groupResult.ok && userResult.ok && groupVerify.ok && userVerify.ok && displayOk);
-    return { ok, verified: ok, usedGForm: false, groupResult, userResult, groupVerify, userVerify, userDisplay, kind: ok ? "ok" : !displayOk ? "assignee-display-unresolved" : "dom-rejected" };
+    const fa = verify({ g, root, field: "assigned_to", id: currentUserSysId, name: currentUserDisplayName, requireDisplay: true }), fg = keepGroup || !groupId ? { ok: true, skipped: true } : verify({ g, root, field: "assignment_group", id: groupId, name: groupName, requireDisplay: Boolean(groupName) }), ok = fa.ok && fg.ok;
+    let kind = "ok";
+    if (!fa.internalOk) kind = "assignee-rejected";
+    else if (!fa.displayOk) kind = "assignee-display-unresolved";
+    else if (!fg.internalOk) kind = "group-rejected";
+    else if (!fg.displayOk) kind = "group-display-unresolved";
+    return { ok, verified: ok, usedGForm: true, table: table(g), before, group, assignee, final: { assignedTo: fa, assignmentGroup: fg }, kind };
   }
   async function assignToMyGroup({ userGroup, currentUserSysId, rootWindow = typeof window !== "undefined" ? window : null } = {}) {
-    const groupSysId = cleanText(userGroup?.group_sys_id);
-    if (!groupSysId) return { ok: false, kind: "no-group-configured" };
-    if (!isValidGroupSysId(groupSysId)) return { ok: false, kind: "invalid-group" };
+    const id = cleanText(userGroup?.group_sys_id);
+    if (!id) return { ok: false, kind: "no-group-configured" };
+    if (!isValidGroupSysId(id)) return { ok: false, kind: "invalid-group" };
     if (!currentUserSysId) return { ok: false, kind: "no-current-user" };
-    const displayName = getCurrentUserDisplayName(rootWindow);
-    if (!displayName) return { ok: false, kind: "no-current-user-display" };
-    return prefillAssignment({ rootWindow, currentUserSysId, currentUserDisplayName: displayName, assignmentGroupSysId: groupSysId, assignmentGroupDisplayName: cleanText(userGroup?.name), keepGroup: false });
+    const name = getCurrentUserDisplayName(rootWindow);
+    if (!name) return { ok: false, kind: "no-current-user-display" };
+    return prefill({ root: rootWindow, currentUserSysId, currentUserDisplayName: name, groupId: id, groupName: cleanText(userGroup?.name), keepGroup: false });
   }
 
   // Assistant/handlers/assign.js
   function createAssignHandlers({ state, rootWindow, runAction, scheduleRecovery, logger }) {
     const hostDocument = () => state.host.document;
+    const log = (stage, data = {}) => logger?.info?.(`[SN Assistant][Assign] ${stage}`, data);
     async function chooseGroup(gForm) {
       const currentSysId = cleanText(gForm?.getValue?.("assignment_group")), currentKnown = findGroupBySysId(currentSysId);
-      if (currentKnown?.source === "user_membership") return { ...currentKnown, preserveCurrent: true };
+      if (currentKnown?.source === "user_membership") {
+        log("group", { strategy: "preserve-current", name: currentKnown.name });
+        return { ...currentKnown, preserveCurrent: true };
+      }
       const saved = loadUserGroup(rootWindow);
-      if (saved?.group_sys_id) return saved;
+      if (saved?.group_sys_id) {
+        log("group", { strategy: "saved", name: saved.name || "" });
+        return saved;
+      }
       const membership = AVAILABLE_GROUPS.filter((g) => g.source === "user_membership"), picked = await showGroupPickerModal(hostDocument(), membership.length ? membership : AVAILABLE_GROUPS);
       if (!picked) {
         showToast(hostDocument(), { message: "Choose one of your assignment groups first.", tone: "warning" });
         return null;
       }
       saveUserGroup(rootWindow, picked);
+      log("group", { strategy: "picker", name: picked.name || "" });
       return picked;
     }
     async function confirm(currentUserSysId, group, gForm) {
@@ -38575,7 +38559,7 @@ ${text2}` : text2;
     return { onAssignToMyGroup() {
       return runAction("assign", async () => {
         const gForm = getBestGForm(rootWindow)?.gForm, currentUserSysId = getCurrentUserSysId(rootWindow);
-        logger?.trace?.("assign:start", { currentUserDetected: Boolean(currentUserSysId), table: cleanText(gForm?.getTableName?.()) });
+        log("start", { userDetected: Boolean(currentUserSysId), table: cleanText(gForm?.getTableName?.()) });
         if (!currentUserSysId) {
           showToast(hostDocument(), { message: failureMessage("no-current-user"), tone: "error" });
           return;
@@ -38586,11 +38570,12 @@ ${text2}` : text2;
         }
         const group = await chooseGroup(gForm);
         if (!group) return;
-        if (!await confirm(currentUserSysId, group, gForm)) return;
-        const currentGroupSysId = cleanText(gForm.getValue?.("assignment_group")), currentGroupName = cleanText(gForm.getDisplayBox?.("assignment_group")?.value);
-        const target = group.preserveCurrent ? { ...group, group_sys_id: currentGroupSysId, name: currentGroupName || group.name } : group;
-        const result = await assignToMyGroup({ rootWindow, currentUserSysId, userGroup: target });
-        logger?.trace?.("assign:result", { targetGroup: target?.name || "", targetGroupSysId: target?.group_sys_id || "", preserved: Boolean(group.preserveCurrent), result });
+        if (!await confirm(currentUserSysId, group, gForm)) {
+          log("cancelled");
+          return;
+        }
+        const currentGroupSysId = cleanText(gForm.getValue?.("assignment_group")), currentGroupName = cleanText(gForm.getDisplayBox?.("assignment_group")?.value), target = group.preserveCurrent ? { ...group, group_sys_id: currentGroupSysId, name: currentGroupName || group.name } : group, result = await assignToMyGroup({ rootWindow, currentUserSysId, userGroup: target });
+        log("result", { ok: Boolean(result.ok), kind: result.kind || "", group: target.name || "", preserved: Boolean(group.preserveCurrent), assignedInternalOk: Boolean(result.final?.assignedTo?.internalOk), assignedDisplayOk: Boolean(result.final?.assignedTo?.displayOk), groupInternalOk: Boolean(result.final?.assignmentGroup?.internalOk ?? true), groupDisplayOk: Boolean(result.final?.assignmentGroup?.displayOk ?? true) });
         if (!result.ok) {
           showToast(hostDocument(), { message: failureMessage(result.kind), tone: "error", duration: 9e3 });
           return;
@@ -38605,7 +38590,7 @@ ${text2}` : text2;
         return false;
       }
       saveUserGroup(rootWindow, picked);
-      logger?.trace?.("assign:group-configured", { name: picked.name || "", groupSysId: picked.group_sys_id || "" });
+      log("configured", { name: picked.name || "" });
       showToast(hostDocument(), { message: `Default assignment group: ${picked.name}`, tone: "info" });
       return true;
     } };
@@ -38620,10 +38605,10 @@ ${text2}` : text2;
     const w = rootWindow || (typeof window !== "undefined" ? window : null);
     return w?.g_ck || w?.frames?.[0]?.g_ck || "";
   }
-  async function fetchCount({ table, query, rootWindow }) {
+  async function fetchCount({ table: table2, query, rootWindow }) {
     const params = new URLSearchParams({ sysparm_query: query, sysparm_count: "true" });
-    const response = await fetch(`/api/now/stats/${table}?${params.toString()}`, { method: "GET", credentials: "same-origin", headers: { Accept: "application/json", "X-UserToken": getUserToken(rootWindow) } });
-    if (!response.ok) throw new Error(`${table} count failed: ${response.status}`);
+    const response = await fetch(`/api/now/stats/${table2}?${params.toString()}`, { method: "GET", credentials: "same-origin", headers: { Accept: "application/json", "X-UserToken": getUserToken(rootWindow) } });
+    if (!response.ok) throw new Error(`${table2} count failed: ${response.status}`);
     const json = await response.json(), count = Number(json?.result?.stats?.count);
     return Number.isFinite(count) && count >= 0 ? count : 0;
   }
@@ -38809,8 +38794,8 @@ ${text2}` : text2;
         lastRecordKey = currentKey;
       }
     }
-    function isStateClosedForAutoFill(table = "", value2 = "", display = "") {
-      const t = cleanText(table).toLowerCase();
+    function isStateClosedForAutoFill(table2 = "", value2 = "", display = "") {
+      const t = cleanText(table2).toLowerCase();
       const v = cleanText(value2).toLowerCase();
       const d = cleanText(display).toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
       if (t === "sc_task") {
@@ -38922,11 +38907,11 @@ ${text2}` : text2;
       const readValue = (name) => cleanText(gForm?.getValue?.(name) || "");
       const readDisplay2 = (name) => cleanText(gForm?.getDisplayValue?.(name) || "");
       const readDom = (id) => cleanText(state.host.document?.getElementById?.(id)?.value || "");
-      const table = cleanText(gForm?.getTableName?.() || state.context?.table || "").toLowerCase();
+      const table2 = cleanText(gForm?.getTableName?.() || state.context?.table || "").toLowerCase();
       const currentNumber2 = cleanText(readValue("number") || state.context?.recordNumber || state.context?.ticketNumber);
       const requestItem = cleanText(readDisplay2("request_item") || readDom("sys_display.sc_task.request_item") || state.context?.requestItem);
       const ritm = cleanText((requestItem.match(/\bRITM\d{4,}\b/i) || [])[0] || "");
-      const ticketNumber = table === "sc_task" && ritm ? ritm : currentNumber2;
+      const ticketNumber = table2 === "sc_task" && ritm ? ritm : currentNumber2;
       const assetTag = cleanText(readValue("asset_tag") || state.context?.asset_tag);
       const ci = cleanText(readDisplay2("configuration_item") || state.context?.configurationItemDisplay || state.context?.configurationItem);
       const configurationItem = assetTag || (/(?:INC|RITM|REQ|SCTASK)\d{4,}/i.test(ci) ? "" : ci);
@@ -38935,10 +38920,10 @@ ${text2}` : text2;
       );
       return {
         ...state.context,
-        table,
+        table: table2,
         ticketNumber,
         recordNumber: ticketNumber,
-        source_task_number: table === "sc_task" ? currentNumber2 : "",
+        source_task_number: table2 === "sc_task" ? currentNumber2 : "",
         shortDescription: readValue("short_description") || state.context?.shortDescription,
         description: readValue("description") || state.context?.description,
         solution,
@@ -39220,8 +39205,8 @@ ${text2}` : text2;
         gForm.onChange("state", () => {
           const val = cleanText(gForm.getValue?.("state"));
           const disp = cleanText(gForm.getDisplayValue?.("state"));
-          const table = cleanText(gForm.getTableName?.() || "");
-          const closed = isStateClosedForAutoFill(table, val, disp);
+          const table2 = cleanText(gForm.getTableName?.() || "");
+          const closed = isStateClosedForAutoFill(table2, val, disp);
           if (!closed) return;
           triggerCloseNoteAutoFill();
         });
@@ -39986,7 +39971,7 @@ ${text2}` : text2;
   function getUserToken2(rootWindow) {
     return rootWindow?.g_ck || rootWindow?.frames?.[0]?.g_ck || "";
   }
-  function buildListUrl(table, query) {
+  function buildListUrl(table2, query) {
     const params = new URLSearchParams({
       sysparm_query: query,
       sysparm_fields: "sys_id,number,short_description,state,sys_updated_on",
@@ -39997,21 +39982,21 @@ ${text2}` : text2;
       sysparm_no_count: "true",
       sysparm_limit: String(MAX_ROWS_PER_TABLE)
     });
-    return `/api/now/table/${table}?${params.toString()}`;
+    return `/api/now/table/${table2}?${params.toString()}`;
   }
-  async function fetchRows({ rootWindow, fetchImpl, table, query }) {
+  async function fetchRows({ rootWindow, fetchImpl, table: table2, query }) {
     const token = getUserToken2(rootWindow);
     const headers = { Accept: "application/json" };
     if (token) headers["X-UserToken"] = token;
-    const response = await fetchImpl(buildListUrl(table, query), {
+    const response = await fetchImpl(buildListUrl(table2, query), {
       method: "GET",
       credentials: "same-origin",
       headers
     });
-    if (!response?.ok) throw new Error(`${table} assigned-work fetch failed: ${response?.status || "unknown"}`);
+    if (!response?.ok) throw new Error(`${table2} assigned-work fetch failed: ${response?.status || "unknown"}`);
     const json = await response.json();
     return (Array.isArray(json?.result) ? json.result : []).map((raw) => ({
-      table,
+      table: table2,
       sysId: serviceNowValue(raw?.sys_id),
       number: serviceNowValue(raw?.number),
       shortDescription: serviceNowValue(raw?.short_description),
