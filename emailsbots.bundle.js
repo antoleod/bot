@@ -38437,12 +38437,13 @@ ${text2}` : text2;
   }
 
   // Assistant/application/assign/assignToMyGroup.js
-  var VERIFY_DELAY_MS = 350;
+  var GROUP_SETTLE_MS = 500;
+  var ASSIGNEE_SETTLE_MS = 450;
+  var FINAL_VERIFY_MS = 650;
+  var SYS_ID_RE = /^[0-9a-f]{32}$/i;
   function getCurrentUserDisplayName(rootWindow) {
     const w = rootWindow || getRootWindow();
-    return cleanText(
-      w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" ")
-    );
+    return cleanText(w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" "));
   }
   function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38454,12 +38455,18 @@ ${text2}` : text2;
       return "";
     }
   }
+  function normalizeDisplay(v) {
+    return cleanText(v).replace(/\s+/g, " ").toLowerCase();
+  }
+  function displayLooksResolved(value2, expected = "") {
+    const actual = cleanText(value2), wanted = cleanText(expected);
+    if (!actual || SYS_ID_RE.test(actual)) return false;
+    if (!wanted) return true;
+    const a = normalizeDisplay(actual), e = normalizeDisplay(wanted);
+    return a === e || a.includes(e) || e.includes(a);
+  }
   function findDomField(rootWindow, field) {
-    const selectors = [
-      `[id^="sys_display."][id$=".${field}"]`,
-      `input[name="${field}"]`,
-      `input[id="${field}"]`
-    ];
+    const selectors = [`[id="sys_display.${field}"]`, `[id^="sys_display."][id$=".${field}"]`, `input[name="${field}"]`, `input[id="${field}"]`];
     for (const doc of getAccessibleDocuments(rootWindow)) {
       for (const selector of selectors) {
         const el = doc.querySelector(selector);
@@ -38468,105 +38475,97 @@ ${text2}` : text2;
     }
     return null;
   }
+  function findDisplayField(rootWindow, field) {
+    for (const doc of getAccessibleDocuments(rootWindow)) {
+      const exact = doc.querySelector(`[id="sys_display.${field}"]`);
+      if (exact) return exact;
+      const candidates = [...doc.querySelectorAll(`[id^="sys_display."][id$=".${field}"]`)];
+      if (candidates.length) return candidates[0];
+    }
+    return null;
+  }
+  function readDisplay(rootWindow, field) {
+    const el = findDisplayField(rootWindow, field);
+    return { value: cleanText(el?.value), elementId: cleanText(el?.id), found: Boolean(el) };
+  }
+  function dispatchReferenceEvents(el) {
+    if (!el) return;
+    const EventCtor = el.ownerDocument?.defaultView?.Event || globalThis.Event;
+    if (typeof EventCtor !== "function") return;
+    ["input", "change", "blur"].forEach((name) => el.dispatchEvent(new EventCtor(name, { bubbles: true })));
+  }
+  function repairDisplay(rootWindow, field, displayName) {
+    const el = findDisplayField(rootWindow, field);
+    if (!el || !cleanText(displayName)) return false;
+    el.value = displayName;
+    dispatchReferenceEvents(el);
+    return displayLooksResolved(el.value, displayName);
+  }
   function readByDom(rootWindow, field, expected) {
     const el = findDomField(rootWindow, field);
     if (!el) return { ok: false, value: "", source: "dom", kind: "field-not-found" };
     const value2 = cleanText(el.value);
-    return {
-      ok: value2 === cleanText(expected),
-      value: value2,
-      source: "dom",
-      elementId: cleanText(el.id),
-      elementName: cleanText(el.name)
-    };
+    return { ok: value2 === cleanText(expected), value: value2, source: "dom", elementId: cleanText(el.id), elementName: cleanText(el.name) };
   }
   function setByDom(rootWindow, field, value2) {
     const el = findDomField(rootWindow, field);
     if (!el) return { ok: false, value: "", source: "dom", kind: "field-not-found" };
-    const EventCtor = el.ownerDocument?.defaultView?.Event || globalThis.Event;
     el.value = value2;
-    if (typeof EventCtor === "function") {
-      ["input", "change", "blur"].forEach(
-        (eventName) => el.dispatchEvent(new EventCtor(eventName, { bubbles: true }))
-      );
-    }
+    dispatchReferenceEvents(el);
     return readByDom(rootWindow, field, value2);
   }
-  async function prefillAssignment({
-    rootWindow,
-    currentUserSysId,
-    currentUserDisplayName,
-    assignmentGroupSysId = "",
-    assignmentGroupDisplayName = "",
-    keepGroup = false
-  }) {
-    const best = getBestGForm(rootWindow);
-    const gForm = best?.gForm;
-    if (gForm && typeof gForm.setValue === "function") {
-      const table = getTableName2(gForm);
-      const before = {
-        assignedTo: cleanText(gForm.getValue?.("assigned_to")),
-        assignmentGroup: cleanText(gForm.getValue?.("assignment_group"))
-      };
-      if (!keepGroup && assignmentGroupSysId) {
-        gForm.setValue("assignment_group", assignmentGroupSysId, assignmentGroupDisplayName || assignmentGroupSysId);
-      }
-      gForm.setValue("assigned_to", currentUserSysId, currentUserDisplayName || currentUserSysId);
-      const immediate = {
-        assignedTo: cleanText(gForm.getValue?.("assigned_to")),
-        assignmentGroup: cleanText(gForm.getValue?.("assignment_group"))
-      };
-      await wait(VERIFY_DELAY_MS);
-      const after = {
-        assignedTo: cleanText(gForm.getValue?.("assigned_to")),
-        assignmentGroup: cleanText(gForm.getValue?.("assignment_group"))
-      };
-      const assignedOk = after.assignedTo === cleanText(currentUserSysId);
-      const groupOk = keepGroup || !assignmentGroupSysId || after.assignmentGroup === cleanText(assignmentGroupSysId);
-      const immediateAssignedOk = immediate.assignedTo === cleanText(currentUserSysId);
-      const immediateGroupOk = keepGroup || !assignmentGroupSysId || immediate.assignmentGroup === cleanText(assignmentGroupSysId);
-      const reverted = immediateAssignedOk && immediateGroupOk && !(assignedOk && groupOk);
-      return {
-        ok: assignedOk && groupOk,
-        verified: assignedOk && groupOk,
-        usedGForm: true,
-        table,
-        before,
-        immediate,
-        after,
-        kind: reverted ? "reverted" : assignedOk ? groupOk ? "ok" : "group-rejected" : "assignee-rejected"
-      };
+  function snapshotReference(gForm, rootWindow, field) {
+    const internal = cleanText(gForm?.getValue?.(field)), display = readDisplay(rootWindow, field);
+    return { internal, display: display.value, displayFound: display.found, displayElementId: display.elementId };
+  }
+  function verifyReference({ gForm, rootWindow, field, expectedSysId, expectedDisplayName, requireDisplay = true }) {
+    const snap = snapshotReference(gForm, rootWindow, field), internalOk = snap.internal === cleanText(expectedSysId), displayOk = !requireDisplay || displayLooksResolved(snap.display, expectedDisplayName);
+    return { ...snap, internalOk, displayOk, ok: internalOk && displayOk };
+  }
+  async function setReferenceSafely({ gForm, rootWindow, field, sysId, displayName, settleMs }) {
+    gForm.setValue(field, sysId, displayName || sysId);
+    await wait(settleMs);
+    let verification = verifyReference({ gForm, rootWindow, field, expectedSysId: sysId, expectedDisplayName: displayName, requireDisplay: Boolean(displayName) });
+    if (verification.internalOk && !verification.displayOk && displayName) {
+      repairDisplay(rootWindow, field, displayName);
+      await wait(120);
+      verification = verifyReference({ gForm, rootWindow, field, expectedSysId: sysId, expectedDisplayName: displayName, requireDisplay: true });
     }
-    const groupResult = keepGroup || !assignmentGroupDisplayName ? { ok: true, source: "dom" } : setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
-    const userResult = setByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
-    await wait(VERIFY_DELAY_MS);
-    const groupVerify = keepGroup || !assignmentGroupDisplayName ? groupResult : readByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
-    const userVerify = readByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
-    const ok = Boolean(groupResult.ok && userResult.ok && groupVerify.ok && userVerify.ok);
-    return {
-      ok,
-      verified: ok,
-      usedGForm: false,
-      groupResult,
-      userResult,
-      groupVerify,
-      userVerify,
-      kind: ok ? "ok" : "dom-rejected"
-    };
+    return verification;
+  }
+  async function prefillAssignment({ rootWindow, currentUserSysId, currentUserDisplayName, assignmentGroupSysId = "", assignmentGroupDisplayName = "", keepGroup = false }) {
+    const best = getBestGForm(rootWindow), gForm = best?.gForm;
+    if (gForm && typeof gForm.setValue === "function") {
+      const table = getTableName2(gForm), before = { assignedTo: snapshotReference(gForm, rootWindow, "assigned_to"), assignmentGroup: snapshotReference(gForm, rootWindow, "assignment_group") };
+      let group = { ok: true, skipped: true };
+      if (!keepGroup && assignmentGroupSysId) {
+        group = await setReferenceSafely({ gForm, rootWindow, field: "assignment_group", sysId: assignmentGroupSysId, displayName: assignmentGroupDisplayName, settleMs: GROUP_SETTLE_MS });
+        if (!group.ok) return { ok: false, verified: false, usedGForm: true, table, before, group, kind: group.internalOk ? "group-display-unresolved" : "group-rejected" };
+      }
+      const assignee = await setReferenceSafely({ gForm, rootWindow, field: "assigned_to", sysId: currentUserSysId, displayName: currentUserDisplayName, settleMs: ASSIGNEE_SETTLE_MS });
+      await wait(FINAL_VERIFY_MS);
+      const finalAssignee = verifyReference({ gForm, rootWindow, field: "assigned_to", expectedSysId: currentUserSysId, expectedDisplayName: currentUserDisplayName, requireDisplay: Boolean(currentUserDisplayName) }), finalGroup = keepGroup || !assignmentGroupSysId ? { ok: true, skipped: true } : verifyReference({ gForm, rootWindow, field: "assignment_group", expectedSysId: assignmentGroupSysId, expectedDisplayName: assignmentGroupDisplayName, requireDisplay: Boolean(assignmentGroupDisplayName) });
+      const ok2 = finalAssignee.ok && finalGroup.ok;
+      let kind = "ok";
+      if (!finalAssignee.internalOk) kind = "assignee-rejected";
+      else if (!finalAssignee.displayOk) kind = "assignee-display-unresolved";
+      else if (!finalGroup.internalOk) kind = "group-rejected";
+      else if (!finalGroup.displayOk) kind = "group-display-unresolved";
+      return { ok: ok2, verified: ok2, usedGForm: true, table, before, group, assignee, final: { assignedTo: finalAssignee, assignmentGroup: finalGroup }, kind };
+    }
+    const groupResult = keepGroup || !assignmentGroupDisplayName ? { ok: true, source: "dom" } : setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName), userResult = setByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
+    await wait(FINAL_VERIFY_MS);
+    const groupVerify = keepGroup || !assignmentGroupDisplayName ? groupResult : readByDom(rootWindow, "assignment_group", assignmentGroupDisplayName), userVerify = readByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId), userDisplay = readDisplay(rootWindow, "assigned_to"), displayOk = !currentUserDisplayName || displayLooksResolved(userDisplay.value, currentUserDisplayName), ok = Boolean(groupResult.ok && userResult.ok && groupVerify.ok && userVerify.ok && displayOk);
+    return { ok, verified: ok, usedGForm: false, groupResult, userResult, groupVerify, userVerify, userDisplay, kind: ok ? "ok" : !displayOk ? "assignee-display-unresolved" : "dom-rejected" };
   }
   async function assignToMyGroup({ userGroup, currentUserSysId, rootWindow = typeof window !== "undefined" ? window : null } = {}) {
     const groupSysId = cleanText(userGroup?.group_sys_id);
     if (!groupSysId) return { ok: false, kind: "no-group-configured" };
     if (!isValidGroupSysId(groupSysId)) return { ok: false, kind: "invalid-group" };
     if (!currentUserSysId) return { ok: false, kind: "no-current-user" };
-    return prefillAssignment({
-      rootWindow,
-      currentUserSysId,
-      currentUserDisplayName: getCurrentUserDisplayName(rootWindow),
-      assignmentGroupSysId: groupSysId,
-      assignmentGroupDisplayName: cleanText(userGroup?.name),
-      keepGroup: false
-    });
+    const displayName = getCurrentUserDisplayName(rootWindow);
+    if (!displayName) return { ok: false, kind: "no-current-user-display" };
+    return prefillAssignment({ rootWindow, currentUserSysId, currentUserDisplayName: displayName, assignmentGroupSysId: groupSysId, assignmentGroupDisplayName: cleanText(userGroup?.name), keepGroup: false });
   }
 
   // Assistant/handlers/assign.js
@@ -38933,18 +38932,18 @@ ${text2}` : text2;
     function buildTicketContext() {
       const gForm = getBestGForm(rootWindow)?.gForm;
       const readValue = (name) => cleanText(gForm?.getValue?.(name) || "");
-      const readDisplay = (name) => cleanText(gForm?.getDisplayValue?.(name) || "");
+      const readDisplay2 = (name) => cleanText(gForm?.getDisplayValue?.(name) || "");
       const readDom = (id) => cleanText(state.host.document?.getElementById?.(id)?.value || "");
       const table = cleanText(gForm?.getTableName?.() || state.context?.table || "").toLowerCase();
       const currentNumber2 = cleanText(readValue("number") || state.context?.recordNumber || state.context?.ticketNumber);
-      const requestItem = cleanText(readDisplay("request_item") || readDom("sys_display.sc_task.request_item") || state.context?.requestItem);
+      const requestItem = cleanText(readDisplay2("request_item") || readDom("sys_display.sc_task.request_item") || state.context?.requestItem);
       const ritm = cleanText((requestItem.match(/\bRITM\d{4,}\b/i) || [])[0] || "");
       const ticketNumber = table === "sc_task" && ritm ? ritm : currentNumber2;
       const assetTag = cleanText(readValue("asset_tag") || state.context?.asset_tag);
-      const ci = cleanText(readDisplay("configuration_item") || state.context?.configurationItemDisplay || state.context?.configurationItem);
+      const ci = cleanText(readDisplay2("configuration_item") || state.context?.configurationItemDisplay || state.context?.configurationItem);
       const configurationItem = assetTag || (/(?:INC|RITM|REQ|SCTASK)\d{4,}/i.test(ci) ? "" : ci);
       const solution = cleanText(
-        readValue("solution") || readDisplay("solution") || readValue("u_solution") || readDisplay("u_solution") || readValue("resolution") || readDisplay("resolution") || readValue("u_resolution") || readDisplay("u_resolution") || readValue("resolution_notes") || readDisplay("resolution_notes") || readValue("u_resolution_notes") || readDisplay("u_resolution_notes") || state.context?.solution || state.context?.resolution || state.context?.resolutionNotes
+        readValue("solution") || readDisplay2("solution") || readValue("u_solution") || readDisplay2("u_solution") || readValue("resolution") || readDisplay2("resolution") || readValue("u_resolution") || readDisplay2("u_resolution") || readValue("resolution_notes") || readDisplay2("resolution_notes") || readValue("u_resolution_notes") || readDisplay2("u_resolution_notes") || state.context?.solution || state.context?.resolution || state.context?.resolutionNotes
       );
       return {
         ...state.context,
@@ -38959,15 +38958,15 @@ ${text2}` : text2;
         resolutionNotes: solution,
         resolution_notes: solution,
         requestItem,
-        requested_for: readDisplay("requested_for") || state.context?.requested_for || state.context?.requestedFor,
-        opened_for: readDisplay("opened_for") || state.context?.opened_for,
-        location: readDisplay("location") || state.context?.location,
+        requested_for: readDisplay2("requested_for") || state.context?.requested_for || state.context?.requestedFor,
+        opened_for: readDisplay2("opened_for") || state.context?.opened_for,
+        location: readDisplay2("location") || state.context?.location,
         asset_tag: assetTag,
         configurationItem,
         configurationItemDisplay: configurationItem,
         state: readValue("state") || state.context?.state,
-        assignmentGroup: readDisplay("assignment_group") || state.context?.assignmentGroup,
-        assigned_to: readDisplay("assigned_to") || state.context?.assigned_to
+        assignmentGroup: readDisplay2("assignment_group") || state.context?.assignmentGroup,
+        assigned_to: readDisplay2("assigned_to") || state.context?.assigned_to
       };
     }
     async function runAction(actionKey, actionHandler) {
