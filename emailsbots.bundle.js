@@ -6835,12 +6835,18 @@ Asset tag: ${item.equipmentAssetTag}`;
   // Assistant/application/persistence/panelPositionState.js
   var STORAGE_KEY = "sn_assistant_panel_position_v1";
   var EDGES = /* @__PURE__ */ new Set(["left", "right"]);
+  var MIN_SAFE_TOP = 72;
+  var VIEWPORT_BOTTOM_GUTTER = 12;
   function getStorage(rootWindow) {
     try {
       return rootWindow?.localStorage || null;
     } catch {
       return null;
     }
+  }
+  function getViewportHeight(rootWindow) {
+    const height = Number(rootWindow?.innerHeight);
+    return Number.isFinite(height) && height > 0 ? height : 0;
   }
   function loadPanelPosition(rootWindow) {
     const storage = getStorage(rootWindow);
@@ -6850,7 +6856,10 @@ Asset tag: ${item.equipmentAssetTag}`;
       const edge = String(parsed?.edge || "");
       const top = Number(parsed?.top);
       if (!EDGES.has(edge) || !Number.isFinite(top)) return null;
-      return { edge, top: Math.max(0, top) };
+      const viewportHeight = getViewportHeight(rootWindow);
+      if (top < MIN_SAFE_TOP) return null;
+      if (viewportHeight && top > viewportHeight - MIN_SAFE_TOP) return null;
+      return { edge, top };
     } catch {
       return null;
     }
@@ -6861,7 +6870,12 @@ Asset tag: ${item.equipmentAssetTag}`;
     const edge = String(position?.edge || "");
     const top = Number(position?.top);
     if (!EDGES.has(edge) || !Number.isFinite(top)) return null;
-    const normalized = { edge, top: Math.max(0, top) };
+    const viewportHeight = getViewportHeight(rootWindow);
+    const maxTop = viewportHeight ? Math.max(MIN_SAFE_TOP, viewportHeight - MIN_SAFE_TOP - VIEWPORT_BOTTOM_GUTTER) : Number.POSITIVE_INFINITY;
+    const normalized = {
+      edge,
+      top: Math.min(Math.max(top, MIN_SAFE_TOP), maxTop)
+    };
     try {
       storage.setItem(STORAGE_KEY, JSON.stringify(normalized));
     } catch {
