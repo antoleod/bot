@@ -6789,44 +6789,28 @@ Asset tag: ${item.equipmentAssetTag}`;
   // Assistant/application/persistence/panelPinState.js
   var PIN_STATE_KEY = "sn-assistant-pin-state";
   var LEGACY_PIN_KEY = "sn_ep_pinned";
+  var MODES = /* @__PURE__ */ new Set(["tab", "icons", "expanded"]);
   function loadPinState(rootWindow) {
-    const fallback = { pinned: false, lastOpenState: false };
+    const fallback = { pinned: false, lastOpenState: false, mode: "icons", lastUsefulMode: "icons" };
     try {
       const storage = rootWindow?.localStorage;
       if (!storage) return fallback;
       const raw = storage.getItem(PIN_STATE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw);
-        const mode = ["tab", "icons", "expanded"].includes(String(parsed?.mode || "")) ? String(parsed.mode) : "";
-        const state = {
-          pinned: Boolean(parsed?.pinned),
-          lastOpenState: Boolean(parsed?.lastOpenState)
-        };
-        if (mode) state.mode = mode;
-        return state;
+        const parsed = JSON.parse(raw), mode = MODES.has(String(parsed?.mode || "")) ? String(parsed.mode) : "icons", lastUsefulMode = ["icons", "expanded"].includes(String(parsed?.lastUsefulMode || "")) ? String(parsed.lastUsefulMode) : mode === "expanded" ? "expanded" : "icons";
+        return { pinned: Boolean(parsed?.pinned), lastOpenState: mode !== "tab", mode, lastUsefulMode };
       }
-      const legacy = storage.getItem(LEGACY_PIN_KEY);
-      if (legacy === "true") {
-        return { pinned: true, lastOpenState: false };
-      }
+      if (storage.getItem(LEGACY_PIN_KEY) === "true") return { pinned: true, lastOpenState: false, mode: "icons", lastUsefulMode: "icons" };
     } catch {
     }
     return fallback;
   }
-  function savePinState(rootWindow, { pinned, lastOpenState, mode = "" }) {
+  function savePinState(rootWindow, { pinned, lastOpenState, mode = "icons", lastUsefulMode = "" }) {
     try {
       const storage = rootWindow?.localStorage;
       if (!storage) return;
-      const safeMode = ["tab", "icons", "expanded"].includes(String(mode || "")) ? String(mode) : "";
-      const payload = {
-        pinned: Boolean(pinned),
-        lastOpenState: Boolean(lastOpenState)
-      };
-      if (safeMode) payload.mode = safeMode;
-      storage.setItem(
-        PIN_STATE_KEY,
-        JSON.stringify(payload)
-      );
+      const safeMode = MODES.has(String(mode || "")) ? String(mode) : "icons", safeUseful = ["icons", "expanded"].includes(String(lastUsefulMode || "")) ? String(lastUsefulMode) : safeMode === "expanded" ? "expanded" : "icons";
+      storage.setItem(PIN_STATE_KEY, JSON.stringify({ pinned: Boolean(pinned), lastOpenState: safeMode !== "tab" || Boolean(lastOpenState), mode: safeMode, lastUsefulMode: safeUseful }));
       storage.removeItem(LEGACY_PIN_KEY);
     } catch {
     }
@@ -38181,74 +38165,65 @@ ${text2}` : text2;
   }
 
   // Assistant/handlers/launcher.js
-  function createLauncherHandlers({
-    state,
-    store,
-    rootWindow,
-    scheduleRecovery,
-    scheduleAutoHideTimer,
-    clearAutoHideTimer
-  }) {
+  function createLauncherHandlers({ state, store, rootWindow, scheduleRecovery, scheduleAutoHideTimer, clearAutoHideTimer }) {
+    const persist = (mode) => {
+      if (mode === "icons" || mode === "expanded") state.ui.edgePanelLastUsefulMode = mode;
+      savePinState(rootWindow, { pinned: Boolean(state.ui.edgePanelPinned), lastOpenState: mode !== "tab", mode, lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
+    };
+    const setMode = (mode, reason = "launcher-mode") => {
+      if (!["tab", "icons", "expanded"].includes(mode)) return;
+      if (mode === "tab" && state.ui.edgePanelPinned) return;
+      state.ui.edgePanelMode = mode;
+      state.ui.assistantHidden = false;
+      persist(mode);
+      if (mode === "tab") scheduleAutoHideTimer();
+      else clearAutoHideTimer();
+      scheduleRecovery(reason, 0);
+    };
     return {
       onToggleLauncherEditMode() {
         store.dispatch(toggleLauncherEditMode);
         scheduleRecovery("launcher-edit-mode", 0);
       },
       onToggleEdgePanelPinned(pinned) {
-        const wasPinned = Boolean(pinned);
-        store.dispatch(setEdgePanelPinned, wasPinned);
-        if (wasPinned) clearAutoHideTimer();
+        const value2 = Boolean(pinned);
+        store.dispatch(setEdgePanelPinned, value2);
+        persist(state.ui.edgePanelMode || "icons");
+        if (value2) clearAutoHideTimer();
         else scheduleAutoHideTimer();
         scheduleRecovery("launcher-pin", 0);
       },
+      // The side tab restores the last useful presentation instead of always jumping to Expanded.
       onEdgePanelToggle() {
-        const isOpen = state.ui.edgePanelMode === "expanded" || state.ui.edgePanelMode === "icons";
-        const next = isOpen ? "tab" : "expanded";
-        if (next === "tab" && state.ui.edgePanelPinned) return;
-        state.ui.edgePanelMode = next;
-        state.ui.assistantHidden = false;
-        if (state.ui.edgePanelPinned) {
-          savePinState(rootWindow, { pinned: true, lastOpenState: next !== "tab", mode: next });
-        }
-        scheduleRecovery("launcher-mode", 0);
+        if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons");
+        else setMode("tab");
       },
       onEdgePanelIconsToggle() {
-        const next = state.ui.edgePanelMode === "icons" ? "expanded" : "icons";
-        state.ui.edgePanelMode = next;
-        state.ui.assistantHidden = false;
-        if (state.ui.edgePanelPinned) {
-          savePinState(rootWindow, { pinned: true, lastOpenState: true, mode: next });
-        }
-        scheduleRecovery("launcher-mode", 0);
+        setMode("icons");
+      },
+      onEdgePanelExpand() {
+        setMode("expanded");
+      },
+      onEdgePanelMinimize() {
+        setMode("tab");
       },
       onEdgePanelClose() {
         if (state.ui.workNotesOpen) store.dispatch(closeWorkNotes);
         if (state.ui.userInfoOpen) store.dispatch(closeUserInfo);
         if (state.ui.userTicketsOpen) store.dispatch(closeUserTickets);
         if (state.ui.findCiOpen) store.dispatch(closeFindCi);
-        if (state.ui.edgePanelPinned) {
-          store.dispatch(setEdgePanelPinned, false);
-          savePinState(rootWindow, { pinned: false, lastOpenState: false, mode: "tab" });
-        }
-        state.ui.edgePanelMode = "tab";
-        state.ui.assistantHidden = false;
-        scheduleAutoHideTimer();
-        scheduleRecovery("ep-close", 0);
+        if (state.ui.edgePanelPinned) store.dispatch(setEdgePanelPinned, false);
+        state.ui.edgePanelPinned = false;
+        setMode("tab", "ep-close");
       },
       onHideLauncherButton(buttonId) {
         const id = cleanText(buttonId);
         if (!id || !HIDEABLE_BUTTON_IDS.includes(id)) return;
-        const currentHidden = Array.isArray(state.settings?.hiddenButtons) ? state.settings.hiddenButtons : [];
-        if (currentHidden.includes(id)) return;
-        const nextSettings = saveSettings(rootWindow, {
-          ...state.settings,
-          hiddenButtons: [...currentHidden, id]
-        });
-        setSettings(state, nextSettings);
-        showToast(state.host.document, {
-          message: "Button hidden. You can re-enable it in Settings > Launcher.",
-          tone: "info"
-        });
+        const current = Array.isArray(state.settings?.hiddenButtons) ? state.settings.hiddenButtons : [];
+        if (current.includes(id)) return;
+        const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
+        setSettings(state, next);
+        showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
         scheduleRecovery("launcher-hide-button", 0);
       }
     };
@@ -38399,6 +38374,10 @@ ${text2}` : text2;
   ]);
   function isValidGroupSysId(value2) {
     return /^[0-9a-f]{32}$/i.test(String(value2 || "").trim());
+  }
+  function findGroupBySysId(sysId) {
+    if (!sysId) return null;
+    return AVAILABLE_GROUPS.find((g) => g.group_sys_id === sysId) || null;
   }
 
   // Assistant/application/assign/getCurrentUser.js
@@ -38571,54 +38550,63 @@ ${text2}` : text2;
   // Assistant/handlers/assign.js
   function createAssignHandlers({ state, rootWindow, runAction, scheduleRecovery, logger }) {
     const hostDocument = () => state.host.document;
-    async function ensureGroupConfigured() {
-      const existing = loadUserGroup(rootWindow);
-      if (existing) return existing;
-      const picked = await showGroupPickerModal(hostDocument(), AVAILABLE_GROUPS);
+    async function chooseGroup(gForm) {
+      const currentSysId = cleanText(gForm?.getValue?.("assignment_group")), currentKnown = findGroupBySysId(currentSysId);
+      if (currentKnown?.source === "user_membership") return { ...currentKnown, preserveCurrent: true };
+      const saved = loadUserGroup(rootWindow);
+      if (saved?.group_sys_id) return saved;
+      const membership = AVAILABLE_GROUPS.filter((g) => g.source === "user_membership"), picked = await showGroupPickerModal(hostDocument(), membership.length ? membership : AVAILABLE_GROUPS);
       if (!picked) {
-        showToast(hostDocument(), { message: "Choose an assignment group first \u2014 a ticket cannot be assigned without one.", tone: "warning" });
+        showToast(hostDocument(), { message: "Choose one of your assignment groups first.", tone: "warning" });
         return null;
       }
       saveUserGroup(rootWindow, picked);
       return picked;
     }
-    async function confirmReassignmentIfNeeded(currentUserSysId, group) {
-      const gForm = getBestGForm(rootWindow)?.gForm;
-      const assignedTo = cleanText(gForm?.getValue?.("assigned_to"));
-      const assignmentGroup = cleanText(gForm?.getValue?.("assignment_group"));
-      if (!(assignedTo && assignedTo !== currentUserSysId) && !(assignmentGroup && assignmentGroup !== cleanText(group?.group_sys_id))) return true;
-      return showConfirmationModal(hostDocument(), { title: "Replace existing assignment", description: "This ticket is already assigned. Continue and replace the current assignment?", details: [{ label: "Current assignee", value: cleanText(gForm?.getDisplayBox?.("assigned_to")?.value) || assignedTo || "Unassigned" }, { label: "Current group", value: cleanText(gForm?.getDisplayBox?.("assignment_group")?.value) || assignmentGroup || "Unassigned" }, { label: "New group", value: group?.name || "Configured group" }] });
+    async function confirm(currentUserSysId, group, gForm) {
+      const assigned2 = cleanText(gForm?.getValue?.("assigned_to")), currentGroup = cleanText(gForm?.getValue?.("assignment_group")), targetGroup = group?.preserveCurrent ? currentGroup : cleanText(group?.group_sys_id);
+      if (!(assigned2 && assigned2 !== currentUserSysId) && !(currentGroup && targetGroup && currentGroup !== targetGroup)) return true;
+      return showConfirmationModal(hostDocument(), { title: "Replace existing assignment", description: "This ticket is already assigned. Continue and assign it to you?", details: [{ label: "Current assignee", value: cleanText(gForm?.getDisplayBox?.("assigned_to")?.value) || assigned2 || "Unassigned" }, { label: "Current group", value: cleanText(gForm?.getDisplayBox?.("assignment_group")?.value) || currentGroup || "Unassigned" }, { label: "Assign to", value: cleanText(rootWindow?.NOW?.user_display_name) || "Current ServiceNow user" }, { label: "Target group", value: group?.name || "Current group" }] });
+    }
+    function failureMessage(kind) {
+      const messages = { "invalid-group": "The selected assignment group has an invalid sys_id. Reconfigure the group.", "no-current-user": "Could not detect your ServiceNow user id.", "no-current-user-display": "Your ServiceNow user was detected, but its display name could not be resolved.", "assignee-rejected": "ServiceNow rejected you as assignee. Verify that you are a member of the target group.", "assignee-display-unresolved": "ServiceNow accepted your user id but did not resolve your name in Assigned to. The assignment was not marked successful.", "group-rejected": "ServiceNow rejected the target assignment group.", "group-display-unresolved": "ServiceNow accepted the group id but did not resolve the group name.", "dom-rejected": "The assignment reference fields could not be verified on this ServiceNow form." };
+      return messages[kind] || `Assignment failed (${kind || "unknown"}). The form was left unconfirmed.`;
     }
     return { onAssignToMyGroup() {
       return runAction("assign", async () => {
-        const currentUserSysId = getCurrentUserSysId(rootWindow);
-        logger?.trace?.("assign:start", { currentUserDetected: Boolean(currentUserSysId) });
+        const gForm = getBestGForm(rootWindow)?.gForm, currentUserSysId = getCurrentUserSysId(rootWindow);
+        logger?.trace?.("assign:start", { currentUserDetected: Boolean(currentUserSysId), table: cleanText(gForm?.getTableName?.()) });
         if (!currentUserSysId) {
-          showToast(hostDocument(), { message: "Could not detect your ServiceNow user. Open the assistant from inside an open ticket and try again.", tone: "error" });
+          showToast(hostDocument(), { message: failureMessage("no-current-user"), tone: "error" });
           return;
         }
-        const group = await ensureGroupConfigured();
+        if (!gForm) {
+          showToast(hostDocument(), { message: "No writable ServiceNow ticket form was detected.", tone: "error" });
+          return;
+        }
+        const group = await chooseGroup(gForm);
         if (!group) return;
-        if (!await confirmReassignmentIfNeeded(currentUserSysId, group)) return;
-        const result = await assignToMyGroup({ rootWindow, currentUserSysId, userGroup: group });
-        logger?.trace?.("assign:result", { group: group?.name || "", groupSysId: group?.group_sys_id || "", result });
+        if (!await confirm(currentUserSysId, group, gForm)) return;
+        const currentGroupSysId = cleanText(gForm.getValue?.("assignment_group")), currentGroupName = cleanText(gForm.getDisplayBox?.("assignment_group")?.value);
+        const target = group.preserveCurrent ? { ...group, group_sys_id: currentGroupSysId, name: currentGroupName || group.name } : group;
+        const result = await assignToMyGroup({ rootWindow, currentUserSysId, userGroup: target });
+        logger?.trace?.("assign:result", { targetGroup: target?.name || "", targetGroupSysId: target?.group_sys_id || "", preserved: Boolean(group.preserveCurrent), result });
         if (!result.ok) {
-          const message = result.kind === "invalid-group" ? "Your saved group has an invalid sys_id \u2014 reconfigure it with the gear button." : result.kind === "assignee-rejected" ? "ServiceNow rejected the assignee. Verify that you are a member of the selected assignment group." : result.kind === "group-rejected" ? "ServiceNow rejected the assignment group. Reconfigure the group and try again." : "Could not fill the assignment fields. Make sure the ticket form is open and try again.";
-          showToast(hostDocument(), { message, tone: "error" });
+          showToast(hostDocument(), { message: failureMessage(result.kind), tone: "error", duration: 9e3 });
           return;
         }
-        showToast(hostDocument(), { message: "Assignment verified on the form \u2014 please save the ticket", tone: "success" });
+        showToast(hostDocument(), { message: `Assigned to you in ${target.name || "the current group"}. Save/Update the ticket to commit the change.`, tone: "success" });
         scheduleRecovery("assign-prefill", 0);
       });
     }, async onConfigureAssignGroup() {
-      const picked = await showGroupPickerModal(hostDocument(), AVAILABLE_GROUPS);
+      const membership = AVAILABLE_GROUPS.filter((g) => g.source === "user_membership"), picked = await showGroupPickerModal(hostDocument(), membership.length ? membership : AVAILABLE_GROUPS);
       if (!picked) {
         showToast(hostDocument(), { message: "No group configured", tone: "warning" });
         return false;
       }
       saveUserGroup(rootWindow, picked);
       logger?.trace?.("assign:group-configured", { name: picked.name || "", groupSysId: picked.group_sys_id || "" });
-      showToast(hostDocument(), { message: `Group set: ${picked.name}`, tone: "info" });
+      showToast(hostDocument(), { message: `Default assignment group: ${picked.name}`, tone: "info" });
       return true;
     } };
   }
