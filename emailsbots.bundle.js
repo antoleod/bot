@@ -38165,8 +38165,13 @@ ${text3}` : text3;
   }
 
   // Assistant/handlers/launcher.js
+  var MODE_SVG = {
+    icons: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeIcons" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#22d3ee"/><stop offset=".52" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect x="3.5" y="4" width="4.5" height="4.5" rx="2.25" fill="url(#snModeIcons)"/><path d="M11 6.25h9" stroke="url(#snModeIcons)" stroke-width="2" stroke-linecap="round"/><rect x="3.5" y="9.75" width="4.5" height="4.5" rx="2.25" fill="url(#snModeIcons)"/><path d="M11 12h7" stroke="url(#snModeIcons)" stroke-width="2" stroke-linecap="round"/><rect x="3.5" y="15.5" width="4.5" height="4.5" rx="2.25" fill="url(#snModeIcons)"/><path d="M11 17.75h9" stroke="url(#snModeIcons)" stroke-width="2" stroke-linecap="round"/></svg>`,
+    expanded: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeExpand" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#60a5fa"/><stop offset=".5" stop-color="#2563eb"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" stroke="url(#snModeExpand)" stroke-width="2.25" stroke-linecap="round"/><path d="M12 7.8l1.25 2.95L16.2 12l-2.95 1.25L12 16.2l-1.25-2.95L7.8 12l2.95-1.25L12 7.8Z" fill="url(#snModeExpand)"/></svg>`,
+    minimal: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeMinimal" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#34d399"/><stop offset=".55" stop-color="#14b8a6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="url(#snModeMinimal)" stroke-width="2"/><rect x="6.5" y="6.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><rect x="13.5" y="6.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><rect x="6.5" y="13.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><path d="M17.5 14.5h-3m0 0 1.5-1.5m-1.5 1.5L16 16" stroke="url(#snModeMinimal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  };
   function createLauncherHandlers({ state, store, rootWindow, scheduleRecovery, scheduleAutoHideTimer, clearAutoHideTimer, logger }) {
-    let lastLoggedMode = "";
+    let lastLoggedMode = "", observer = null, injectQueued = false;
     const logMode = (reason, mode) => {
       const key = `${reason}:${mode}:${Boolean(state.ui.edgePanelPinned)}`;
       if (key === lastLoggedMode) return;
@@ -38179,7 +38184,10 @@ ${text3}` : text3;
     };
     const setMode = (mode, reason = "launcher-mode") => {
       if (!["tab", "icons", "expanded"].includes(mode)) return;
-      if (mode === "tab" && state.ui.edgePanelPinned) return;
+      if (mode === "tab" && state.ui.edgePanelPinned) {
+        store.dispatch(setEdgePanelPinned, false);
+        state.ui.edgePanelPinned = false;
+      }
       state.ui.edgePanelMode = mode;
       state.ui.assistantHidden = false;
       persist(mode);
@@ -38188,44 +38196,118 @@ ${text3}` : text3;
       else clearAutoHideTimer();
       scheduleRecovery(reason, 0);
     };
-    return { onToggleLauncherEditMode() {
-      store.dispatch(toggleLauncherEditMode);
-      scheduleRecovery("launcher-edit-mode", 0);
-    }, onToggleEdgePanelPinned(pinned) {
-      const value2 = Boolean(pinned);
-      store.dispatch(setEdgePanelPinned, value2);
-      persist(state.ui.edgePanelMode || "icons");
-      logMode("pin", state.ui.edgePanelMode || "icons");
-      if (value2) clearAutoHideTimer();
-      else scheduleAutoHideTimer();
-      scheduleRecovery("launcher-pin", 0);
-    }, onEdgePanelToggle() {
-      if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons", "tab-restore");
-      else setMode("tab", "minimal");
-    }, onEdgePanelIconsToggle() {
-      setMode("icons", "icons");
-    }, onEdgePanelExpand() {
-      setMode("expanded", "expanded");
-    }, onEdgePanelMinimize() {
-      setMode("tab", "minimal");
-    }, onEdgePanelClose() {
-      if (state.ui.workNotesOpen) store.dispatch(closeWorkNotes);
-      if (state.ui.userInfoOpen) store.dispatch(closeUserInfo);
-      if (state.ui.userTicketsOpen) store.dispatch(closeUserTickets);
-      if (state.ui.findCiOpen) store.dispatch(closeFindCi);
-      if (state.ui.edgePanelPinned) store.dispatch(setEdgePanelPinned, false);
-      state.ui.edgePanelPinned = false;
-      setMode("tab", "close");
-    }, onHideLauncherButton(buttonId) {
-      const id = cleanText(buttonId);
-      if (!id || !HIDEABLE_BUTTON_IDS.includes(id)) return;
-      const current = Array.isArray(state.settings?.hiddenButtons) ? state.settings.hiddenButtons : [];
-      if (current.includes(id)) return;
-      const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
-      setSettings(state, next);
-      showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
-      scheduleRecovery("launcher-hide-button", 0);
-    } };
+    const modeButton = (doc, mode, title, svg) => {
+      const b = doc.createElement("button");
+      b.type = "button";
+      b.className = "sn-ep__icon-btn sn-ep__mode-btn";
+      b.dataset.snMode = mode;
+      b.title = title;
+      b.setAttribute("aria-label", title);
+      b.innerHTML = svg;
+      b.style.cssText = "position:relative;display:inline-grid;place-items:center;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;border-radius:10px;";
+      b.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setMode(mode, `control-${mode}`);
+      });
+      return b;
+    };
+    const injectModeControls = () => {
+      injectQueued = false;
+      const doc = state.host?.document;
+      if (!doc) return;
+      const footer = doc.querySelector("#sn-assistant-launcher .sn-ep__footer-actions, [data-sn-assistant-root] .sn-ep__footer-actions, .sn-ep__footer-actions");
+      if (!footer) return;
+      let group = footer.querySelector("[data-sn-mode-controls]");
+      if (!group) {
+        group = doc.createElement("div");
+        group.dataset.snModeControls = "true";
+        group.setAttribute("role", "group");
+        group.setAttribute("aria-label", "Assistant view");
+        group.style.cssText = "display:inline-flex;align-items:center;gap:4px;padding:3px;border:1px solid rgba(96,165,250,.22);border-radius:12px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(59,130,246,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.35);";
+        group.append(modeButton(doc, "icons", "Icons view", MODE_SVG.icons), modeButton(doc, "expanded", "Expand assistant", MODE_SVG.expanded), modeButton(doc, "tab", "Minimal view", MODE_SVG.minimal));
+        const old = footer.querySelector('[data-action="ep-icons"]');
+        if (old) {
+          old.style.display = "none";
+          old.setAttribute("aria-hidden", "true");
+        }
+        footer.insertBefore(group, footer.firstChild);
+      }
+      const current = state.ui.edgePanelMode || "icons";
+      group.querySelectorAll("[data-sn-mode]").forEach((b) => {
+        const active = b.dataset.snMode === current;
+        b.classList.toggle("is-active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+        b.style.transform = active ? "translateY(-1px)" : "";
+        b.style.background = active ? "linear-gradient(135deg,rgba(37,99,235,.16),rgba(139,92,246,.12))" : "";
+        b.style.boxShadow = active ? "0 0 0 1px rgba(59,130,246,.38),0 4px 12px rgba(37,99,235,.16)" : "";
+      });
+    };
+    const queueInject = () => {
+      if (injectQueued) return;
+      injectQueued = true;
+      (rootWindow?.requestAnimationFrame || ((fn) => setTimeout(fn, 0)))(injectModeControls);
+    };
+    try {
+      const doc = state.host?.document;
+      if (doc?.documentElement && typeof MutationObserver !== "undefined") {
+        observer = new MutationObserver(queueInject);
+        observer.observe(doc.documentElement, { childList: true, subtree: true });
+        queueInject();
+      } else setTimeout(queueInject, 0);
+    } catch {
+      setTimeout(queueInject, 0);
+    }
+    return {
+      onToggleLauncherEditMode() {
+        store.dispatch(toggleLauncherEditMode);
+        scheduleRecovery("launcher-edit-mode", 0);
+        queueInject();
+      },
+      onToggleEdgePanelPinned(pinned) {
+        const value2 = Boolean(pinned);
+        store.dispatch(setEdgePanelPinned, value2);
+        persist(state.ui.edgePanelMode || "icons");
+        logMode("pin", state.ui.edgePanelMode || "icons");
+        if (value2) clearAutoHideTimer();
+        else scheduleAutoHideTimer();
+        scheduleRecovery("launcher-pin", 0);
+        queueInject();
+      },
+      onEdgePanelToggle() {
+        if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons", "tab-restore");
+        else setMode("tab", "minimal");
+      },
+      onEdgePanelIconsToggle() {
+        setMode("icons", "icons");
+      },
+      onEdgePanelExpand() {
+        setMode("expanded", "expanded");
+      },
+      onEdgePanelMinimize() {
+        setMode("tab", "minimal");
+      },
+      onEdgePanelClose() {
+        if (state.ui.workNotesOpen) store.dispatch(closeWorkNotes);
+        if (state.ui.userInfoOpen) store.dispatch(closeUserInfo);
+        if (state.ui.userTicketsOpen) store.dispatch(closeUserTickets);
+        if (state.ui.findCiOpen) store.dispatch(closeFindCi);
+        if (state.ui.edgePanelPinned) store.dispatch(setEdgePanelPinned, false);
+        state.ui.edgePanelPinned = false;
+        setMode("tab", "close");
+      },
+      onHideLauncherButton(buttonId) {
+        const id = cleanText(buttonId);
+        if (!id || !HIDEABLE_BUTTON_IDS.includes(id)) return;
+        const current = Array.isArray(state.settings?.hiddenButtons) ? state.settings.hiddenButtons : [];
+        if (current.includes(id)) return;
+        const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
+        setSettings(state, next);
+        showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
+        scheduleRecovery("launcher-hide-button", 0);
+        queueInject();
+      }
+    };
   }
 
   // Assistant/application/ep/links.js
