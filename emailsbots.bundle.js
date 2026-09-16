@@ -4859,8 +4859,8 @@
     }
     return /[A-Za-zÀ-ÿ]/.test(text2);
   }
-  function deriveNameFromEmail(email) {
-    const localPart = cleanText(email).split("@")[0] || "";
+  function deriveNameFromEmail(email2) {
+    const localPart = cleanText(email2).split("@")[0] || "";
     const normalized = localPart.replace(/[._-]+/g, " ").replace(/\d+/g, " ").replace(/\s+/g, " ").trim();
     if (!normalized) return "";
     return titleCase(normalized);
@@ -6367,7 +6367,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     if (!templateId) return;
     const storage = getLocalStorage(rootWindow);
     if (!storage) return;
-    const existing = loadRecentWorkNotes(rootWindow).filter((note) => note.templateId !== templateId);
+    const existing = loadRecentWorkNotes(rootWindow).filter((note2) => note2.templateId !== templateId);
     const updated = [
       normalizeRecentWorkNote({ templateId, label: cleanText(label) || templateId, usedAt: (/* @__PURE__ */ new Date()).toISOString() }),
       ...existing
@@ -7710,15 +7710,15 @@ Asset tag: ${item.equipmentAssetTag}`;
     }
     return `${isReminder ? "Email reminder sent" : "Email sent"} to the user regarding ticket ${ticketNumber || "the ticket"}.`;
   }
-  function enforceWorkNoteContract(note = "") {
-    return String(note || "").replace(/\bDear\s+[^\n,]+,?/gi, "").replace(/\bKind regards,?[\s\S]*$/i, "").replace(/\bBest regards,?[\s\S]*$/i, "").replace(/\n{3,}/g, "\n\n").trim();
+  function enforceWorkNoteContract(note2 = "") {
+    return String(note2 || "").replace(/\bDear\s+[^\n,]+,?/gi, "").replace(/\bKind regards,?[\s\S]*$/i, "").replace(/\bBest regards,?[\s\S]*$/i, "").replace(/\n{3,}/g, "\n\n").trim();
   }
   function buildWorkNoteForEmailAction(renderedTemplate = null, context = {}, settings = {}) {
     if (renderedTemplate?.isReminder && renderedTemplate?.reminderWorkNote) {
       return enforceWorkNoteContract(renderTemplateText(renderedTemplate.reminderWorkNote, context, settings));
     }
-    const note = summarizeEmailAction(renderedTemplate?.id || "", renderedTemplate, context);
-    if (note) return enforceWorkNoteContract(note);
+    const note2 = summarizeEmailAction(renderedTemplate?.id || "", renderedTemplate, context);
+    if (note2) return enforceWorkNoteContract(note2);
     return enforceWorkNoteContract(generateWorkNotes(context, settings));
   }
   function renderTemplateText(value2, context = {}, settings = {}) {
@@ -9061,6 +9061,60 @@ ${configurationItemLine}`,
     ...REMINDER_WORK_NOTE_TEMPLATES
   ];
 
+  // Assistant/templates/serviceDeskTemplates.js
+  var SIGN_OFF2 = "Kind regards,\n{{agent_name}}";
+  var kw = (short_desc = [], description = []) => ({ short_desc, description });
+  function email(id, label, subject, topic, action, keywords, subcategory = "access", exclusions = []) {
+    return { id, category: "email", subcategory, label, target: "comments", subject, keywords, exclusions, priority: 90, body: ["Dear {{user_name}},", `Regarding ticket {{ticket_number}} and ${topic}:`, action, SIGN_OFF2].join("\n\n") };
+  }
+  function note(id, label, body, keywords, subcategory = "follow-up", exclusions = []) {
+    return { id, category: "work_note", subcategory, label, target: "work_notes", keywords, exclusions, priority: 90, body };
+  }
+  var SERVICE_DESK_EMAIL_TEMPLATES = [
+    email("it_equipment_retrieval", "IT Equipment - Arrange Retrieval", "{{request_item}} - IT equipment retrieval", "the retrieval of your corporate IT equipment", "We need to arrange the collection of the IT equipment assigned to you. Could you please confirm your preferred date, time and location for the collection? If the equipment has already been returned, please let us know so that we can update the request accordingly. If you have any questions about the equipment to be returned, we will be happy to clarify.", kw(["recover the it material", "recover it material", "it material", "equipment retrieval", "recover equipment"], ["it materials assigned", "cmdb", "elitebook", "monitor", "notebook pc", "thinkvision", "assigned to the user"]), "return"),
+    email("it_equipment_retrieval_reminder", "IT Equipment - Retrieval Reminder", "Reminder: {{request_item}} - IT equipment retrieval", "the pending return of your corporate IT equipment", "This is a reminder regarding the IT equipment that still needs to be collected or returned. Could you please confirm a suitable date, time and location for the handover? If the equipment has already been returned, please let us know and we will update the request.", kw(["recover the it material", "equipment retrieval", "it material"], ["reminder", "pending", "return", "collection", "assigned to the user"]), "return"),
+    email("it_equipment_retrieval_confirmed", "IT Equipment - Return Confirmed / Thank You", "{{request_item}} - IT equipment return confirmed", "the return of your corporate IT equipment", "Thank you for your confirmation. We have noted that the equipment has been returned or the collection has been completed. We will update the request accordingly. No further action is required from you at this stage.", kw(["recover the it material", "equipment retrieval", "it material"], ["returned", "return completed", "collected", "collection completed", "received"]), "confirmation"),
+    email("end_user_confirmation_request", "End User - Ask for Confirmation", "{{ticket_number}} - Could you confirm the result?", "the action completed on your request", "The required action has now been completed on our side. Could you please confirm whether everything is working as expected for you? Once we receive your confirmation, we can complete the request. If the issue is still present, please let us know what you are seeing and we will continue investigating.", kw(["confirmation", "confirm result", "resolved", "fixed"], ["confirm", "working as expected", "feedback", "user confirmation"]), "follow-up"),
+    email("end_user_confirmation_reminder", "End User - Confirmation Reminder", "Reminder: {{ticket_number}} - confirmation requested", "our previous request for confirmation", "Just a quick follow-up to check whether everything is now working as expected. When you have a moment, please confirm the result. If the issue is still present, let us know and we will continue with the necessary checks.", kw(["confirmation reminder", "awaiting confirmation"], ["waiting for confirmation", "no reply", "feedback reminder"]), "follow-up"),
+    email("request_more_information", "End User - Request More Information", "{{ticket_number}} - Additional information needed", "your request", "We need a little more information before we can continue. Could you please send us the exact error message, what you were trying to do when it occurred, and whether the behaviour can be reproduced? A screenshot is also helpful when available.", kw(["more information", "additional information", "clarification"], ["details", "error message", "screenshot", "reproduce"]), "follow-up"),
+    email("user_availability_request", "End User - Ask for Availability", "{{ticket_number}} - Availability for IT support", "the next support step", "We would like to continue with an intervention. Could you please send us a few dates and time slots that work for you and let us know whether you prefer remote support or an on-site visit where applicable?", kw(["availability", "appointment", "intervention"], ["time slot", "remote", "on-site", "schedule"]), "appointment"),
+    email("zoom_access_request", "Zoom - Access Request", "{{ticket_number}} - Zoom access request", "your request for access to Zoom", "We reviewed your request for Zoom access. We will check the appropriate access path for your account. If you already have Zoom installed, please let us know what happens when you try to sign in. If access is needed for a specific course or meeting, you can also share that detail with us.", kw(["zoom"], ["access", "get access", "zoom application", "course", "meeting", "videoconference", "video conference"]), "access", ["install", "installation", "configure", "configuration", "not working", "error"]),
+    email("zoom_installation_support", "Zoom - Installation / Configuration", "{{ticket_number}} - Zoom installation support", "the installation or configuration of Zoom", "We can help with the Zoom installation or configuration. Please let us know whether Zoom is already installed and, if you see an error when opening or signing in, send us the message shown on screen.", kw(["zoom"], ["install", "installation", "configure", "configuration", "setup", "sign in"]), "software", ["get access", "access request"]),
+    email("teams_access_support", "Microsoft Teams - Access / Configuration", "{{ticket_number}} - Microsoft Teams support", "your Microsoft Teams request", "We reviewed your Teams request and will check the required access or client configuration. If you are seeing an error, please send us the exact message and tell us whether the issue occurs in the desktop application, browser, or both.", kw(["teams", "microsoft teams"], ["access", "configuration", "login", "sign in", "permission", "not working", "error"])),
+    email("software_installation_request", "Software - Installation Request", "{{ticket_number}} - Software installation request", "your software request", "Please confirm the application you need and, if relevant, the business need or licence required. We will check the available installation or access path and proceed accordingly.", kw(["software", "application"], ["install", "installation", "application access", "software request", "license", "licence"]), "software"),
+    email("eu_login_access_support", "EU Login - Access / Authentication", "{{ticket_number}} - EU Login support", "your EU Login request", "We will check the reported EU Login issue. Please tell us whether the problem concerns your password, multi-factor authentication, account activation, or access to a specific service, and include the exact error message if one is displayed.", kw(["eu login", "eulogin"], ["authentication", "mfa", "2fa", "password", "login", "access", "activation"])),
+    email("sharepoint_access_request", "SharePoint - Access Request", "{{ticket_number}} - SharePoint access request", "your SharePoint access request", "Please confirm the SharePoint site or resource you need and, if known, the permission level required. We will check the request and route the access action appropriately.", kw(["sharepoint"], ["access", "site", "permission", "permissions", "folder"])),
+    email("vpn_connection_support", "VPN - Connection Support", "{{ticket_number}} - VPN connection support", "the VPN connection issue", "Please try the VPN connection again and send us the exact error message if it still fails. It would also help to know whether you are connecting from home or from an EP site and whether normal internet access is working.", kw(["vpn"], ["connection", "cannot connect", "connection failed", "disconnect", "remote access", "error"]), "connectivity"),
+    email("onedrive_sync_support", "OneDrive - Sync Support", "{{ticket_number}} - OneDrive sync support", "the OneDrive synchronisation issue", "Please tell us whether the problem affects all files or only a specific folder and send us any sync error displayed by OneDrive. We will use that information to continue the troubleshooting.", kw(["onedrive", "one drive"], ["sync", "synchronisation", "synchronization", "folder", "file", "error"]), "software"),
+    email("printer_installation_support", "Printer - Installation / Access", "{{ticket_number}} - Printer support", "your printer request", "Please send us the printer name or location and confirm whether you need a new installation or whether an existing printer has stopped working. We will then take the appropriate support action.", kw(["printer", "imprimante"], ["install", "installation", "access", "printing", "not working", "cannot print"]), "hardware"),
+    email("bitlocker_recovery_support", "BitLocker - Recovery Support", "{{ticket_number}} - BitLocker recovery support", "the BitLocker recovery request", "We can assist with the BitLocker recovery process using the approved support procedure. Please keep the affected device available and provide the device identification requested by the support team.", kw(["bitlocker"], ["recovery key", "recovery", "encrypted", "encryption", "locked"]), "security"),
+    email("ticket_transfer_notification", "Ticket - Transferred to Correct Team", "{{ticket_number}} - Request transferred", "your support request", "We reviewed your request and it needs to be handled by a different support team. We have therefore transferred the ticket to the appropriate team, who will continue with the next steps.", kw(["transfer", "transferred", "reassign", "reassigned"], ["different team", "other team", "appropriate team"]), "follow-up")
+  ];
+  var SERVICE_DESK_WORK_NOTE_TEMPLATES = [
+    note("worknote_it_equipment_retrieval", "IT Equipment - Retrieval Requested", "Reviewed the equipment retrieval request for {{requested_for}}. The ticket contains the list of IT assets currently associated with the user. Contacted the user to arrange a suitable date, time and location for collection. Awaiting confirmation.", kw(["recover the it material", "it material", "equipment retrieval"], ["cmdb", "assigned to the user", "elitebook", "monitor", "notebook pc", "thinkvision"]), "return"),
+    note("worknote_it_equipment_return_confirmed", "IT Equipment - Return Confirmed", "The equipment return/collection for {{requested_for}} has been confirmed. The request can be updated with the returned asset information and completed once the applicable asset records are verified.", kw(["equipment retrieval", "it material"], ["returned", "collected", "received", "return completed"]), "return"),
+    note("worknote_end_user_confirmation_requested", "End User - Confirmation Requested", "Action completed on our side and the user has been asked to confirm the result. Awaiting end-user confirmation before completing the ticket.", kw(["confirmation", "confirm result", "resolved", "fixed"], ["confirm", "working as expected", "feedback", "user confirmation"])),
+    note("worknote_end_user_confirmation_received", "End User - Confirmation Received", "The user confirmed that the service is working as expected. No further action is required from the Service Desk.", kw(["confirmed", "confirmation received"], ["user confirmed", "working now", "works now", "resolved"])),
+    note("worknote_end_user_confirmation_reminder", "End User - Confirmation Reminder Sent", "Follow-up sent to the user requesting confirmation of the result. Awaiting their reply before completing the ticket.", kw(["confirmation reminder", "awaiting confirmation"], ["reminder sent", "awaiting reply", "waiting for confirmation"])),
+    note("worknote_user_contacted_human", "User Contacted - Awaiting Reply", "Contacted {{requested_for}} regarding {{short_description}}. The current situation and next step were explained. Awaiting the user's reply before continuing.", kw(["contact", "contacted", "user contacted"], ["awaiting reply", "waiting for user", "follow up"])),
+    note("worknote_information_requested", "Additional Information Requested", "Asked {{requested_for}} for the information needed to continue with {{short_description}}. Awaiting the requested details before proceeding with further troubleshooting.", kw(["more information", "additional information", "clarification"], ["details", "error message", "screenshot", "reproduce"])),
+    note("worknote_availability_requested", "Availability Requested", "Contacted {{requested_for}} to arrange the next support step for {{short_description}}. Asked the user to provide suitable dates and time slots. Awaiting availability confirmation.", kw(["availability", "appointment", "intervention"], ["time slot", "schedule", "remote", "on-site"]), "appointment"),
+    note("worknote_remote_session_completed", "Remote Session Completed", "Remote session completed with {{requested_for}} for {{short_description}}. The required checks or configuration were performed and the result was explained to the user. Awaiting confirmation if additional validation is needed.", kw(["remote support", "remote session", "remote assistance"], ["completed", "performed", "intervention", "session"])),
+    note("worknote_zoom_access_reviewed", "Zoom - Access Reviewed", "Reviewed the Zoom access request for {{requested_for}} and identified the appropriate access path. The user has been informed of the next step. Awaiting any additional information or confirmation required to proceed.", kw(["zoom"], ["access", "get access", "zoom application", "course", "meeting"]), "access", ["install", "configuration", "not working", "error"]),
+    note("worknote_zoom_configured", "Zoom - Installed / Configured", "Zoom was installed or configured for {{requested_for}}. Application launch and sign-in were checked. The user has been asked to confirm that Zoom is working as expected on their side.", kw(["zoom"], ["installed", "configured", "installation", "configuration", "sign in"]), "software"),
+    note("worknote_teams_support", "Teams - Support Performed", "Reviewed the Microsoft Teams request for {{requested_for}} and completed the relevant access or client checks. The current result was shared with the user and confirmation is pending where required.", kw(["teams", "microsoft teams"], ["access", "configuration", "login", "sign in", "error"])),
+    note("worknote_software_installation", "Software - Installation Performed", "Completed the software installation or configuration related to {{short_description}} for {{requested_for}}. Basic launch verification was successful. User confirmation requested before completing the ticket.", kw(["software", "application"], ["install", "installation", "configured", "configuration"]), "software"),
+    note("worknote_eu_login_support", "EU Login - Support Performed", "Reviewed the EU Login access/authentication issue for {{requested_for}} and completed the applicable checks. The user has been informed of the result or next step; confirmation is pending where required.", kw(["eu login", "eulogin"], ["authentication", "mfa", "password", "login", "access"])),
+    note("worknote_vpn_troubleshooting", "VPN - Troubleshooting Performed", "Performed VPN troubleshooting for {{requested_for}} and reviewed the available connection/error information. The user has been informed of the result and asked to confirm whether connectivity is now stable.", kw(["vpn"], ["connection", "disconnect", "cannot connect", "error", "remote access"]), "connectivity"),
+    note("worknote_onedrive_support", "OneDrive - Troubleshooting Performed", "Reviewed the OneDrive synchronisation issue for {{requested_for}} and completed the applicable checks. The user has been asked to confirm whether synchronisation is now working normally.", kw(["onedrive", "one drive"], ["sync", "synchronisation", "synchronization", "folder", "file", "error"]), "software"),
+    note("worknote_sharepoint_access", "SharePoint - Access Reviewed", "Reviewed the SharePoint access request for {{requested_for}} and identified the requested resource/permission path. The user has been informed of the current status and next step.", kw(["sharepoint"], ["access", "permission", "site", "folder"])),
+    note("worknote_printer_support", "Printer - Support Performed", "Reviewed the printer request for {{requested_for}} and completed the applicable installation or troubleshooting action. The user has been asked to confirm that printing is working as expected.", kw(["printer", "imprimante"], ["printing", "install", "installation", "not working", "cannot print"]), "hardware"),
+    note("worknote_bitlocker_support", "BitLocker - Support Performed", "Assisted {{requested_for}} with the BitLocker recovery process using the approved support procedure. The device status was checked and the user was informed of the outcome.", kw(["bitlocker"], ["recovery", "recovery key", "encrypted", "locked"]), "security"),
+    note("worknote_ticket_transferred", "Ticket - Transferred to Correct Team", "Reviewed the request and confirmed that it needs to be handled by another support team. The ticket has been transferred to the appropriate group for further action.", kw(["transfer", "transferred", "reassign"], ["different team", "other team", "appropriate group"]), "follow-up"),
+    note("escalation_recommended", "Escalation Recommended", "Initial troubleshooting did not resolve the reported issue. The ticket has been reviewed and escalation to the appropriate support team is recommended for further analysis. The relevant findings are documented in the ticket.", kw(["escalation", "escalate"], ["troubleshooting", "not resolved", "further analysis"]), "escalation"),
+    note("worknote_tpm", "TPM - Support Performed", "TPM-related support was performed for {{requested_for}}. The device state and the reported TPM issue were reviewed, the applicable support action was completed, and the current result was communicated to the user.", kw(["tpm"], ["trusted platform module", "security processor", "tpm error", "tpm issue"]), "security")
+  ];
+
   // Assistant/templates/customTemplates.json
   var customTemplates_default = [
     {
@@ -9801,141 +9855,70 @@ ${configurationItemLine}`,
   ];
 
   // Assistant/templates/registry.js
-  var CATEGORY_META = [
-    { id: "email", label: "Emails" },
-    { id: "reminder", label: "Reminder" },
-    { id: "close_note", label: "Close Note" },
-    { id: "work_note", label: "Work Notes" },
-    { id: "appointment", label: "Appointment" }
-  ];
-  var DEFAULT_GROUPS = {
-    email: EMAIL_TEMPLATES,
-    reminder: [],
-    close_note: RESOLUTION_TEMPLATES,
-    work_note: WORK_NOTE_TEMPLATES,
-    appointment: APPOINTMENT_TEMPLATES
-  };
+  var CATEGORY_META = [{ id: "email", label: "Emails" }, { id: "reminder", label: "Reminder" }, { id: "close_note", label: "Close Note" }, { id: "work_note", label: "Work Notes" }, { id: "appointment", label: "Appointment" }];
+  var BUILTIN_EMAIL_TEMPLATES = [...EMAIL_TEMPLATES, ...SERVICE_DESK_EMAIL_TEMPLATES];
+  var BUILTIN_WORK_NOTE_TEMPLATES = [...WORK_NOTE_TEMPLATES, ...SERVICE_DESK_WORK_NOTE_TEMPLATES];
+  var DEFAULT_GROUPS = { email: BUILTIN_EMAIL_TEMPLATES, reminder: [], close_note: RESOLUTION_TEMPLATES, work_note: BUILTIN_WORK_NOTE_TEMPLATES, appointment: APPOINTMENT_TEMPLATES };
   var SUPPORTED_CATEGORIES = ["email", "reminder", "close_note", "work_note", "appointment"];
-  var LEGACY_PLACEHOLDER_ALIASES = Object.freeze({
-    assigned_to: "agent_name",
-    assignee: "agent_name",
-    asset_tag: "equipment_asset_tag",
-    follow_up_date: "appointment_date",
-    followup_date: "appointment_date",
-    short_desc: "short_description",
-    ticket: "ticket_number",
-    requested_for_name: "requested_for"
-  });
+  var LEGACY_PLACEHOLDER_ALIASES = Object.freeze({ assigned_to: "agent_name", assignee: "agent_name", asset_tag: "equipment_asset_tag", follow_up_date: "appointment_date", followup_date: "appointment_date", short_desc: "short_description", ticket: "ticket_number", requested_for_name: "requested_for" });
   function normalizeTemplateCategory(value2) {
-    const category = String(value2 || "").trim();
-    if (SUPPORTED_CATEGORIES.includes(category)) return category;
-    if (category === "resolution") return "close_note";
-    if (category === "internal") return "work_note";
-    if (category === "event") return "appointment";
+    const c = String(value2 || "").trim();
+    if (SUPPORTED_CATEGORIES.includes(c)) return c;
+    if (c === "resolution") return "close_note";
+    if (c === "internal") return "work_note";
+    if (c === "event") return "appointment";
     return "";
   }
   function normalizeTemplatePlaceholders(value2 = "") {
-    return String(value2 || "").replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (match, key) => {
-      const normalizedKey = String(key || "").toLowerCase();
-      const replacement = LEGACY_PLACEHOLDER_ALIASES[normalizedKey];
-      return replacement ? `{{${replacement}}}` : match;
+    return String(value2 || "").replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, key) => {
+      const k = String(key || "").toLowerCase(), r = LEGACY_PLACEHOLDER_ALIASES[k];
+      return r ? `{{${r}}}` : m;
     });
   }
   function normalizePlaceholderList(values2) {
-    if (!Array.isArray(values2)) return values2;
-    return values2.map((value2) => {
-      const key = String(value2 || "").trim().toLowerCase();
-      return LEGACY_PLACEHOLDER_ALIASES[key] || key;
-    });
+    return Array.isArray(values2) ? values2.map((v) => LEGACY_PLACEHOLDER_ALIASES[String(v || "").trim().toLowerCase()] || String(v || "").trim().toLowerCase()) : values2;
   }
   function normalizeStudioTemplate(template) {
     if (!template || !template.id || template.enabled === false) return null;
-    const rawId = String(template.id || "").trim();
-    const rawType = String(template.type || "").trim().toLowerCase();
-    const rawCategory = String(template.category || "").trim().toLowerCase();
+    const rawId = String(template.id || "").trim(), rawType = String(template.type || "").trim().toLowerCase(), rawCategory = String(template.category || "").trim().toLowerCase();
     if (rawCategory === "test" || /^test(?:_|-)/i.test(rawId)) return null;
     const sourceCategory = normalizeTemplateCategory(rawType) || normalizeTemplateCategory(rawCategory);
     if (!sourceCategory) {
       if (rawType || rawCategory) return null;
       if (!template.body && !template.subject) return null;
     }
-    const safeCategory = sourceCategory || "email";
-    const contentByCategory = {
-      email: template.body,
-      reminder: template.body,
-      close_note: template.close_note || template.body,
-      work_note: template.work_note || template.body,
-      appointment: template.event_desc || template.body
-    };
-    return {
-      ...deepClone(template),
-      category: safeCategory,
-      subcategory: template.subcategory || template.category || "",
-      label: template.label || template.title || template.id,
-      title: template.title || template.label || template.id,
-      subject: normalizeTemplatePlaceholders(
-        safeCategory === "appointment" ? template.event_title || template.subject || "" : template.subject || ""
-      ),
-      body: normalizeTemplatePlaceholders(contentByCategory[safeCategory] || ""),
-      placeholders: normalizePlaceholderList(template.placeholders),
-      target: template.target || (safeCategory === "work_note" ? "work_notes" : safeCategory === "close_note" ? "close_notes" : "comments"),
-      isCustom: true,
-      source: template.source || "customTemplates.json"
-    };
+    const category = sourceCategory || "email";
+    const content = { email: template.body, reminder: template.body, close_note: template.close_note || template.body, work_note: template.work_note || template.body, appointment: template.event_desc || template.body };
+    return { ...deepClone(template), category, subcategory: template.subcategory || template.category || "", label: template.label || template.title || template.id, title: template.title || template.label || template.id, subject: normalizeTemplatePlaceholders(category === "appointment" ? template.event_title || template.subject || "" : template.subject || ""), body: normalizeTemplatePlaceholders(content[category] || ""), placeholders: normalizePlaceholderList(template.placeholders), target: template.target || (category === "work_note" ? "work_notes" : category === "close_note" ? "close_notes" : "comments"), isCustom: true, source: template.source || "customTemplates.json" };
   }
   function applyTemplateOverride(template, override) {
     if (!override) return deepClone(template);
-    return {
-      ...deepClone(template),
-      label: override.label || template.label,
-      subject: normalizeTemplatePlaceholders(override.subject || template.subject),
-      body: normalizeTemplatePlaceholders(override.body || template.body),
-      target: override.target || template.target,
-      paragraphSpacing: override.paragraphSpacing || template.paragraphSpacing || "standard"
-    };
+    return { ...deepClone(template), label: override.label || template.label, subject: normalizeTemplatePlaceholders(override.subject || template.subject), body: normalizeTemplatePlaceholders(override.body || template.body), target: override.target || template.target, paragraphSpacing: override.paragraphSpacing || template.paragraphSpacing || "standard" };
   }
   function mergeTemplatesById(...lists) {
     const map = /* @__PURE__ */ new Map();
-    lists.flat().forEach((template) => {
-      if (!template?.id) return;
-      map.set(template.id, template);
+    lists.flat().forEach((t) => {
+      if (t?.id) map.set(t.id, t);
     });
     return [...map.values()];
   }
   function getCustomTemplatesByCategory(settings) {
+    const overrides = settings?.templateOverrides || {};
     const fileTemplates = Array.isArray(customTemplates_default) ? customTemplates_default.map(normalizeStudioTemplate).filter(Boolean) : [];
-    const persistedTemplates = Array.isArray(settings?.customTemplates) ? settings.customTemplates.map((template) => normalizeStudioTemplate({ ...template, source: template?.source || "settings" })).filter(Boolean) : [];
-    const templates = mergeTemplatesById(fileTemplates, persistedTemplates);
-    const output = {
-      email: [],
-      reminder: [],
-      close_note: [],
-      work_note: [],
-      appointment: []
-    };
-    templates.forEach((template) => {
-      if (!template || !template.id) return;
-      const category = normalizeTemplateCategory(template.category);
+    const persisted = Array.isArray(settings?.customTemplates) ? settings.customTemplates.map((t) => normalizeStudioTemplate({ ...t, source: t?.source || "settings" })).filter(Boolean) : [];
+    const templates = mergeTemplatesById(fileTemplates, persisted);
+    const output = { email: [], reminder: [], close_note: [], work_note: [], appointment: [] };
+    templates.forEach((t) => {
+      if (!t?.id) return;
+      const category = normalizeTemplateCategory(t.category);
       if (!output[category]) return;
-      output[category].push({ ...deepClone(template), category });
+      const isPersisted = t.source === "settings";
+      output[category].push({ ...applyTemplateOverride(t, isPersisted ? null : overrides[category]?.[t.id]), category });
     });
     return output;
   }
   function buildReminderTemplate(template) {
-    const reminderBody = buildReminderBody(template);
-    const reminderSubject = buildReminderSubject(template);
-    return {
-      ...deepClone(template),
-      id: `reminder_${template.id}`,
-      category: "reminder",
-      label: `Reminder - ${template.label}`,
-      subject: reminderSubject,
-      body: reminderBody,
-      target: template.target || "comments",
-      isReminder: true,
-      baseTemplateId: template.id,
-      reminderWorkNote: template.reminderWorkNote || ""
-    };
+    return { ...deepClone(template), id: `reminder_${template.id}`, category: "reminder", label: `Reminder - ${template.label}`, subject: buildReminderSubject(template), body: buildReminderBody(template), target: template.target || "comments", isReminder: true, baseTemplateId: template.id, reminderWorkNote: template.reminderWorkNote || "" };
   }
   function buildReminderSubject(template) {
     const explicit = String(template?.reminderSubject || "").trim();
@@ -9949,44 +9932,24 @@ ${configurationItemLine}`,
     if (explicit) return normalizeTemplatePlaceholders(explicit);
     let body = normalizeTemplatePlaceholders(template?.body || "").trim();
     if (!body) return "";
-    body = body.replace(/We are contacting you regarding/gi, "This is a friendly reminder regarding");
-    body = body.replace(/I am reaching out regarding/gi, "This is a friendly reminder regarding");
-    body = body.replace(/We kindly ask you to share/gi, "Could you please share");
-    body = body.replace(/We kindly ask you to confirm/gi, "Could you please confirm");
-    body = body.replace(/We kindly ask you to let us know/gi, "Could you please let us know");
-    body = body.replace(/Please confirm whether/gi, "Could you please confirm whether");
-    body = body.replace(/Please confirm if/gi, "Could you please confirm if");
-    body = body.replace(/Please let us know if/gi, "Could you please let us know if");
-    body = body.replace(/Please inform us/gi, "Please let us know");
-    body = body.replace(/We will contact you once/gi, "We will follow up with you once");
-    body = body.replace(/We will notify you as soon as/gi, "We will follow up with you as soon as");
+    body = body.replace(/We are contacting you regarding/gi, "This is a friendly reminder regarding").replace(/I am reaching out regarding/gi, "This is a friendly reminder regarding").replace(/We kindly ask you to share/gi, "Could you please share").replace(/We kindly ask you to confirm/gi, "Could you please confirm").replace(/We kindly ask you to let us know/gi, "Could you please let us know").replace(/Please confirm whether/gi, "Could you please confirm whether").replace(/Please confirm if/gi, "Could you please confirm if").replace(/Please let us know if/gi, "Could you please let us know if").replace(/Please inform us/gi, "Please let us know").replace(/We will contact you once/gi, "We will follow up with you once").replace(/We will notify you as soon as/gi, "We will follow up with you as soon as");
     return body;
   }
   function getCategories() {
-    return CATEGORY_META.map((entry) => ({ ...entry }));
+    return CATEGORY_META.map((x) => ({ ...x }));
   }
   function getTemplateGroups(settings) {
-    const overrides = settings?.templateOverrides || {};
-    const customTemplates = getCustomTemplatesByCategory(settings);
-    const baseEmailTemplates = EMAIL_TEMPLATES.map((template) => applyTemplateOverride(template, overrides.email?.[template.id]));
-    const reminderTemplates = baseEmailTemplates.map(
-      (template) => applyTemplateOverride(buildReminderTemplate(template), overrides.reminder?.[`reminder_${template.id}`])
-    );
-    return Object.fromEntries(
-      Object.entries(DEFAULT_GROUPS).map(([category, templates]) => {
-        const baseTemplates = category === "reminder" ? reminderTemplates : templates.map((template) => applyTemplateOverride(template, overrides[category]?.[template.id]));
-        return [
-          category,
-          mergeTemplatesById(baseTemplates, customTemplates[category])
-        ];
-      })
-    );
+    const overrides = settings?.templateOverrides || {}, custom = getCustomTemplatesByCategory(settings), baseEmail = BUILTIN_EMAIL_TEMPLATES.map((t) => applyTemplateOverride(t, overrides.email?.[t.id])), reminders = baseEmail.map((t) => applyTemplateOverride(buildReminderTemplate(t), overrides.reminder?.[`reminder_${t.id}`]));
+    return Object.fromEntries(Object.entries(DEFAULT_GROUPS).map(([category, templates]) => {
+      const base = category === "reminder" ? reminders : templates.map((t) => applyTemplateOverride(t, overrides[category]?.[t.id]));
+      return [category, mergeTemplatesById(base, custom[category])];
+    }));
   }
   function getTemplatesForCategory(category, settings) {
     return getTemplateGroups(settings)[category] || [];
   }
   function getTemplate(category, templateId, settings) {
-    return getTemplatesForCategory(category, settings).find((template) => template.id === templateId) || null;
+    return getTemplatesForCategory(category, settings).find((t) => t.id === templateId) || null;
   }
   function getFirstTemplateId(category, settings) {
     return getTemplatesForCategory(category, settings)[0]?.id || "";
@@ -11099,8 +11062,8 @@ word-wrap:break-word'>\r
     if (!/[a-z]/i.test(text2)) return false;
     return !/^(?:unknown|n\/a|null|undefined)$/i.test(text2);
   }
-  function toDisplayNameFromEmail(email) {
-    const local = cleanText(email).split("@")[0];
+  function toDisplayNameFromEmail(email2) {
+    const local = cleanText(email2).split("@")[0];
     if (!local) return "";
     return local.replace(/[._-]+/g, " ").replace(/\d+/g, "").replace(/\s+/g, " ").trim().split(" ").filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
   }
@@ -11872,6 +11835,30 @@ ${value2}`)));
     if (typeof EventCtor !== "function") return;
     ["input", "change", "blur"].forEach((name) => field.dispatchEvent(new EventCtor(name, { bubbles: true })));
   }
+  function findWorkNoteField(documentRef) {
+    const selectors = [
+      'textarea[name="work_notes"]',
+      'textarea[id$="work_notes"]',
+      'textarea[aria-label="Work notes"]',
+      'textarea[aria-label="Work Notes"]',
+      '[contenteditable="true"][data-field="work_notes"]',
+      '[contenteditable="true"][aria-label="Work notes"]',
+      "#work_notes",
+      "#activity-stream-textarea"
+    ];
+    for (const selector of selectors) {
+      const field = documentRef.querySelector(selector);
+      if (field && !field.disabled && field.getAttribute?.("aria-disabled") !== "true") return field;
+    }
+    return null;
+  }
+  function readDomValue(field) {
+    return cleanText("value" in field ? field.value : field.textContent || "");
+  }
+  function setDomValue(field, value2) {
+    if ("value" in field) field.value = value2;
+    else field.textContent = value2;
+  }
   function writeWorkNoteToDom(value2, { append = true } = {}) {
     let documents = [];
     try {
@@ -11881,17 +11868,18 @@ ${value2}`)));
     }
     for (const documentRef of documents) {
       try {
-        const field = documentRef.querySelector('textarea[aria-label="Work notes"]') || documentRef.querySelector('textarea[name="work_notes"]') || documentRef.querySelector("#work_notes") || documentRef.querySelector("#activity-stream-textarea");
+        const field = findWorkNoteField(documentRef);
         if (!field) continue;
-        const existing = append ? cleanText(field.value || "") : "";
+        const existing = append ? readDomValue(field) : "";
         if (append && isDuplicateAppend(existing, value2)) return { ok: true, verified: true, targetField: "work_notes", appended: false, skipped: true, source: "dom" };
         const nextValue = existing ? `${existing}
 
 ${value2}` : value2;
-        field.value = nextValue;
+        setDomValue(field, nextValue);
         dispatchWorkNoteEvents(field);
-        const verified = containsWrittenValue(field.value, value2, append);
-        return { ok: verified, verified, targetField: field.name || field.id || "work_notes", appended: Boolean(existing && append), source: "dom", beforeLength: existing.length, afterLength: cleanText(field.value).length };
+        const after = readDomValue(field);
+        const verified = containsWrittenValue(after, value2, append);
+        return { ok: verified, verified, targetField: field.name || field.id || "work_notes", appended: Boolean(existing && append), source: "dom", beforeLength: existing.length, afterLength: after.length };
       } catch {
       }
     }
@@ -11903,21 +11891,25 @@ ${value2}` : value2;
     const bestGForm = getBestGForm();
     try {
       if (bestGForm?.gForm?.setValue) {
-        const existing = append && typeof bestGForm.gForm.getValue === "function" ? cleanText(bestGForm.gForm.getValue("work_notes")) : "";
-        if (append && isDuplicateAppend(existing, value2)) return { ok: true, verified: true, targetField: "work_notes", appended: false, skipped: true, source: "g_form" };
-        const nextValue = existing ? `${existing}
+        const gForm = bestGForm.gForm;
+        const hasWorkNotes = typeof gForm.hasField !== "function" || gForm.hasField("work_notes");
+        if (hasWorkNotes) {
+          const existing = append && typeof gForm.getValue === "function" ? cleanText(gForm.getValue("work_notes")) : "";
+          if (append && isDuplicateAppend(existing, value2)) return { ok: true, verified: true, targetField: "work_notes", appended: false, skipped: true, source: "g_form" };
+          const nextValue = existing ? `${existing}
 
 ${value2}` : value2;
-        bestGForm.gForm.setValue("work_notes", nextValue);
-        const after = typeof bestGForm.gForm.getValue === "function" ? cleanText(bestGForm.gForm.getValue("work_notes")) : nextValue;
-        const verified = containsWrittenValue(after, value2, append);
-        if (verified) return { ok: true, verified: true, targetField: "work_notes", appended: Boolean(existing && append), source: "g_form", beforeLength: existing.length, afterLength: after.length };
+          gForm.setValue("work_notes", nextValue);
+          const after = typeof gForm.getValue === "function" ? cleanText(gForm.getValue("work_notes")) : nextValue;
+          const verified = containsWrittenValue(after, value2, append);
+          if (verified) return { ok: true, verified: true, targetField: "work_notes", appended: Boolean(existing && append), source: "g_form", beforeLength: existing.length, afterLength: after.length };
+        }
       }
     } catch {
     }
     const domResult = writeWorkNoteToDom(value2, { append });
     if (domResult.ok) return domResult;
-    if (!append) return { ok: false, verified: false, targetField: "", replaceUnsupported: true };
+    if (!append) return { ok: false, verified: false, targetField: "", replaceUnsupported: true, kind: "write-not-verified" };
     const legacy = insertWorkNote(value2, context);
     return { ...legacy, verified: Boolean(legacy?.ok), source: legacy?.source || "legacy" };
   }
@@ -15945,189 +15937,108 @@ ${value2}` : value2;
   function getServiceNowWindow(rootWindow) {
     return (rootWindow?.g_form ? rootWindow : null) || rootWindow?.top?.frames?.gsft_main || rootWindow?.frames?.gsft_main || rootWindow || window;
   }
-  function readField(gForm, fieldName) {
+  function readField(g, f) {
     try {
-      return cleanText(gForm?.getValue?.(fieldName) || gForm?.getDisplayValue?.(fieldName) || "");
+      return cleanText(g?.getValue?.(f) || g?.getDisplayValue?.(f) || "");
     } catch {
       return "";
     }
   }
-  function getSolutionText(context = {}, gForm = null) {
-    const contextValue = cleanText(
-      context.solution || context.u_solution || context.resolution || context.u_resolution || context.resolution_notes || context.resolutionNotes || context.solution_notes || context.solutionNotes
-    );
-    if (contextValue) return contextValue;
-    const fields = [
-      "solution",
-      "u_solution",
-      "resolution",
-      "u_resolution",
-      "resolution_notes",
-      "u_resolution_notes",
-      "solution_notes",
-      "u_solution_notes"
-    ];
-    for (const field of fields) {
-      const value2 = readField(gForm, field);
-      if (value2) return value2;
+  function readAny(g, fields = []) {
+    for (const f of fields) {
+      const v = readField(g, f);
+      if (v) return v;
     }
     return "";
   }
-  function isTicketNumber(value2) {
-    return /^(INC|REQ|RITM|SCTASK|TASK)\d+$/i.test(String(value2 || "").trim());
+  function getSolutionText(c = {}, g = null) {
+    return cleanText(c.solution || c.u_solution || c.resolution || c.u_resolution || c.resolution_notes || c.resolutionNotes || c.solution_notes || c.solutionNotes) || readAny(g, ["solution", "u_solution", "resolution", "u_resolution", "resolution_notes", "u_resolution_notes", "solution_notes", "u_solution_notes"]);
   }
-  function cleanName(name) {
-    const n = cleanText(name || "");
-    if (!n || isTicketNumber(n)) return "";
-    return n;
+  function isTicketNumber(v) {
+    return /^(INC|REQ|RITM|SCTASK|TASK)\d+$/i.test(String(v || "").trim());
   }
-  function firstName(name) {
-    const n = cleanName(name);
+  function cleanName(n) {
+    n = cleanText(n || "");
+    return !n || isTicketNumber(n) ? "" : n;
+  }
+  function firstName(n) {
+    n = cleanName(n);
     return n ? n.split(/\s+/)[0] : "User";
   }
-  function detectClosureType(stateValue, stateDisplay) {
-    const s = String(stateDisplay || "").toLowerCase().replace(/[_-]+/g, " ");
+  function detectClosureType(v, d) {
+    const s = String(d || "").toLowerCase().replace(/[_-]+/g, " ");
     if (/cancel/.test(s)) return "cancelled";
-    if (/incomplete|not complete|uncomplete/.test(s)) return "incomplete";
+    if (/incomplete|not complete|uncomplete|unable to resolve/.test(s)) return "incomplete";
     if (/complete|resolved|closed/.test(s)) return "complete";
-    if (stateValue === "4") return "incomplete";
-    if (stateValue === "7") return "cancelled";
-    if (stateValue === "3") return "complete";
+    if (v === "4") return "incomplete";
+    if (v === "7") return "cancelled";
     return "complete";
   }
-  function detectRequestType(allText) {
-    if (/return|restitution|stock|logistic|logistics/.test(allText)) return "return";
-    if (/delivery|deliver|livraison|handover|equipment|device|laptop|iphone|smartphone|headset|webcam|dock|docking|keyboard|mouse/.test(allText)) return "delivery";
-    if (/license|licence|access|permission|account|rights|software|application/.test(allText)) return "access";
-    if (/broken|issue|problem|fault|not working|repair|replace|replacement|swap/.test(allText)) return "incident";
+  function detectRequestType(t) {
+    if (/return|restitution|stock|logistic/.test(t)) return "return";
+    if (/delivery|deliver|livraison|handover|equipment|device|laptop|iphone|smartphone|headset|webcam|dock|keyboard|mouse/.test(t)) return "delivery";
+    if (/license|licence|access|permission|account|rights|software|application/.test(t)) return "access";
+    if (/broken|issue|problem|fault|not working|repair|replace|replacement|swap/.test(t)) return "incident";
     return "generic";
   }
-  function buildSmartCloseNote({ context, gForm, rootWindow }) {
-    const snWindow = getServiceNowWindow(rootWindow);
-    const ticket = cleanText(context?.ticketNumber || context?.recordNumber || readField(gForm, "number") || "this ticket");
-    const requestedFor = cleanName(context?.requestedFor) || cleanName(context?.requested_for) || cleanName(readField(gForm, "requested_for")) || cleanName(readField(gForm, "caller_id")) || cleanName(readField(gForm, "u_affected_end_user")) || cleanName(readField(gForm, "opened_by")) || "User";
-    const agent = cleanName(context?.assignedToDisplay) || cleanName(readField(gForm, "assigned_to")) || cleanName(snWindow?.NOW?.user_display_name) || "IT Support Team";
-    const stateValue = cleanText(context?.state || readField(gForm, "state"));
-    const stateDisplay = cleanText(context?.stateDisplay || readField(gForm, "state")) || stateValue;
-    const allText = [
-      cleanText(context?.shortDescription || readField(gForm, "short_description")),
-      cleanText(context?.description || readField(gForm, "description")),
-      cleanText(context?.configurationItem || readField(gForm, "cmdb_ci")),
-      cleanText(context?.assignmentGroup || readField(gForm, "assignment_group")),
-      stateDisplay
-    ].join(" ").toLowerCase();
-    const requestType = detectRequestType(allText);
-    const closureType = detectClosureType(stateValue, stateDisplay);
-    const dynamicResolution = (() => {
-      if (closureType === "cancelled") return "This task has been cancelled and no further action will be taken at this stage.";
-      if (closureType === "incomplete") {
-        if (requestType === "delivery") return "This task has been closed as incomplete because the delivery could not be completed with the available information or current conditions.";
-        if (requestType === "return") return "This task has been closed as incomplete because the equipment return could not be completed at this stage.";
-        return "This task has been closed as incomplete because the required action could not be completed at this stage.";
-      }
-      if (requestType === "delivery") return "Your requested IT equipment has been prepared and processed successfully.";
-      if (requestType === "return") return "The equipment return has been processed successfully.";
-      if (requestType === "access") return "The requested access, license, or software-related action has been checked and processed successfully.";
-      if (requestType === "incident") return "The reported issue has been reviewed and the necessary action has been completed.";
-      return "The requested action has been completed successfully.";
-    })();
-    const statusSentence = closureType === "cancelled" ? `We would like to inform you that your task ${ticket} has been cancelled.` : closureType === "incomplete" ? `We would like to inform you that your task ${ticket} has been closed as incomplete.` : `We would like to inform you that your task ${ticket} has been successfully resolved.`;
-    return [
-      `Dear ${firstName(requestedFor)},`,
-      "",
-      statusSentence,
-      "",
-      dynamicResolution,
-      "",
-      "If you continue to experience any issues or require further assistance, please do not hesitate to contact us.",
-      "",
-      "Kind regards,",
-      agent
-    ].join("\n");
+  function isIncident(c = {}, g = null) {
+    const table = cleanText(c.table || g?.getTableName?.()).toLowerCase(), number = cleanText(c.ticketNumber || c.recordNumber || readField(g, "number"));
+    return table === "incident" || /^INC\d+$/i.test(number);
   }
-  function setNativeValue(snWindow, el, value2) {
-    const proto = el.tagName === "TEXTAREA" ? snWindow.HTMLTextAreaElement.prototype : snWindow.HTMLInputElement.prototype;
-    const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+  function getIncidentFacts(c = {}, g = null) {
+    const shortDescription = cleanText(c.shortDescription || c.short_description || readField(g, "short_description")), description = cleanText(c.description || readField(g, "description")), workNotes = cleanText(c.workNotes || c.work_notes || c.latestWorkNote || c.latest_work_note || readAny(g, ["work_notes", "comments_and_work_notes"])), solution = getSolutionText(c, g), closeCode = cleanText(c.closeCode || c.close_code || readField(g, "close_code")), confirmation = /\b(user|caller|end user).{0,35}\b(confirm(?:ed|s)?|working as expected|works now|resolved)\b/i.test(`${workNotes}
+${solution}`);
+    return { shortDescription, description, workNotes, solution, closeCode, confirmation };
+  }
+  function buildIncidentCloseNote({ context, gForm, rootWindow }) {
+    const sn = getServiceNowWindow(rootWindow), ticket = cleanText(context.ticketNumber || context.recordNumber || readField(gForm, "number") || "the incident"), user = cleanName(context.requestedFor) || cleanName(context.caller) || cleanName(readField(gForm, "caller_id")) || cleanName(readField(gForm, "u_affected_end_user")) || "User", agent = cleanName(context.assignedToDisplay) || cleanName(readField(gForm, "assigned_to")) || cleanName(sn?.NOW?.user_display_name) || "IT Support Team", stateValue = cleanText(context.state || readField(gForm, "state")), stateDisplay = cleanText(context.stateDisplay || readField(gForm, "state")) || stateValue, closure = detectClosureType(stateValue, stateDisplay), facts = getIncidentFacts(context, gForm), issue = facts.shortDescription || "the reported issue";
+    if (closure === "cancelled") return [`Dear ${firstName(user)},`, "", `Incident ${ticket} concerning ${issue} has been cancelled.`, "", "No resolution is being recorded for this incident at this stage.", "", "Kind regards,", agent].join("\n");
+    if (closure === "incomplete") return [`Dear ${firstName(user)},`, "", `Incident ${ticket} concerning ${issue} could not be resolved at this stage.`, "", facts.solution || "The available troubleshooting did not provide a confirmed resolution.", "", "Kind regards,", agent].join("\n");
+    const result = facts.solution || "The reported issue was reviewed and the required support action was completed.";
+    return [`Dear ${firstName(user)},`, "", `Incident ${ticket} concerning ${issue} has been resolved.`, "", result, facts.closeCode ? `Resolution code: ${facts.closeCode}.` : "", facts.confirmation ? "The user confirmed that the service is working as expected." : "", "If the issue occurs again, please contact the Service Desk and refer to this incident.", "", "Kind regards,", agent].filter(Boolean).join("\n");
+  }
+  function buildSmartCloseNote({ context, gForm, rootWindow }) {
+    if (isIncident(context, gForm)) return buildIncidentCloseNote({ context, gForm, rootWindow });
+    const sn = getServiceNowWindow(rootWindow), ticket = cleanText(context?.ticketNumber || context?.recordNumber || readField(gForm, "number") || "this ticket"), requestedFor = cleanName(context?.requestedFor) || cleanName(context?.requested_for) || cleanName(readField(gForm, "requested_for")) || cleanName(readField(gForm, "caller_id")) || "User", agent = cleanName(context?.assignedToDisplay) || cleanName(readField(gForm, "assigned_to")) || cleanName(sn?.NOW?.user_display_name) || "IT Support Team", stateValue = cleanText(context?.state || readField(gForm, "state")), stateDisplay = cleanText(context?.stateDisplay || readField(gForm, "state")) || stateValue, allText = [cleanText(context?.shortDescription || readField(gForm, "short_description")), cleanText(context?.description || readField(gForm, "description")), cleanText(context?.configurationItem || readField(gForm, "cmdb_ci")), stateDisplay].join(" ").toLowerCase(), type = detectRequestType(allText), closure = detectClosureType(stateValue, stateDisplay);
+    let resolution = closure === "cancelled" ? "This task has been cancelled and no further action will be taken at this stage." : closure === "incomplete" ? "The required action could not be completed at this stage." : type === "delivery" ? "The requested IT equipment has been prepared and processed successfully." : type === "return" ? "The equipment return has been processed successfully." : type === "access" ? "The requested access or software-related action has been processed successfully." : "The requested action has been completed successfully.";
+    return [`Dear ${firstName(requestedFor)},`, "", closure === "cancelled" ? `Task ${ticket} has been cancelled.` : closure === "incomplete" ? `Task ${ticket} has been closed as incomplete.` : `Task ${ticket} has been completed.`, "", resolution, "", "Kind regards,", agent].join("\n");
+  }
+  function setNativeValue(sn, el, value2) {
+    const proto = el.tagName === "TEXTAREA" ? sn.HTMLTextAreaElement.prototype : sn.HTMLInputElement.prototype, setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
     if (setter) setter.call(el, value2);
     else el.value = value2;
-    el.dispatchEvent(new snWindow.Event("input", { bubbles: true }));
-    el.dispatchEvent(new snWindow.Event("change", { bubbles: true }));
-    el.dispatchEvent(new snWindow.Event("blur", { bubbles: true }));
+    el.dispatchEvent(new sn.Event("input", { bubbles: true }));
+    el.dispatchEvent(new sn.Event("change", { bubbles: true }));
+    el.dispatchEvent(new sn.Event("blur", { bubbles: true }));
   }
   function tryDomWrite({ rootWindow, table, field, value: value2 }) {
-    const snWindow = getServiceNowWindow(rootWindow);
-    const doc = snWindow?.document;
+    const sn = getServiceNowWindow(rootWindow), doc = sn?.document;
     if (!doc) return false;
-    const selectors = [
-      `[name="${field}"]`,
-      `textarea[name="${field}"]`,
-      `input[name="${field}"]`,
-      `#${field}`,
-      `#${table}.${field}`,
-      `#sys_display\\.${table}\\.${field}`
-    ];
-    for (const sel of selectors) {
+    for (const sel of [`[name="${field}"]`, `textarea[name="${field}"]`, `input[name="${field}"]`, `#${field}`, `#${table}.${field}`, `#sys_display\\.${table}\\.${field}`]) {
       const el = doc.querySelector(sel);
-      if (!el) continue;
-      setNativeValue(snWindow, el, value2);
-      return true;
+      if (el) {
+        setNativeValue(sn, el, value2);
+        return true;
+      }
     }
     return false;
   }
   function autoFillCloseNote({ context, settings, rootWindow = getRootWindow() }) {
     if (!context) return { ok: false, kind: "no-context" };
     try {
-      const bestGForm = getBestGForm(rootWindow);
-      const gForm = bestGForm?.gForm;
-      const existing = cleanText(readField(gForm, "close_notes") || readField(gForm, "u_close_notes"));
-      if (existing) {
-        return { ok: true, kind: "already-set" };
-      }
-      const solutionText = getSolutionText(context, gForm);
-      const groups = getTemplateGroups(settings);
-      const { template } = selectCloseNoteTemplate(groups.close_note || [], context, context);
-      const templateText = solutionText ? "" : cleanText(template ? renderTemplate(template, { context, settings })?.body || "" : "");
-      const smartText = solutionText ? "" : cleanText(buildSmartCloseNote({ context, gForm, rootWindow }));
-      const text2 = cleanText(solutionText || templateText || smartText);
+      const best = getBestGForm(rootWindow), g = best?.gForm, existing = cleanText(readField(g, "close_notes") || readField(g, "u_close_notes"));
+      if (existing) return { ok: true, kind: "already-set" };
+      const incident = isIncident(context, g), solution = getSolutionText(context, g), groups = getTemplateGroups(settings), { template } = selectCloseNoteTemplate(groups.close_note || [], context, context);
+      const smartText = cleanText(buildSmartCloseNote({ context, gForm: g, rootWindow })), templateText = !incident && !solution ? cleanText(template ? renderTemplate(template, { context, settings })?.body || "" : "") : "", text2 = cleanText(incident ? smartText : solution || templateText || smartText);
       if (!text2) return { ok: false, kind: "no-template" };
-      const inserted = insertRenderedTemplate(
-        { body: text2, category: "close_note", target: "close_notes" },
-        context
-      );
-      const templateId = solutionText ? "existing-solution" : template?.id || "smart-close-note";
-      const source = solutionText ? "solution" : templateText ? "template" : "smart-generated";
-      if (inserted?.ok) {
-        return {
-          ok: true,
-          kind: "filled",
-          templateId,
-          source,
-          targetField: inserted.targetField
-        };
+      const inserted = insertRenderedTemplate({ body: text2, category: "close_note", target: "close_notes" }, context), templateId = incident ? "smart-incident-close" : solution ? "existing-solution" : template?.id || "smart-close-note", source = incident ? "smart-incident" : solution ? "solution" : templateText ? "template" : "smart-generated";
+      if (inserted?.ok) return { ok: true, kind: "filled", templateId, source, targetField: inserted.targetField };
+      if (typeof g?.setValue === "function") {
+        g.setValue("close_notes", text2);
+        return { ok: true, kind: "filled", templateId, source, targetField: "close_notes" };
       }
-      const fallbackField = typeof gForm?.setValue === "function" ? "close_notes" : "";
-      if (fallbackField) {
-        gForm.setValue(fallbackField, text2);
-        return {
-          ok: true,
-          kind: "filled",
-          templateId,
-          source,
-          targetField: fallbackField
-        };
-      }
-      const domOkClose = tryDomWrite({ rootWindow, table: cleanText(gForm?.getTableName?.() || context?.table || ""), field: "close_notes", value: text2 });
-      const domOkUClose = domOkClose ? false : tryDomWrite({ rootWindow, table: cleanText(gForm?.getTableName?.() || context?.table || ""), field: "u_close_notes", value: text2 });
-      if (domOkClose || domOkUClose) {
-        return {
-          ok: true,
-          kind: "filled",
-          templateId,
-          source,
-          targetField: domOkClose ? "close_notes" : "u_close_notes"
-        };
-      }
-      return { ok: false, kind: "no-target" };
+      const table = cleanText(g?.getTableName?.() || context?.table || ""), a = tryDomWrite({ rootWindow, table, field: "close_notes", value: text2 }), b = a ? false : tryDomWrite({ rootWindow, table, field: "u_close_notes", value: text2 });
+      return a || b ? { ok: true, kind: "filled", templateId, source, targetField: a ? "close_notes" : "u_close_notes" } : { ok: false, kind: "no-target" };
     } catch (error2) {
       return { ok: false, kind: "error", error: error2 };
     }
@@ -16673,28 +16584,14 @@ ${value2}` : value2;
   var SMART_SHORT_DESCRIPTION_RULES = RULES.map(({ id, templates }) => ({ id, templates: [...templates] }));
 
   // Assistant/application/email/smartEmailComposer.js
-  var SMART_COMPOSABLE_TEMPLATE_IDS = /* @__PURE__ */ new Set([
-    "generic_ticket_follow_up",
-    "generic_clarification",
-    "incident_follow_up",
-    "incident_software_issue",
-    "incident_hardware_issue",
-    "incident_connectivity_issue"
-  ]);
-  var SHORT_DESCRIPTION_PREFIXES = [
-    /^access\s+(?:and\s*\/\s*or|and|or|&)\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i,
-    /^access\s+and\/or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i,
-    /^access\s+or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i,
-    /^application\s*\/\s*software\s*(?:access|update|access\s+and\/or\s+update)\s*[:\-–—]\s*/i,
-    /^request\s+(?:for\s+)?(?:access|installation|install|update)\s+(?:to|of)\s+application\s*\/\s*software\s*[:\-–—]\s*/i
-  ];
-  function normalize2(value2 = "") {
-    return cleanText(value2).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  var SMART_COMPOSABLE_TEMPLATE_IDS = /* @__PURE__ */ new Set(["generic_ticket_follow_up", "generic_clarification", "incident_follow_up", "incident_software_issue", "incident_hardware_issue", "incident_connectivity_issue", "it_equipment_retrieval", "it_equipment_retrieval_reminder", "it_equipment_retrieval_confirmed"]);
+  var SHORT_DESCRIPTION_PREFIXES = [/^access\s+(?:and\s*\/\s*or|and|or|&)\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i, /^access\s+and\/or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i, /^access\s+or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i, /^application\s*\/\s*software\s*(?:access|update|access\s+and\/or\s+update)\s*[:\-–—]\s*/i, /^request\s+(?:for\s+)?(?:access|installation|install|update)\s+(?:to|of)\s+application\s*\/\s*software\s*[:\-–—]\s*/i];
+  function normalize2(v = "") {
+    return cleanText(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
   }
   function humanizeShortDescription(value2 = "") {
     let text2 = cleanText(value2).replace(/[.?!]+$/g, "").trim();
     if (!text2) return "the issue you reported";
-    text2 = text2.replace(/^(?:\[[A-Z0-9][A-Z0-9 _.-]{1,18}\]\s*)+/i, "").trim();
     for (const pattern of SHORT_DESCRIPTION_PREFIXES) {
       const cleaned = text2.replace(pattern, "").trim();
       if (cleaned !== text2) {
@@ -16704,210 +16601,97 @@ ${value2}` : value2;
     }
     return text2 || "the issue you reported";
   }
-  function getTicketNumber2(context = {}) {
-    return cleanText(
-      context.validTicketNumber || context.customerTicketNumber || context.requestItem || context.ticketNumber || context.recordNumber
-    );
+  function getTicketNumber2(c = {}) {
+    return cleanText(c.validTicketNumber || c.customerTicketNumber || c.requestItem || c.ticketNumber || c.recordNumber);
   }
-  function getUserName(context = {}) {
-    return cleanText(
-      context.user?.fullName || context.requestedFor || context.caller || ""
-    );
+  function getUserName(c = {}) {
+    return cleanText(c.user?.fullName || c.requestedFor || c.caller || "");
   }
-  function getAgentName2(context = {}) {
-    return cleanText(context.agentName) || "IT Support";
+  function getAgentName2(c = {}) {
+    return cleanText(c.agentName || c.assignedToDisplay) || "IT Support";
   }
-  function buildEmail2({ userName, paragraphs, agentName }) {
-    return [
-      `Dear ${userName || "colleague"},`,
-      ...paragraphs.filter(Boolean),
-      "Thank you in advance for your feedback.",
-      `Kind regards,
-${agentName}`
-    ].join("\n\n");
+  function buildEmail2({ userName, paragraphs, agentName, thankYou = true }) {
+    return [`Dear ${userName || "colleague"},`, ...paragraphs.filter(Boolean), thankYou ? "Thank you in advance for your feedback." : "", `Kind regards,
+${agentName}`].filter(Boolean).join("\n\n");
   }
-  function classifyContext(context = {}) {
-    const shortDescription = cleanText(context.shortDescription || context.short_description);
-    const description = cleanText(context.description);
-    const category = cleanText(context.category);
-    const subcategory = cleanText(context.subcategory);
-    const application = cleanText(context.applicationSoftware || context.application || context.businessApplication);
-    const state = normalize2(context.state);
-    const onHoldReason = normalize2(context.onHoldReason || context.on_hold_reason);
-    const shortText = normalize2(shortDescription);
-    const descriptionText = normalize2(description);
-    const text2 = normalize2([shortDescription, description, category, subcategory, application].filter(Boolean).join(" "));
-    if (/awaiting vendor|waiting vendor|vendor/.test(onHoldReason) && /on hold|hold|pending/.test(state)) {
-      return { family: "waiting-vendor", confidence: 0.98 };
+  function formatDeadline(raw = "") {
+    const m = String(raw).match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+    if (m) return `${m[3].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[1]}`;
+    const e = String(raw).match(/\b(\d{1,2})[/.](\d{1,2})[/.](20\d{2})\b/);
+    return e ? `${e[1].padStart(2, "0")}/${e[2].padStart(2, "0")}/${e[3]}` : "";
+  }
+  function cleanModel(v = "") {
+    return cleanText(v).replace(/\b(HP|LENOVO|DELL)\s+\1\b/ig, "$1").replace(/\s+/g, " ");
+  }
+  function extractEquipmentFacts(c = {}) {
+    const description = String(c.description || ""), short = String(c.shortDescription || c.short_description || ""), assets = [];
+    for (const raw of description.split(/\r?\n/)) {
+      const line = cleanText(raw), m = line.match(/^([A-Z0-9][A-Z0-9_-]{5,})\s*,\s*([^,]+)(?:\s*,\s*([^,]+))?(?:\s*,\s*(.+))?$/i);
+      if (!m) continue;
+      const tag = cleanText(m[1]);
+      if (/\d/.test(tag)) assets.push({ assetTag: tag, model: cleanModel(m[2]), location: cleanText(m[3]), ownerGroup: cleanText(m[4]) });
     }
-    if (/\b(slow|slowness|performance|speed|lag|freeze|freezing)\b/.test(text2) && /\b(laptop|computer|pc|workstation)\b/.test(text2)) {
-      return { family: "device-performance", confidence: 0.96 };
-    }
-    if (/\b(scenario unavailable|unavailable|service down|application unavailable|system unavailable|isalive)\b/.test(text2)) {
-      return { family: "application-unavailable", confidence: 0.94 };
-    }
-    if (/^access\s+(?:and\s*\/\s*or|and\/or|and|or|&)\s+update\s+to\s+application\s*\/\s*software\b/.test(shortText) || /^access\s+or\s+update\s+to\s+application\s*\/\s*software\b/.test(shortText) || /\b(?:permission|requesting permission|require access|need access|software request)\b/.test(descriptionText) && /\b(?:software|application|program|reprogram)\b/.test(text2)) {
-      return { family: "software-access-request", confidence: 0.96 };
-    }
-    if (/\b(permission denied|access denied|cannot access|unable to access|access issue)\b/.test(text2)) {
-      return { family: "access", confidence: 0.9 };
-    }
-    if (/\b(error|issue|problem|not working|failed|failure|crash|freeze|unavailable)\b/.test(text2) && /\b(application|software|outlook|word|adobe|system|service)\b/.test(text2)) {
-      return { family: "software-troubleshooting", confidence: 0.84 };
-    }
+    return { assets, deadline: formatDeadline(`${short}
+${description}`) };
+  }
+  function assetLines(a = []) {
+    return a.map((x) => `Asset tag: ${x.assetTag}${x.model ? ` \u2014 ${x.model}` : ""}`).join("\n");
+  }
+  function incidentClosureState(c = {}) {
+    const number = getTicketNumber2(c), table = normalize2(c.table), closeCode = normalize2(c.closeCode || c.close_code), state = normalize2(c.stateDisplay || c.state), resolvedAt = cleanText(c.resolvedAt || c.resolved_at), isInc = table === "incident" || /^INC\d+$/i.test(number), closing = Boolean(closeCode || resolvedAt || /resolved|closed|cancelled|canceled/.test(state));
+    return { isInc, closing, closeCode, state };
+  }
+  function composeIncidentClosure(c = {}) {
+    const ticket = getTicketNumber2(c), userName = getUserName(c), agentName = getAgentName2(c), issue = humanizeShortDescription(c.shortDescription || c.short_description), solution = cleanText(c.solution || c.resolution || c.resolutionNotes || c.resolution_notes || c.closeNotes || c.close_notes), work = cleanText(c.latestWorkNote || c.latest_work_note || c.workNotes || c.work_notes), status = incidentClosureState(c), evidence = `${solution}
+${work}`, confirmed = /\b(user|caller|end user).{0,45}\b(confirm(?:ed|s)?|working as expected|works now|resolved)\b/i.test(evidence);
+    if (/cancel/.test(status.state) || /cancel/.test(status.closeCode)) return { subject: `${ticket} - Incident cancelled`, body: buildEmail2({ userName, agentName, thankYou: false, paragraphs: [`We are contacting you regarding incident ${ticket} concerning ${issue}.`, `The incident has been cancelled and no resolution is being recorded at this stage.`, `If you still require assistance, please contact the Service Desk and we will be happy to review the request.`] }), reason: "Incident cancellation state detected." };
+    const result = solution || "The necessary checks and support actions have been completed and the incident has been resolved.";
+    return { subject: `${ticket} - Incident resolved`, body: buildEmail2({ userName, agentName, thankYou: false, paragraphs: [confirmed ? `Thank you for confirming the outcome regarding incident ${ticket} concerning ${issue}.` : `We are contacting you regarding incident ${ticket} concerning ${issue}.`, result, confirmed ? "As the service is now working as expected, we will proceed with closing the incident." : "The incident is now marked as resolved. If you experience the same issue again, please contact the Service Desk and refer to this incident."] }), reason: `Incident closure detected${confirmed ? " with user confirmation" : ""}.` };
+  }
+  function classifyContext(c = {}) {
+    const closure = incidentClosureState(c);
+    if (closure.isInc && closure.closing) return { family: "incident-closure", confidence: 1 };
+    const short = cleanText(c.shortDescription || c.short_description), description = cleanText(c.description), text2 = normalize2([short, description, c.category, c.subcategory, c.applicationSoftware, c.application].filter(Boolean).join(" ")), hold = normalize2(c.onHoldReason || c.on_hold_reason), state = normalize2(c.state), shortText = normalize2(short), descriptionText = normalize2(description);
+    if (/recover.*(?:it material|equipment)|equipment retrieval|return.*(?:equipment|material)/.test(text2)) return { family: "equipment-retrieval", confidence: 0.99 };
+    if (/awaiting vendor|waiting vendor|vendor/.test(hold) && /on hold|hold|pending/.test(state)) return { family: "waiting-vendor", confidence: 0.98 };
+    if (/\b(slow|slowness|performance|lag|freeze)\b/.test(text2) && /\b(laptop|computer|pc)\b/.test(text2)) return { family: "device-performance", confidence: 0.96 };
+    if (/^access\s+/.test(shortText) || /\b(?:permission|require access|need access)\b/.test(descriptionText) && /\b(?:software|application)\b/.test(text2)) return { family: "software-access-request", confidence: 0.96 };
+    if (/\b(permission denied|access denied|cannot access|unable to access)\b/.test(text2)) return { family: "access", confidence: 0.9 };
+    if (/\b(error|issue|problem|not working|failed|crash|unavailable)\b/.test(text2) && /\b(application|software|outlook|word|adobe|system|service)\b/.test(text2)) return { family: "software-troubleshooting", confidence: 0.84 };
     return { family: "generic-follow-up", confidence: 0.55 };
   }
-  function buildKnownFacts(context = {}, family = "") {
-    const description = normalize2(context.description);
-    const facts = [];
-    if (family === "device-performance") {
-      if (/\b(reboot|restart|restarted|rebooted)\b/.test(description)) facts.push("you have already restarted the device");
-      if (/\b(best performance|performance setting|performance mode)\b/.test(description)) facts.push("the performance settings have already been adjusted");
-      if (/\b(wifi|wi-fi|network|connection|line)\b/.test(description) && /\b(not the problem|confirmed|speed test|tested)\b/.test(description)) facts.push("the network connection has already been checked");
-      if (/\boutlook\b/.test(description) && /\bword\b/.test(description)) facts.push("the slowdown affects multiple applications");
-    }
-    return facts;
+  function composeEquipmentRetrieval(c = {}, mode = "initial") {
+    const ticket = getTicketNumber2(c), userName = getUserName(c), agentName = getAgentName2(c), facts = extractEquipmentFacts(c), list = assetLines(facts.assets), intro = facts.deadline ? `According to our records, the following equipment should be returned before ${facts.deadline}:` : `According to our records, the following equipment is currently assigned to you and should be returned:`;
+    if (mode === "confirmed") return { subject: `${ticket} - IT equipment return confirmed`, body: buildEmail2({ userName, agentName, thankYou: false, paragraphs: [`Thank you for your confirmation regarding ticket ${ticket}.`, facts.assets.length ? `We have noted the return/collection of the following equipment:
+${list}` : "We have noted that the equipment return or collection has been completed.", "We will update the request accordingly. No further action is required from you at this stage."] }), reason: "Equipment return confirmation." };
+    return { subject: `${mode === "reminder" ? "Reminder: " : ""}${ticket} - IT equipment retrieval`, body: buildEmail2({ userName, agentName, paragraphs: [`${mode === "reminder" ? "We are following up" : "We are contacting you"} regarding ticket ${ticket} concerning the return of IT equipment currently assigned to you.`, facts.assets.length ? `${intro}
+${list}` : "According to our records, IT equipment assigned to you should be returned.", "Could you please confirm your preferred date, time and location for the collection?", "If the equipment has already been returned, please let us know so that we can update our records accordingly."] }), reason: `Equipment retrieval ${mode}.` };
   }
-  function composeForFamily(context = {}, family = "generic-follow-up") {
-    const ticket = getTicketNumber2(context);
-    const shortDescription = humanizeShortDescription(context.shortDescription || context.short_description);
-    const application = cleanText(context.applicationSoftware || context.application || context.businessApplication);
-    const userName = getUserName(context);
-    const agentName = getAgentName2(context);
-    const intro = ticket ? `I am following up regarding ticket ${ticket} concerning ${shortDescription}.` : `I am following up regarding ${shortDescription}.`;
-    if (family === "waiting-vendor") {
-      return {
-        subject: ticket ? `${ticket} - Status update` : "Status update",
-        body: buildEmail2({
-          userName,
-          agentName,
-          paragraphs: [
-            intro,
-            "Your case is currently on hold while we wait for feedback from the external/vendor support team. No action is required from you at this stage.",
-            "We will continue the investigation as soon as we receive their response and will keep you informed of any relevant update."
-          ]
-        }),
-        reason: "Ticket is on hold awaiting vendor feedback."
-      };
-    }
-    if (family === "device-performance") {
-      const facts = buildKnownFacts(context, family);
-      const known = facts.length ? `From the information already provided, ${facts.join(", and ")}.` : "We have reviewed the information already provided in the ticket.";
-      return {
-        subject: ticket ? `${ticket} - Laptop performance follow-up` : "Laptop performance follow-up",
-        body: buildEmail2({
-          userName,
-          agentName,
-          paragraphs: [
-            intro,
-            known,
-            "Could you please confirm whether the performance issue is still occurring? If it persists, we can arrange an intervention, either on-site or remotely, to investigate further.",
-            "Please let us know your availability, including a few dates and time slots that would suit you best, so that we can schedule the intervention accordingly."
-          ]
-        }),
-        reason: "Performance issue detected from the ticket context."
-      };
-    }
-    if (family === "application-unavailable") {
-      const appText = application ? ` affecting ${application}` : "";
-      return {
-        subject: ticket ? `${ticket} - Application availability follow-up` : "Application availability follow-up",
-        body: buildEmail2({
-          userName,
-          agentName,
-          paragraphs: [
-            `I am following up regarding ${ticket ? `ticket ${ticket} and ` : ""}the application/service availability issue${appText}.`,
-            "Could you please confirm whether the issue is still occurring? If available, the approximate time of the latest occurrence and any current error message would help us continue the investigation.",
-            "If the issue has already been resolved, please let us know so that we can update the ticket accordingly."
-          ]
-        }),
-        reason: "Application/service unavailable intent detected."
-      };
-    }
-    if (family === "software-access-request") {
-      return {
-        subject: ticket ? `${ticket} - Software request follow-up` : "Software request follow-up",
-        body: buildEmail2({
-          userName,
-          agentName,
-          paragraphs: [
-            intro,
-            "Could you please confirm whether you still require assistance with this software request?",
-            "If assistance is still required, we can arrange an intervention, either on-site or remotely, to review the request and proceed with the appropriate next step.",
-            "Please let us know your availability, including a few dates and time slots that would suit you best, so that we can schedule this accordingly."
-          ]
-        }),
-        reason: "Software access/update request detected; troubleshooting questions intentionally avoided."
-      };
-    }
-    if (family === "access") {
-      return {
-        subject: ticket ? `${ticket} - Access issue follow-up` : "Access issue follow-up",
-        body: buildEmail2({
-          userName,
-          agentName,
-          paragraphs: [
-            intro,
-            "Could you please confirm whether you are still unable to access the requested application or service? If the issue persists, please share the exact error message or the step at which access fails, if available.",
-            "We will use this information to continue the investigation and determine the appropriate next action."
-          ]
-        }),
-        reason: "Access/permission issue detected."
-      };
-    }
-    if (family === "software-troubleshooting") {
-      return {
-        subject: ticket ? `${ticket} - Software issue follow-up` : "Software issue follow-up",
-        body: buildEmail2({
-          userName,
-          agentName,
-          paragraphs: [
-            intro,
-            "Could you please confirm whether you are still experiencing the problem? If it persists, please let us know whether the behaviour is reproducible and share any current error message, if available.",
-            "If necessary, we can arrange an intervention, either on-site or remotely, to investigate further."
-          ]
-        }),
-        reason: "Software/application troubleshooting intent detected."
-      };
-    }
-    return {
-      subject: ticket ? `${ticket} - Follow-up` : "Ticket follow-up",
-      body: buildEmail2({
-        userName,
-        agentName,
-        paragraphs: [
-          intro,
-          "Could you please confirm whether you are still experiencing the problem, or whether the situation has already been resolved?",
-          "If the issue persists, we can arrange an intervention, either on-site or remotely, to investigate further.",
-          "Please let us know your availability, including a few dates and time slots that would suit you best, so that we can schedule this accordingly."
-        ]
-      }),
-      reason: "Low-confidence context: safe generic follow-up used."
-    };
+  function composeForFamily(c = {}, family = "generic-follow-up") {
+    if (family === "incident-closure") return composeIncidentClosure(c);
+    if (family === "equipment-retrieval") return composeEquipmentRetrieval(c, "initial");
+    const ticket = getTicketNumber2(c), userName = getUserName(c), agentName = getAgentName2(c), issue = humanizeShortDescription(c.shortDescription || c.short_description), intro = `I am following up regarding ${ticket ? `ticket ${ticket} concerning ` : ""}${issue}.`;
+    if (family === "waiting-vendor") return { subject: `${ticket} - Status update`, body: buildEmail2({ userName, agentName, paragraphs: [intro, "Your case is currently on hold while we wait for feedback from the external support team. No action is required from you at this stage."] }), reason: "Awaiting external feedback." };
+    if (family === "software-access-request") return { subject: `${ticket} - Software request follow-up`, body: buildEmail2({ userName, agentName, paragraphs: [intro, "Could you please confirm whether you still require assistance with this software request?"] }), reason: "Software access request." };
+    if (family === "access") return { subject: `${ticket} - Access issue follow-up`, body: buildEmail2({ userName, agentName, paragraphs: [intro, "Could you please confirm whether you are still unable to access the requested application or service?"] }), reason: "Access issue." };
+    if (family === "software-troubleshooting") return { subject: `${ticket} - Software issue follow-up`, body: buildEmail2({ userName, agentName, paragraphs: [intro, "Could you please confirm whether you are still experiencing the problem? If it persists, please share any current error message."] }), reason: "Software troubleshooting." };
+    return { subject: `${ticket} - Follow-up`, body: buildEmail2({ userName, agentName, paragraphs: [intro, "Could you please confirm whether the situation is still ongoing or has already been resolved?"] }), reason: "Safe follow-up." };
   }
-  function composeSmartEmail(context = {}) {
-    const classification = classifyContext(context);
-    return {
-      ...composeForFamily(context, classification.family),
-      family: classification.family,
-      confidence: classification.confidence
-    };
+  function composeSmartEmail(c = {}) {
+    const classification = classifyContext(c);
+    return { ...composeForFamily(c, classification.family), family: classification.family, confidence: classification.confidence };
   }
-  function applySmartEmailComposition(renderedTemplate, selection = {}, context = {}) {
-    if (!renderedTemplate || renderedTemplate.category !== "email") return renderedTemplate;
-    if (selection.selectionMode === "manual") return renderedTemplate;
-    if (!SMART_COMPOSABLE_TEMPLATE_IDS.has(cleanText(selection.selectedTemplateId))) return renderedTemplate;
-    const smart = composeSmartEmail(context);
-    return {
-      ...renderedTemplate,
-      subject: smart.subject || renderedTemplate.subject,
-      body: smart.body || renderedTemplate.body,
-      smartEmail: {
-        family: smart.family,
-        confidence: smart.confidence,
-        reason: smart.reason
-      }
-    };
+  function applySmartEmailComposition(rendered, selection = {}, context = {}) {
+    if (!rendered || rendered.category !== "email" || selection.selectionMode === "manual") return rendered;
+    const closure = incidentClosureState(context), id = cleanText(selection.selectedTemplateId);
+    let smart = null;
+    if (closure.isInc && closure.closing) smart = composeIncidentClosure(context);
+    else if (id === "it_equipment_retrieval") smart = composeEquipmentRetrieval(context, "initial");
+    else if (id === "it_equipment_retrieval_reminder" || id === "reminder_it_equipment_retrieval") smart = composeEquipmentRetrieval(context, "reminder");
+    else if (id === "it_equipment_retrieval_confirmed") smart = composeEquipmentRetrieval(context, "confirmed");
+    else if (SMART_COMPOSABLE_TEMPLATE_IDS.has(id)) smart = composeSmartEmail(context);
+    if (!smart) return rendered;
+    return { ...rendered, subject: smart.subject || rendered.subject, body: smart.body || rendered.body, smartEmail: { family: smart.family || "incident-closure", confidence: smart.confidence || 1, reason: smart.reason } };
   }
   var SMART_EMAIL_COMPOSABLE_TEMPLATE_IDS = [...SMART_COMPOSABLE_TEMPLATE_IDS];
 
@@ -16916,20 +16700,11 @@ ${agentName}`
     return TICKET_NUMBER_PATTERN.test(cleanText(value2));
   }
   function readLiveTextField(rootWindow, fieldName) {
-    const escaped = String(fieldName || "").replace(/"/g, '\\"');
-    const selectors = [
-      `#${fieldName}`,
-      `[name="${escaped}"]`,
-      `input[id$=".${escaped}"]`,
-      `textarea[id$=".${escaped}"]`,
-      `[data-field-name="${escaped}"]`,
-      `[data-field="${escaped}"]`
-    ];
+    const escaped = String(fieldName || "").replace(/"/g, '\\"'), selectors = [`#${fieldName}`, `[name="${escaped}"]`, `input[id$=".${escaped}"]`, `textarea[id$=".${escaped}"]`, `[data-field-name="${escaped}"]`, `[data-field="${escaped}"]`];
     for (const documentRef of getAccessibleDocuments(rootWindow)) {
       for (const selector of selectors) {
         try {
-          const element = documentRef.querySelector(selector);
-          const value2 = cleanText(element?.value || element?.textContent || element?.innerText);
+          const element = documentRef.querySelector(selector), value2 = cleanText(element?.value || element?.textContent || element?.innerText);
           if (value2) return value2;
         } catch {
         }
@@ -16938,31 +16713,11 @@ ${agentName}`
     return "";
   }
   function mergeLiveContext(cachedContext = {}, liveContext = {}, rootWindow = null) {
-    const liveUser = liveContext?.user || {};
-    const cachedUser = cachedContext?.user || {};
-    const user = {
-      ...cachedUser,
-      ...Object.fromEntries(Object.entries(liveUser).filter(([, value2]) => cleanText(value2)))
-    };
-    const shortDescription = cleanText(
-      liveContext?.shortDescription || liveContext?.short_description || readLiveTextField(rootWindow, "short_description") || cachedContext?.shortDescription || cachedContext?.short_description
-    );
-    const description = cleanText(
-      liveContext?.description || readLiveTextField(rootWindow, "description") || cachedContext?.description
-    );
-    return {
-      ...cachedContext || {},
-      ...liveContext || {},
-      user,
-      shortDescription,
-      short_description: shortDescription,
-      description
-    };
+    const liveUser = liveContext?.user || {}, cachedUser = cachedContext?.user || {}, user = { ...cachedUser, ...Object.fromEntries(Object.entries(liveUser).filter(([, value2]) => cleanText(value2))) }, shortDescription = cleanText(liveContext?.shortDescription || liveContext?.short_description || readLiveTextField(rootWindow, "short_description") || cachedContext?.shortDescription || cachedContext?.short_description), description = cleanText(liveContext?.description || readLiveTextField(rootWindow, "description") || cachedContext?.description);
+    return { ...cachedContext || {}, ...liveContext || {}, user, shortDescription, short_description: shortDescription, description };
   }
   function getRecordIdentity(context = {}) {
-    return cleanText(
-      context.recordKey || context.sysId || context.sys_id || context.recordSysId || context.record_sys_id || context.recordNumber || context.ticketNumber || context.requestItem || context.validTicketNumber || context.customerTicketNumber
-    ).toUpperCase();
+    return cleanText(context.recordKey || context.sysId || context.sys_id || context.recordSysId || context.record_sys_id || context.recordNumber || context.ticketNumber || context.requestItem || context.validTicketNumber || context.customerTicketNumber).toUpperCase();
   }
   function resetStaleTemplateSelection(state, context = {}, logger) {
     state.ui = state.ui || {};
@@ -16985,8 +16740,7 @@ ${agentName}`
   }
   function normalizeRenderedSubject(renderedTemplate, context = {}) {
     if (!renderedTemplate) return renderedTemplate;
-    const ticketCandidates = [context.validTicketNumber, context.customerTicketNumber, context.requestItem, context.ticketNumber, context.recordNumber];
-    const ticket = ticketCandidates.map((value2) => cleanText(value2).toUpperCase()).find((value2) => /^(?:RITM|INC|REQ|SCTASK)\d{4,}$/.test(value2)) || "";
+    const ticket = [context.validTicketNumber, context.customerTicketNumber, context.requestItem, context.ticketNumber, context.recordNumber].map((value2) => cleanText(value2).toUpperCase()).find((value2) => /^(?:RITM|INC|REQ|SCTASK)\d{4,}$/.test(value2)) || "";
     let subject = cleanText(renderedTemplate.subject).replace(/\bfollow\s*-\s*up\b/gi, "follow-up").replace(/\s{2,}/g, " ").trim();
     if (ticket) {
       subject = subject.replace(new RegExp(`\\b${ticket}\\b`, "ig"), "").replace(/^\s*(?:[-–—:|]\s*)+/, "").replace(/(?:\s*[-–—:|])+\s*$/, "").replace(/\s{2,}/g, " ").trim();
@@ -16997,24 +16751,20 @@ ${agentName}`
 ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
     return { ...renderedTemplate, subject, clipboardText };
   }
+  function renderSuggestion(template, candidate, selection, context, settings) {
+    const rendered = renderTemplate(template, { context, settings });
+    const smart = applySmartEmailComposition(rendered, { ...selection, selectedTemplateId: template.id, selectedTemplate: template, selectionMode: "auto" }, context);
+    const normalized = normalizeRenderedSubject(smart, context);
+    return { templateId: candidate.templateId, score: candidate.score, label: template.label, subject: normalized?.subject || "", body: normalized?.body || "" };
+  }
   async function getRenderedSelection({ state, settings, logger, rootWindow, hydrateUser = false, categoryOverride }) {
-    const cachedContext = state.context || {};
-    const liveContext = getCurrentContext(rootWindow);
-    const baseContext = liveContext?.supported ? mergeLiveContext(cachedContext, liveContext, rootWindow) : mergeLiveContext({}, cachedContext, rootWindow);
-    if (!baseContext?.supported) {
-      return { renderedTemplate: null, selection: resolveTemplateSelection(state, settings, categoryOverride), emailSuggestions: [] };
-    }
+    const cachedContext = state.context || {}, liveContext = getCurrentContext(rootWindow), baseContext = liveContext?.supported ? mergeLiveContext(cachedContext, liveContext, rootWindow) : mergeLiveContext({}, cachedContext, rootWindow);
+    if (!baseContext?.supported) return { renderedTemplate: null, selection: resolveTemplateSelection(state, settings, categoryOverride), emailSuggestions: [] };
     state.context = baseContext;
     const currentCi = getCurrentCmdbCi(rootWindow);
-    let context = {
-      ...baseContext,
-      configurationItem: !looksLikeTicket(currentCi.display) ? currentCi.display || currentCi.value || baseContext.configurationItem || "" : baseContext.configurationItem || "",
-      configurationItemDisplay: !looksLikeTicket(currentCi.display) ? currentCi.display || currentCi.value || baseContext.configurationItemDisplay || "" : baseContext.configurationItemDisplay || "",
-      configurationItemValue: !looksLikeTicket(currentCi.value) ? currentCi.value || currentCi.display || baseContext.configurationItemValue || "" : baseContext.configurationItemValue || ""
-    };
+    let context = { ...baseContext, configurationItem: !looksLikeTicket(currentCi.display) ? currentCi.display || currentCi.value || baseContext.configurationItem || "" : baseContext.configurationItem || "", configurationItemDisplay: !looksLikeTicket(currentCi.display) ? currentCi.display || currentCi.value || baseContext.configurationItemDisplay || "" : baseContext.configurationItemDisplay || "", configurationItemValue: !looksLikeTicket(currentCi.value) ? currentCi.value || currentCi.display || baseContext.configurationItemValue || "" : baseContext.configurationItemValue || "" };
     if (hydrateUser) {
-      const resolvedUser = await resolveUserForContext(context, state, settings, logger);
-      const mergedUser = mergeResolvedUser(context?.user, resolvedUser);
+      const resolvedUser = await resolveUserForContext(context, state, settings, logger), mergedUser = mergeResolvedUser(context?.user, resolvedUser);
       if (mergedUser.email !== context?.user?.email || mergedUser.fullName !== context?.user?.fullName || mergedUser.firstName !== context?.user?.firstName || mergedUser.lastName !== context?.user?.lastName) context = { ...context, user: mergedUser };
     }
     state.context = context;
@@ -17022,33 +16772,14 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
     let selection = resolveTemplateSelection(state, settings, categoryOverride);
     selection = applySmartShortDescriptionOverride(selection, context);
     const diagnosticSource = cleanText(selection.selectionSource || (selection.emailSelection?.metadata ? "studio-metadata" : "intelligence"));
-    logger?.info?.("template-selection", {
-      recordKey: cleanText(context.recordKey),
-      category: cleanText(selection.activeCategory),
-      templateId: cleanText(selection.selectedTemplateId),
-      selectionMode: cleanText(selection.selectionMode || "auto"),
-      selectionSource: diagnosticSource,
-      shortDescription: cleanText(context.shortDescription),
-      hasDescription: Boolean(cleanText(context.description)),
-      smartShortDescription: Boolean(selection.smartShortDescription)
-    });
-    const baseRenderedTemplate = selection.selectedTemplate ? renderTemplate(selection.selectedTemplate, { context, settings }) : null;
-    const smartRenderedTemplate = applySmartEmailComposition(baseRenderedTemplate, selection, context);
-    const renderedTemplate = normalizeRenderedSubject(smartRenderedTemplate, context);
-    if (renderedTemplate?.smartEmail) {
-      logger?.info?.("smart-email-composition", {
-        recordKey: cleanText(context.recordKey),
-        templateId: cleanText(selection.selectedTemplateId),
-        family: cleanText(renderedTemplate.smartEmail.family),
-        confidence: renderedTemplate.smartEmail.confidence,
-        reason: cleanText(renderedTemplate.smartEmail.reason)
-      });
-    }
-    const emailSuggestions = selection.activeCategory === "email" && selection.emailSelection?.ambiguous ? (selection.emailSelection.candidates || []).slice(0, 3).map((candidate) => {
+    logger?.info?.("template-selection", { recordKey: cleanText(context.recordKey), category: cleanText(selection.activeCategory), templateId: cleanText(selection.selectedTemplateId), selectionMode: cleanText(selection.selectionMode || "auto"), selectionSource: diagnosticSource, shortDescription: cleanText(context.shortDescription), hasDescription: Boolean(cleanText(context.description)), smartShortDescription: Boolean(selection.smartShortDescription) });
+    const baseRenderedTemplate = selection.selectedTemplate ? renderTemplate(selection.selectedTemplate, { context, settings }) : null, smartRenderedTemplate = applySmartEmailComposition(baseRenderedTemplate, selection, context), renderedTemplate = normalizeRenderedSubject(smartRenderedTemplate, context);
+    if (renderedTemplate?.smartEmail) logger?.info?.("smart-email-composition", { recordKey: cleanText(context.recordKey), templateId: cleanText(selection.selectedTemplateId), family: cleanText(renderedTemplate.smartEmail.family), confidence: renderedTemplate.smartEmail.confidence, reason: cleanText(renderedTemplate.smartEmail.reason) });
+    const rawCandidates = selection.emailSelection?.candidates || [];
+    const positiveCandidates = rawCandidates.filter((candidate) => Number(candidate.score) > 0);
+    const emailSuggestions = selection.activeCategory === "email" && (selection.emailSelection?.ambiguous || positiveCandidates.length > 1) ? positiveCandidates.slice(0, 3).map((candidate) => {
       const template = selection.templates.find((item) => item.id === candidate.templateId);
-      if (!template) return null;
-      const rendered = normalizeRenderedSubject(renderTemplate(template, { context, settings }), context);
-      return { templateId: candidate.templateId, score: candidate.score, label: template.label, subject: rendered?.subject || "", body: rendered?.body || "" };
+      return template ? renderSuggestion(template, candidate, selection, context, settings) : null;
     }).filter(Boolean) : [];
     return { renderedTemplate, selection, emailSuggestions };
   }
@@ -18173,7 +17904,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   var toasts_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   TOASTS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-toast-viewport {\r\n  position: fixed;\r\n  right: 16px;\r\n  bottom: 16px;\r\n  display: grid;\r\n  gap: 8px;\r\n  z-index: 2147483300;\r\n  pointer-events: none;\r\n}\r\n\r\n.sn-assistant-toast {\r\n  min-width: 160px;\r\n  max-width: 260px;\r\n  padding: 10px 14px;\r\n  border-radius: 10px;\r\n  color: #FFFFFF;\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  line-height: 1.45;\r\n  box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);\r\n  animation: sn-assistant-toast-in 160ms ease;\r\n}\r\n\r\n.sn-assistant-toast--success {\r\n  background: #166B46;\r\n}\r\n\r\n.sn-assistant-toast--error {\r\n  background: #991B1B;\r\n  border: 1px solid rgba(255, 255, 255, 0.12);\r\n}\r\n\r\n.sn-assistant-toast--info {\r\n  background: var(--sn-assistant-accent);\r\n}\r\n\r\n/* Toast carrying an inline action button (e.g. the "Mute 1h" new-work alert).\r\n   The viewport is pointer-events:none, so the button re-enables clicks. */\r\n.sn-assistant-toast--with-action {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-toast--with-action .sn-assistant-toast__message {\r\n  flex: 1;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-toast__action {\r\n  pointer-events: auto;\r\n  flex-shrink: 0;\r\n  font-family: inherit;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  color: #FFFFFF;\r\n  background: rgba(255, 255, 255, 0.18);\r\n  border: 1px solid rgba(255, 255, 255, 0.45);\r\n  border-radius: 6px;\r\n  padding: 3px 9px;\r\n  cursor: pointer;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-toast__action:hover {\r\n  background: rgba(255, 255, 255, 0.30);\r\n}\r\n';
 
   // Assistant/ui/styles/animations.css
-  var animations_default = "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   ANIMATIONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n@keyframes sn-assistant-toast-in {\r\n  from { opacity: 0; transform: translateY(8px); }\r\n  to   { opacity: 1; transform: translateY(0); }\r\n}\r\n\r\n@keyframes sn-embedded-view-in {\r\n  from {\r\n    opacity: 0;\r\n    transform: translateY(5px);\r\n  }\r\n  to {\r\n    opacity: 1;\r\n    transform: translateY(0);\r\n  }\r\n}\r\n\r\n@keyframes sn-assistant-launcher-float {\r\n  0%, 100% { transform: translateY(0); }\r\n  50%       { transform: translateY(-2px); }\r\n}\r\n\r\n@keyframes sn-assistant-launcher-glow {\r\n  0%, 100% { opacity: 0.60; }\r\n  50%       { opacity: 0.88; }\r\n}\r\n\r\n@keyframes sn-assistant-launcher-dot {\r\n  0%, 100% { transform: scale(1); }\r\n  50%       { transform: scale(1.14); }\r\n}\r\n\r\n@keyframes sn-assistant-theme-pop {\r\n  0%   { transform: translateY(1px) scale(0.985); }\r\n  100% { transform: translateY(-1px) scale(1.01); }\r\n}\r\n\r\n@keyframes sn-assistant-theme-sheen {\r\n  from { transform: translateX(-140%); }\r\n  to   { transform: translateX(140%); }\r\n}\r\n";
+  var animations_default = "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   ANIMATIONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n@keyframes sn-assistant-toast-in {\r\n  from { opacity: 0; transform: translateY(8px); }\r\n  to   { opacity: 1; transform: translateY(0); }\r\n}\r\n\r\n@keyframes sn-embedded-view-in {\r\n  from { opacity: 0; transform: translateY(5px); }\r\n  to   { opacity: 1; transform: translateY(0); }\r\n}\r\n\r\n@keyframes sn-assistant-panel-in {\r\n  from { opacity: 0; transform: translateY(7px) scale(0.992); }\r\n  to { opacity: 1; transform: translateY(0) scale(1); }\r\n}\r\n\r\n@keyframes sn-assistant-edge-in {\r\n  from { opacity: 0.72; transform: translateY(-50%) translateX(8px); }\r\n  to { opacity: 1; transform: translateY(-50%) translateX(0); }\r\n}\r\n\r\n@keyframes sn-assistant-launcher-float {\r\n  0%, 100% { transform: translateY(0); }\r\n  50%       { transform: translateY(-2px); }\r\n}\r\n\r\n@keyframes sn-assistant-launcher-glow {\r\n  0%, 100% { opacity: 0.60; }\r\n  50%       { opacity: 0.88; }\r\n}\r\n\r\n@keyframes sn-assistant-launcher-dot {\r\n  0%, 100% { transform: scale(1); }\r\n  50%       { transform: scale(1.14); }\r\n}\r\n\r\n@keyframes sn-assistant-theme-pop {\r\n  0%   { transform: translateY(1px) scale(0.985); }\r\n  100% { transform: translateY(-1px) scale(1.01); }\r\n}\r\n\r\n@keyframes sn-assistant-theme-sheen {\r\n  from { transform: translateX(-140%); }\r\n  to   { transform: translateX(140%); }\r\n}\r\n\r\n/* Panels should feel attached to the assistant rather than flash into existence. */\r\n.sn-assistant-panel {\r\n  animation: sn-assistant-panel-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;\r\n  transform-origin: top right;\r\n  will-change: transform, opacity;\r\n}\r\n\r\n/* Keep every interactive assistant surface above ServiceNow/Polaris overlays. */\r\n.sn-assistant-panel,\r\n.sn-assistant-worknotes-panel,\r\n.sn-assistant-settings,\r\n.sn-assistant-modal,\r\n.sn-assistant-toast,\r\n.sn-assistant-popover {\r\n  isolation: isolate;\r\n  z-index: 2147483005;\r\n}\r\n\r\n/* Interaction must remain visually stable while typing/clicking inside a panel. */\r\n.sn-assistant-panel:hover,\r\n.sn-assistant-panel:focus-within {\r\n  opacity: 1 !important;\r\n  visibility: visible !important;\r\n  filter: none !important;\r\n}\r\n\r\n/* Edge panel gets a short entrance but never fades during active interaction. */\r\n.sn-ep {\r\n  animation: sn-assistant-edge-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;\r\n  will-change: transform, opacity;\r\n}\r\n.sn-ep:hover,\r\n.sn-ep:focus-within {\r\n  opacity: 1 !important;\r\n  visibility: visible !important;\r\n}\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-assistant-panel,\r\n  .sn-ep {\r\n    animation: none !important;\r\n    transition-duration: 0.01ms !important;\r\n  }\r\n}\r\n";
 
   // Assistant/ui/styles/edgePanel.css
   var edgePanel_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   EDGE PANEL  (Samsung Edge Panel style)\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n:root {\r\n  --ep-green:        #1A9E72;\r\n  --ep-green-bg:     #E6F5EF;\r\n  --ep-green-border: rgba(26, 158, 114, 0.26);\r\n  --ep-red:          #A52828;\r\n  --ep-red-bg:       #FDEAEA;\r\n  --ep-neutral:      #6B7280;\r\n  --ep-neutral-bg:   #F3F4F6;\r\n  --ep-surface:      #FFFFFF;\r\n  --ep-border:       rgba(0, 0, 0, 0.08);\r\n  --ep-ink:          #111827;\r\n  --ep-muted:        #6B7280;\r\n  --ep-icon-r:       8px;\r\n  --ep-panel-r:      12px;\r\n  --ep-ease:         140ms cubic-bezier(0.4, 0, 0.2, 1);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   PANEL THEME OPTIONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-theme-option {\r\n  display: flex;\r\n  flex-direction: column;\r\n  align-items: center;\r\n  gap: 8px;\r\n  padding: 12px;\r\n  border: 2px solid var(--sn-assistant-border);\r\n  border-radius: 10px;\r\n  cursor: pointer;\r\n  transition: all 160ms ease;\r\n  background: transparent;\r\n}\r\n\r\n.sn-assistant-theme-option:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-theme-option.is-selected {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sn-assistant-accent) 20%, transparent);\r\n}\r\n\r\n.sn-assistant-theme-option__swatch {\r\n  width: 32px;\r\n  height: 32px;\r\n  border-radius: 6px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-theme-option__label {\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n/* \u2500\u2500 Dark theme \u2500\u2500 */\r\n:root[data-ep-theme="dark"] {\r\n  --ep-green:        #10B981;\r\n  --ep-green-bg:     rgba(16, 185, 129, 0.15);\r\n  --ep-green-border: rgba(16, 185, 129, 0.28);\r\n  --ep-red:          #F87171;\r\n  --ep-red-bg:       rgba(248, 113, 113, 0.12);\r\n  --ep-neutral:      #9CA3AF;\r\n  --ep-neutral-bg:   #374151;\r\n  --ep-surface:      #1F2937;\r\n  --ep-border:       rgba(255, 255, 255, 0.10);\r\n  --ep-ink:          #F3F4F6;\r\n  --ep-muted:        #9CA3AF;\r\n}\r\n\r\n/* \u2500\u2500 Midnight Steel theme \u2500\u2500 */\r\n:root[data-ep-theme="midnightSteel"] {\r\n  --ep-green:        #0EA5E9;\r\n  --ep-green-bg:     rgba(14, 165, 233, 0.12);\r\n  --ep-green-border: rgba(14, 165, 233, 0.24);\r\n  --ep-red:          #EF4444;\r\n  --ep-red-bg:       rgba(239, 68, 68, 0.12);\r\n  --ep-neutral:      #64748B;\r\n  --ep-neutral-bg:   #1E293B;\r\n  --ep-surface:      #0F172A;\r\n  --ep-border:       rgba(51, 65, 85, 0.4);\r\n  --ep-ink:          #E2E8F0;\r\n  --ep-muted:        #94A3B8;\r\n}\r\n\r\n.sn-ep {\r\n  position: fixed;\r\n  right: 0;\r\n  top: 50%;\r\n  transform: translateY(-50%);\r\n  z-index: 2147483001;\r\n  display: flex;\r\n  flex-direction: row;\r\n  align-items: stretch;\r\n  background: var(--ep-surface);\r\n  border: 0.5px solid var(--ep-border);\r\n  border-right: none;\r\n  border-radius: var(--ep-panel-r) 0 0 var(--ep-panel-r);\r\n  font-family: var(--sn-assistant-font);\r\n  color: var(--ep-ink);\r\n  color-scheme: light;\r\n  user-select: none;\r\n  pointer-events: auto;\r\n  isolation: isolate;\r\n  box-shadow: -6px 0 22px rgba(15, 23, 42, 0.07), -1px 0 0 rgba(15, 23, 42, 0.05);\r\n}\r\n\r\n.sn-ep::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: -1px;\r\n  z-index: -1;\r\n  border-radius: inherit;\r\n  background:\r\n    conic-gradient(\r\n      from var(--sn-ep-border-angle, 0deg),\r\n      rgba(14, 165, 233, 0.08),\r\n      rgba(37, 99, 235, 0.28),\r\n      rgba(20, 184, 166, 0.18),\r\n      rgba(14, 165, 233, 0.08)\r\n    );\r\n  opacity: 0.45;\r\n  animation: sn-ep-border-flow 12s linear infinite;\r\n}\r\n\r\n.sn-ep::after {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 1px;\r\n  z-index: -1;\r\n  border-radius: calc(var(--ep-panel-r) - 1px) 0 0 calc(var(--ep-panel-r) - 1px);\r\n  background:\r\n    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04)),\r\n    var(--ep-surface);\r\n}\r\n\r\n@property --sn-ep-border-angle {\r\n  syntax: "<angle>";\r\n  inherits: false;\r\n  initial-value: 0deg;\r\n}\r\n\r\n@keyframes sn-ep-border-flow {\r\n  to {\r\n    --sn-ep-border-angle: 360deg;\r\n  }\r\n}\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-ep::before,\r\n  .sn-assistant-panel__generator::after {\r\n    animation: none;\r\n  }\r\n}\r\n\r\n.sn-ep__panel {\r\n  width: 0;\r\n  overflow: hidden;\r\n  display: flex;\r\n  flex-direction: column;\r\n  transition: width var(--ep-ease);\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__panel {\r\n  width: 52px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__panel {\r\n  width: 200px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__panel,\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__panel {\r\n  border-right: 0.5px solid var(--ep-border);\r\n}\r\n\r\n.sn-ep__tab {\r\n  flex-shrink: 0;\r\n  width: 30px;\r\n  min-height: 82px;\r\n  display: flex;\r\n  flex-direction: column;\r\n  align-items: center;\r\n  justify-content: center;\r\n  gap: 8px;\r\n  background:\r\n    linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.18)),\r\n    rgba(14, 165, 233, 0.05);\r\n  border: none;\r\n  cursor: grab;\r\n  padding: 10px 0;\r\n  color: color-mix(in srgb, var(--ep-neutral) 82%, var(--ep-green));\r\n  font-family: inherit;\r\n  border-radius: var(--ep-panel-r) 0 0 var(--ep-panel-r);\r\n  box-shadow: inset -1px 0 0 rgba(14, 165, 233, 0.12);\r\n  transition: color var(--ep-ease), background var(--ep-ease), box-shadow var(--ep-ease);\r\n}\r\n\r\n.sn-ep__tab:active {\r\n  cursor: grabbing;\r\n}\r\n\r\n.sn-ep[data-ep-mode="tab"] .sn-ep__tab {\r\n  border-radius: var(--ep-panel-r) 0 0 var(--ep-panel-r);\r\n}\r\n\r\n.sn-ep[data-ep-mode="tab"] .sn-ep__tab + .sn-ep__panel {\r\n  width: 0;\r\n}\r\n\r\n.sn-ep__tab[data-action="ep-toggle"] {\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-ep__tab[data-action="ep-toggle"]:hover {\r\n  color: var(--ep-green);\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__tab,\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__tab {\r\n  border-radius: 0;\r\n}\r\n\r\n.sn-ep__tab-dot {\r\n  width: 7px;\r\n  height: 7px;\r\n  flex-shrink: 0;\r\n  border-radius: 50%;\r\n  background: linear-gradient(135deg, #38bdf8, #0d9488);\r\n  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12), 0 0 14px rgba(14, 165, 233, 0.34);\r\n}\r\n\r\n.sn-ep__tab-version {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  padding: 2px 5px;\r\n  border-radius: 999px;\r\n  background: rgba(255, 255, 255, 0.12);\r\n  color: rgba(255, 255, 255, 0.92);\r\n  font-size: 9px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.04em;\r\n  text-transform: none;\r\n}\r\n\r\n.sn-ep__tab-text {\r\n  font-size: 8.5px;\r\n  font-weight: 800;\r\n  letter-spacing: 0.04em;\r\n  text-transform: uppercase;\r\n  color: color-mix(in srgb, var(--ep-muted) 72%, var(--ep-green));\r\n  writing-mode: vertical-rl;\r\n  transform: rotate(180deg);\r\n  white-space: nowrap;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__tab-text,\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__tab-text {\r\n  display: none;\r\n}\r\n\r\n.sn-ep__chevron {\r\n  display: block;\r\n  transition: transform var(--ep-ease);\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__chevron,\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__chevron {\r\n  transform: rotate(180deg);\r\n}\r\n\r\n.sn-ep__header {\r\n  display: none;\r\n  align-items: center;\r\n  gap: 6px;\r\n  padding: 7px 8px 6px;\r\n  border-bottom: 0.5px solid var(--ep-border);\r\n  overflow: hidden;\r\n  white-space: nowrap;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-ep__header-main {\r\n  flex: 1;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-ep__header-actions {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  gap: 4px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__header {\r\n  display: flex;\r\n}\r\n\r\n.sn-ep__header-dot {\r\n  width: 8px;\r\n  height: 8px;\r\n  flex-shrink: 0;\r\n  border-radius: 50%;\r\n  background: var(--ep-green);\r\n}\r\n\r\n.sn-ep__header-title {\r\n  flex: 1;\r\n  font-size: 12px;\r\n  font-weight: 700;\r\n  color: var(--ep-ink);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n}\r\n\r\n.sn-ep__title {\r\n  font-size: 12px;\r\n  font-weight: 700;\r\n  color: var(--ep-ink);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  line-height: 1.3;\r\n}\r\n\r\n.sn-ep__subtitle {\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  color: var(--ep-muted);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  line-height: 1.3;\r\n}\r\n\r\n.sn-ep__ticket-context {\r\n  margin-top: 4px;\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  color: var(--ep-muted);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-ep__version {\r\n  flex-shrink: 0;\r\n  padding: 2px 6px;\r\n  border-radius: 999px;\r\n  background: var(--sn-assistant-accent-soft);\r\n  color: var(--sn-assistant-accent);\r\n  font-size: 9px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.03em;\r\n  text-transform: none;\r\n}\r\n\r\n.sn-ep__header-btn {\r\n  flex-shrink: 0;\r\n  width: 20px;\r\n  height: 20px;\r\n  display: grid;\r\n  place-items: center;\r\n  border-radius: 50%;\r\n  border: none;\r\n  background: transparent;\r\n  color: var(--ep-muted);\r\n  cursor: pointer;\r\n  padding: 0;\r\n  font-size: 14px;\r\n  font-family: inherit;\r\n  line-height: 1;\r\n  transition: background var(--ep-ease), color var(--ep-ease);\r\n}\r\n\r\n.sn-ep__header-btn:hover {\r\n  background: var(--ep-neutral-bg);\r\n  color: var(--ep-ink);\r\n}\r\n\r\n.sn-ep__header-btn--close:hover {\r\n  background: var(--ep-red-bg);\r\n  color: var(--ep-red);\r\n}\r\n\r\n/* Footer actions container */\r\n.sn-ep__footer-actions {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 4px;\r\n  padding: 0 4px;\r\n}\r\n\r\n.sn-ep__icon-btn {\r\n  width: 28px;\r\n  height: 28px;\r\n  min-width: 28px;\r\n  min-height: 28px;\r\n\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n\r\n  border: none;\r\n  border-radius: 10px;\r\n\r\n  background: transparent;\r\n  color: var(--ep-muted);\r\n\r\n  cursor: pointer;\r\n  padding: 0;\r\n\r\n  /* suavidad + microinteracci\xF3n */\r\n  transition:\r\n    background 0.16s ease,\r\n    color 0.16s ease,\r\n    transform 0.14s ease,\r\n    box-shadow 0.16s ease,\r\n    border-color 0.16s ease;\r\n\r\n  /* evita deformaciones */\r\n  flex-shrink: 0;\r\n  position: relative;\r\n}\r\n\r\n/* hover m\xE1s moderno con efecto subtle \u2014 SOLO para botones sin colores espec\xEDficos */\r\n.sn-ep__icon-btn:hover {\r\n  transform: translateY(-2px);\r\n}\r\n\r\n/* Hover gen\xE9rico SOLO si no tiene data-action espec\xEDfico */\r\n.sn-ep__icon-btn:not([data-action]):hover,\r\n.sn-ep__icon-btn[data-action=""]:hover {\r\n  background: var(--ep-neutral-bg);\r\n  color: var(--ep-ink);\r\n  box-shadow: 0 4px 12px rgba(0,0,0,0.14);\r\n}\r\n\r\n/* feedback al click - efecto press */\r\n.sn-ep__icon-btn:active {\r\n  transform: scale(0.88) translateY(1px);\r\n  box-shadow: inset 0 1px 3px rgba(0,0,0,0.20), 0 1px 2px rgba(0,0,0,0.10);\r\n}\r\n\r\n/* estado activo m\xE1s visible */\r\n.sn-ep__icon-btn.is-active {\r\n  background: var(--ep-green-bg);\r\n  color: var(--ep-green);\r\n\r\n  /* glow suave con borde visible */\r\n  box-shadow:\r\n    0 0 0 2px var(--ep-bg, #fff),\r\n    0 0 0 3px var(--ep-green),\r\n    0 2px 8px rgba(22, 163, 74, 0.20);\r\n}\r\n\r\n.sn-ep__icon-btn.is-active:hover {\r\n  background: var(--ep-green-bg);\r\n  transform: translateY(-2px);\r\n  box-shadow:\r\n    0 0 0 2px var(--ep-bg, #fff),\r\n    0 0 0 3px var(--ep-green),\r\n    0 4px 12px rgba(22, 163, 74, 0.28);\r\n}\r\n\r\n/* accesibilidad (muy importante en SN) */\r\n.sn-ep__icon-btn:focus-visible {\r\n  outline: none;\r\n  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), inset 0 0 0 1px rgba(37, 99, 235, 0.50);\r\n}\r\n\r\n/* When pin is active AND focused, preserve the green ring alongside the blue focus ring. */\r\n.sn-ep__icon-btn[data-action="ep-pin"].is-active:focus-visible {\r\n  box-shadow:\r\n    0 0 0 2px var(--ep-bg, #fff),\r\n    0 0 0 3px #16a34a,\r\n    0 0 0 5px rgba(37, 99, 235, 0.35);\r\n}\r\n\r\n/* When pinned the close button unpins+closes \u2014 keep it clickable, just dim it slightly. */\r\n.sn-ep[data-ep-pinned="true"] .sn-ep__icon-btn--header {\r\n  opacity: 0.6;\r\n}\r\n\r\n/* Header Settings Button */\r\n.sn-ep__icon-btn--header {\r\n  width: 26px;\r\n  height: 26px;\r\n  min-width: 26px;\r\n  min-height: 26px;\r\n  border-radius: 8px;\r\n  color: var(--ep-ink);\r\n  opacity: 0.7;\r\n}\r\n\r\n.sn-ep__icon-btn--header:hover {\r\n  opacity: 1;\r\n  background: var(--ep-neutral-bg);\r\n  transform: none;  /* No elevation in header */\r\n  box-shadow: none;\r\n}\r\n\r\n.sn-ep__icon-btn--header:active {\r\n  transform: scale(0.9);\r\n  opacity: 1;\r\n}\r\n\r\n/* Pin button: small notification dot anchored to the corner when locked,\r\n   so the user has a clear "this stays open" cue beyond the filled glyph. */\r\n.sn-ep__icon-btn--pin {\r\n  position: relative;\r\n}\r\n\r\n.sn-ep__icon-btn--pin.is-active::after {\r\n  content: "";\r\n  position: absolute;\r\n  top: 2px;\r\n  right: 2px;\r\n  width: 6px;\r\n  height: 6px;\r\n  border-radius: 50%;\r\n  background: var(--ep-green, #16a34a);\r\n  box-shadow: 0 0 0 2px var(--ep-bg, #fff);\r\n}\r\n\r\n/* Footer button colors \u2014 specific semantic coloring */\r\n\r\n/* Close button: RED */\r\n.sn-ep__icon-btn[data-action="ep-close"] {\r\n  color: var(--ep-muted);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-close"]:hover {\r\n  background: rgba(220, 38, 38, 0.12);\r\n  color: #dc2626;\r\n  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-close"]:active {\r\n  box-shadow: inset 0 1px 3px rgba(220, 38, 38, 0.30), 0 1px 2px rgba(220, 38, 38, 0.15);\r\n  color: #b91c1c;\r\n}\r\n\r\n/* Pin button: GREEN */\r\n.sn-ep__icon-btn[data-action="ep-pin"] {\r\n  color: var(--ep-muted);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-pin"]:hover {\r\n  background: rgba(22, 163, 74, 0.12);\r\n  color: #16a34a;\r\n  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-pin"].is-active {\r\n  color: #16a34a;\r\n  background: rgba(22, 163, 74, 0.12);\r\n  box-shadow: 0 0 0 2px var(--ep-bg, #fff), 0 0 0 3px #16a34a, 0 2px 8px rgba(22, 163, 74, 0.20);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-pin"].is-active:hover {\r\n  box-shadow: 0 0 0 2px var(--ep-bg, #fff), 0 0 0 3px #16a34a, 0 4px 12px rgba(22, 163, 74, 0.28);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-pin"]:active {\r\n  box-shadow: inset 0 1px 3px rgba(22, 163, 74, 0.30), 0 1px 2px rgba(22, 163, 74, 0.15);\r\n  color: #15803d;\r\n}\r\n\r\n/* Edit button: BLUE */\r\n.sn-ep__icon-btn[data-action="ep-edit"] {\r\n  color: var(--ep-muted);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-edit"]:hover {\r\n  background: rgba(37, 99, 235, 0.12);\r\n  color: #2563eb;\r\n  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-edit"].is-active {\r\n  color: #2563eb;\r\n  background: rgba(37, 99, 235, 0.12);\r\n  box-shadow: 0 0 0 2px var(--ep-bg, #fff), 0 0 0 3px #2563eb, 0 2px 8px rgba(37, 99, 235, 0.20);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-edit"].is-active:hover {\r\n  box-shadow: 0 0 0 2px var(--ep-bg, #fff), 0 0 0 3px #2563eb, 0 4px 12px rgba(37, 99, 235, 0.28);\r\n}\r\n\r\n.sn-ep__icon-btn[data-action="ep-edit"]:active {\r\n  box-shadow: inset 0 1px 3px rgba(37, 99, 235, 0.30), 0 1px 2px rgba(37, 99, 235, 0.15);\r\n  color: #1d4ed8;\r\n}\r\n\r\n.sn-ep__actions {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  padding: 6px;\r\n  overflow: hidden;\r\n}\r\n\r\n/* Phase B: action grouping \u2014 each section gets a small uppercase header\r\n   and a subtle separator above (except the first one). Headers stay\r\n   muted so the buttons remain the visual focus. */\r\n.sn-ep__group {\r\n  display: flex;\r\n  flex-direction: column;\r\n  padding: 6px 0 4px;\r\n  border-top: 1px solid var(--ep-divider, rgba(15, 23, 42, 0.06));\r\n}\r\n\r\n.sn-ep__group:first-child {\r\n  border-top: 0;\r\n  padding-top: 0;\r\n}\r\n\r\n.sn-ep__group-header {\r\n  font-size: 9.5px;\r\n  font-weight: 600;\r\n  letter-spacing: 0.04em;\r\n  color: color-mix(in srgb, var(--ep-muted, #64748b) 88%, var(--ep-ink));\r\n  padding: 4px 8px 5px;\r\n  text-transform: none;\r\n  user-select: none;\r\n}\r\n\r\n.sn-ep__group-buttons {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 1px;\r\n}\r\n\r\n.sn-ep__action-row {\r\n  display: grid;\r\n  grid-template-columns: 1fr 42px;\r\n  gap: 6px;\r\n  align-items: stretch;\r\n}\r\n\r\n/* Tighten the icon-only / collapsed mode: in tab/icons mode the section\r\n   labels would just push everything down for no value. Hide them when\r\n   the panel is in icons-only mode. */\r\n[data-ep-mode="icons"] .sn-ep__group-header,\r\n[data-ep-mode="tab"] .sn-ep__group-header {\r\n  display: none;\r\n}\r\n\r\n[data-ep-mode="icons"] .sn-ep__group,\r\n[data-ep-mode="tab"] .sn-ep__group {\r\n  padding: 2px 0;\r\n  border-top: 0;\r\n}\r\n\r\n.sn-ep__action {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 9px;\r\n  padding: 7px 9px;\r\n  border-radius: 9px;\r\n  cursor: pointer;\r\n  border: none;\r\n  background: transparent;\r\n  text-align: left;\r\n  font-family: inherit;\r\n  font-size: 11.5px;\r\n  font-weight: 600;\r\n  transition:\r\n    background var(--ep-ease),\r\n    transform 100ms ease;\r\n  width: 100%;\r\n  overflow: hidden;\r\n  white-space: nowrap;\r\n  color: var(--ep-ink);\r\n}\r\n\r\n.sn-ep__action:hover {\r\n  background: color-mix(in srgb, var(--ep-ink) 4%, transparent);\r\n}\r\n\r\n.sn-ep__action:active {\r\n  transform: scale(0.99);\r\n}\r\n\r\n.sn-ep__action--mini-bolt {\r\n  min-width: 42px;\r\n  width: 42px;\r\n  padding: 0;\r\n  justify-content: center;\r\n}\r\n\r\n.sn-ep__action--mini-bolt .sn-ep__text {\r\n  display: none;\r\n}\r\n\r\n/* \u2500\u2500\u2500 Generate notes dropdown (Work Notes lightning menu) \u2500\u2500\u2500 */\r\n.sn-ep__generate-menu {\r\n  display: none;\r\n  flex-direction: column;\r\n  background: var(--ep-surface);\r\n  border: 1px solid var(--ep-border);\r\n  border-radius: var(--ep-icon-r);\r\n  overflow: hidden;\r\n  margin-bottom: 2px;\r\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\r\n}\r\n\r\n.sn-ep__generate-menu.is-open {\r\n  display: flex;\r\n}\r\n\r\n.sn-ep__generate-item {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  padding: 7px 10px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--ep-ink);\r\n  background: transparent;\r\n  border: none;\r\n  border-top: 1px solid var(--ep-border);\r\n  cursor: pointer;\r\n  text-align: left;\r\n  width: 100%;\r\n  font-family: inherit;\r\n  transition: background var(--ep-ease);\r\n  white-space: nowrap;\r\n  overflow: hidden;\r\n}\r\n\r\n.sn-ep__generate-item:first-child {\r\n  border-top: none;\r\n}\r\n\r\n.sn-ep__generate-item:hover {\r\n  background: var(--ep-neutral-bg);\r\n}\r\n\r\n.sn-ep__generate-item .sn-ep__icon {\r\n  flex-shrink: 0;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  opacity: 0.7;\r\n}\r\n\r\n.sn-ep__generate-item .sn-ep__icon svg {\r\n  width: 14px;\r\n  height: 14px;\r\n}\r\n\r\n.sn-ep__action:hover {\r\n  background: var(--ep-neutral-bg);\r\n}\r\n\r\n.sn-ep__generate-section-label {\r\n  padding: 4px 10px 2px;\r\n  font-size: 10px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.06em;\r\n  text-transform: uppercase;\r\n  color: var(--ep-muted, #94a3b8);\r\n  background: transparent;\r\n  border-top: 1px solid var(--ep-border);\r\n}\r\n\r\n.sn-ep__generate-section-label:first-child {\r\n  border-top: none;\r\n}\r\n\r\n.sn-ep__generate-divider {\r\n  height: 0;\r\n  border-top: 1px solid var(--ep-border);\r\n  margin: 2px 0;\r\n}\r\n\r\n.sn-ep__generate-item--template {\r\n  font-size: 11.5px;\r\n  font-weight: 500;\r\n  max-width: 100%;\r\n}\r\n\r\n.sn-ep__generate-item--template span:last-child {\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--draft { background: rgba(37, 99, 235, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--work-notes { background: rgba(13, 148, 136, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--reminder { background: rgba(245, 158, 11, calc(0.144 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--agenda { background: rgba(59, 130, 246, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--pdf { background: rgba(168, 85, 247, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--links { background: rgba(20, 184, 166, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--user-tickets { background: rgba(14, 165, 233, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--find-ci { background: rgba(34, 197, 94, calc(0.12 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--settings { background: rgba(100, 116, 139, calc(0.144 * var(--btn-opacity, 1))); }\r\n.sn-ep[style*="--btn-opacity"] .sn-ep__action--danger { background: rgba(239, 68, 68, calc(0.144 * var(--btn-opacity, 1))); }\r\n\r\n.sn-ep__action--draft { background: rgba(37, 99, 235, 0.12); }\r\n.sn-ep__action--work-notes { background: rgba(13, 148, 136, 0.12); }\r\n.sn-ep__action--reminder { background: rgba(245, 158, 11, 0.144); }\r\n.sn-ep__action--agenda { background: rgba(59, 130, 246, 0.12); }\r\n.sn-ep__action--pdf { background: rgba(168, 85, 247, 0.12); }\r\n.sn-ep__action--links { background: rgba(20, 184, 166, 0.12); }\r\n.sn-ep__action--user-tickets { background: rgba(14, 165, 233, 0.12); }\r\n.sn-ep__action--find-ci { background: rgba(34, 197, 94, 0.12); }\r\n.sn-ep__action--settings { background: rgba(100, 116, 139, 0.144); }\r\n.sn-ep__action--danger { background: rgba(239, 68, 68, 0.144); }\r\n\r\n.sn-ep__action.is-dragging {\r\n  opacity: 0.50;\r\n  background: var(--ep-neutral-bg);\r\n}\r\n\r\n.sn-ep__hide-btn {\r\n  width: 22px;\r\n  height: 22px;\r\n  flex-shrink: 0;\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  border: 1px solid var(--ep-border);\r\n  border-radius: 6px;\r\n  background: transparent;\r\n  color: var(--ep-muted);\r\n  cursor: pointer;\r\n  padding: 0;\r\n}\r\n\r\n.sn-ep__hide-btn:hover {\r\n  color: var(--ep-red);\r\n  border-color: rgba(165, 40, 40, 0.35);\r\n  background: var(--ep-red-bg);\r\n}\r\n\r\n.sn-ep__icon {\r\n  width: 28px;\r\n  height: 28px;\r\n  flex-shrink: 0;\r\n  display: grid;\r\n  place-items: center;\r\n  border-radius: var(--ep-icon-r);\r\n  background: var(--ep-neutral-bg);\r\n  color: var(--ep-neutral);\r\n}\r\n\r\n/* Per-button custom color override \u2014 set via --btn-color inline style */\r\n.sn-ep__action[style*="--btn-color"] .sn-ep__icon {\r\n  background: color-mix(in srgb, var(--btn-color) 15%, transparent) !important;\r\n  color: var(--btn-color) !important;\r\n}\r\n.sn-ep__action[style*="--btn-color"]:hover {\r\n  background: color-mix(in srgb, var(--btn-color) 8%, transparent);\r\n}\r\n\r\n.sn-ep__action--active .sn-ep__icon {\r\n  background: var(--ep-green-bg);\r\n  color: var(--ep-green);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--draft,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--draft {\r\n  background: rgba(37, 99, 235, 0.12);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--draft .sn-ep__icon,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--draft .sn-ep__icon {\r\n  background: rgba(37, 99, 235, 0.12);\r\n  color: #2563eb;\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--reminder,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--reminder {\r\n  background: rgba(245, 158, 11, 0.144);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--reminder .sn-ep__icon,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--reminder .sn-ep__icon {\r\n  background: rgba(37, 99, 235, 0.10);\r\n  color: #3b82f6;\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--work-notes,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--work-notes {\r\n  background: rgba(13, 148, 136, 0.12);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--work-notes .sn-ep__icon,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--work-notes .sn-ep__icon {\r\n  background: rgba(100, 116, 139, 0.12);\r\n  color: #64748b;\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--agenda,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--agenda {\r\n  background: rgba(59, 130, 246, 0.12);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--agenda .sn-ep__icon,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--agenda .sn-ep__icon {\r\n  background: rgba(15, 23, 42, 0.06);\r\n  color: #334155;\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--pdf,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--pdf {\r\n  background: rgba(168, 85, 247, 0.12);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--pdf .sn-ep__icon,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--pdf .sn-ep__icon {\r\n  background: rgba(220, 38, 38, 0.10);\r\n  color: #b91c1c;\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--settings,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--settings {\r\n  background: rgba(100, 116, 139, 0.144);\r\n}\r\n\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action--settings .sn-ep__icon,\r\n.sn-ep[data-button-theme="subtle"] .sn-ep__action--settings .sn-ep__icon {\r\n  background: rgba(100, 116, 139, 0.08);\r\n  color: #64748b;\r\n}\r\n\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action--draft .sn-ep__icon,\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action--reminder .sn-ep__icon,\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action--agenda .sn-ep__icon,\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action--work-notes .sn-ep__icon,\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action--pdf .sn-ep__icon,\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action--settings .sn-ep__icon {\r\n  background: var(--ep-neutral-bg);\r\n  color: var(--ep-neutral);\r\n}\r\n\r\n/* \u2500\u2500 Launcher button style: Cards (data-button-theme="soft") \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   White cards with a border and a soft shadow. The per-category icon\r\n   tint is kept so each card still reads at a glance. */\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action {\r\n  background: var(--ep-surface, #ffffff) !important;\r\n  border: 1px solid var(--ep-border) !important;\r\n  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;\r\n}\r\n.sn-ep[data-button-theme="soft"] .sn-ep__action:hover {\r\n  border-color: var(--ep-neutral) !important;\r\n  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.13) !important;\r\n}\r\n\r\n/* \u2500\u2500 Launcher button style: Flat (data-button-theme="classic") \u2500\u2500\u2500\u2500\u2500\r\n   Minimal \u2014 transparent buttons and neutral monochrome icons; colour\r\n   appears only on hover. */\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action {\r\n  background: transparent !important;\r\n  border: none !important;\r\n  box-shadow: none !important;\r\n}\r\n.sn-ep[data-button-theme="classic"] .sn-ep__action:hover {\r\n  background: var(--ep-neutral-bg) !important;\r\n}\r\n.sn-ep[data-button-theme="classic"] .sn-ep__icon {\r\n  background: var(--ep-neutral-bg) !important;\r\n  color: var(--ep-neutral) !important;\r\n}\r\n\r\n.sn-ep__action--danger .sn-ep__icon {\r\n  background: var(--ep-red-bg);\r\n  color: var(--ep-red);\r\n}\r\n\r\n.sn-ep__action--dim {\r\n  opacity: 0.40;\r\n}\r\n\r\n.sn-ep__text {\r\n  flex: 1;\r\n  display: flex;\r\n  align-items: center;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-ep__label {\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--ep-ink);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-ep__badge {\r\n  flex-shrink: 0;\r\n  font-size: 9px;\r\n  font-weight: 700;\r\n  color: var(--ep-green);\r\n  background: var(--ep-green-bg);\r\n  border: 1px solid var(--ep-green-border);\r\n  padding: 2px 6px;\r\n  border-radius: 4px;\r\n  letter-spacing: 0.05em;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__text,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__badge {\r\n  display: none;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__actions {\r\n  padding: 4px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action {\r\n  justify-content: center;\r\n  padding: 6px 0;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__footer {\r\n  display: flex;\r\n  justify-content: center;\r\n  padding: 5px 4px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__version,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__icon-btn[data-action="open-settings"],\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__icon-btn[data-action="ep-pin"],\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__icon-btn[data-action="ep-edit"] {\r\n  display: none;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__footer-actions {\r\n  padding: 0;\r\n}\r\n\r\n.sn-ep__divider {\r\n  height: 0.5px;\r\n  background: var(--ep-border);\r\n  margin: 2px 6px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-ep__resize {\r\n  flex-shrink: 0;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  padding: 8px;\r\n  border: none;\r\n  border-top: 0.5px solid var(--ep-border);\r\n  background: transparent;\r\n  cursor: pointer;\r\n  color: var(--ep-muted);\r\n  width: 100%;\r\n  font-family: inherit;\r\n  transition: background var(--ep-ease), color var(--ep-ease);\r\n}\r\n\r\n.sn-ep__resize:hover {\r\n  background: var(--ep-neutral-bg);\r\n  color: var(--ep-ink);\r\n}\r\n\r\n.sn-ep__resize-icon {\r\n  display: block;\r\n  transition: transform var(--ep-ease);\r\n  transform: rotate(-90deg);\r\n}\r\n\r\n.sn-ep[data-ep-mode="expanded"] .sn-ep__resize-icon {\r\n  transform: rotate(90deg);\r\n}\r\n\r\n/* \u2500\u2500 Left-edge variant \u2500\u2500 */\r\n.sn-ep--left {\r\n  right: auto;\r\n  left: 0;\r\n  flex-direction: row-reverse;\r\n  border-radius: 0 var(--ep-panel-r) var(--ep-panel-r) 0;\r\n  border-left: none;\r\n  border-right: 0.5px solid var(--ep-border);\r\n  box-shadow: 10px 0 30px rgba(15, 23, 42, 0.10), 1px 0 4px rgba(15, 23, 42, 0.08);\r\n}\r\n\r\n.sn-ep--left::after {\r\n  border-radius: 0 calc(var(--ep-panel-r) - 1px) calc(var(--ep-panel-r) - 1px) 0;\r\n}\r\n\r\n.sn-ep--left .sn-ep__tab {\r\n  border-radius: 0 var(--ep-panel-r) var(--ep-panel-r) 0;\r\n  box-shadow: inset 1px 0 0 rgba(14, 165, 233, 0.12);\r\n}\r\n\r\n.sn-ep--left .sn-ep__tab:hover {\r\n  box-shadow: inset 1px 0 0 rgba(14, 165, 233, 0.24), 0 0 18px rgba(14, 165, 233, 0.16);\r\n}\r\n\r\n.sn-ep--left[data-ep-mode="icons"] .sn-ep__tab,\r\n.sn-ep--left[data-ep-mode="expanded"] .sn-ep__tab {\r\n  border-radius: 0;\r\n}\r\n\r\n.sn-ep--left[data-ep-mode="icons"] .sn-ep__panel,\r\n.sn-ep--left[data-ep-mode="expanded"] .sn-ep__panel {\r\n  border-right: none;\r\n  border-left: 0.5px solid var(--ep-border);\r\n}\r\n\r\n.sn-ep--left .sn-ep__chevron {\r\n  transform: rotate(180deg);\r\n}\r\n\r\n.sn-ep--left[data-ep-mode="icons"] .sn-ep__chevron,\r\n.sn-ep--left[data-ep-mode="expanded"] .sn-ep__chevron {\r\n  transform: rotate(0deg);\r\n}\r\n\r\n.sn-ep--left .sn-ep__resize-icon {\r\n  transform: rotate(90deg);\r\n}\r\n\r\n.sn-ep--left[data-ep-mode="expanded"] .sn-ep__resize-icon {\r\n  transform: rotate(-90deg);\r\n}\r\n';
@@ -18453,7 +18184,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
 `;
 
   // Assistant/ui/styles/iconography-polish.css
-  var iconography_polish_default = '/* Visual polish for Edge Panel action icons. */\r\n\r\n.sn-ep__action .sn-ep__icon {\r\n  isolation: isolate;\r\n  display: inline-grid;\r\n  place-items: center;\r\n  flex: 0 0 auto;\r\n  width: 32px;\r\n  height: 32px;\r\n  border-radius: 10px;\r\n  overflow: hidden;\r\n  background: color-mix(in srgb, currentColor 8%, transparent);\r\n  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);\r\n  box-shadow:\r\n    inset 0 1px 0 rgba(255, 255, 255, 0.42),\r\n    0 1px 2px rgba(15, 23, 42, 0.06);\r\n}\r\n\r\n.sn-ep__action .sn-ep__icon::after {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0;\r\n  z-index: -1;\r\n  border-radius: inherit;\r\n  background: linear-gradient(145deg, rgba(255,255,255,.28), transparent 58%);\r\n  opacity: .8;\r\n  pointer-events: none;\r\n}\r\n\r\n.sn-ep__action:hover .sn-ep__icon {\r\n  transform: translateY(-1px) scale(1.035);\r\n  background: color-mix(in srgb, currentColor 12%, transparent);\r\n  border-color: color-mix(in srgb, currentColor 24%, transparent);\r\n  box-shadow:\r\n    inset 0 1px 0 rgba(255,255,255,.5),\r\n    0 5px 12px color-mix(in srgb, currentColor 14%, transparent);\r\n}\r\n\r\n.sn-ep__action:active .sn-ep__icon {\r\n  transform: translateY(0) scale(.965);\r\n  box-shadow: inset 0 1px 2px rgba(15,23,42,.08);\r\n}\r\n\r\n.sn-ep__action:focus-visible { outline: none; }\r\n.sn-ep__action:focus-visible .sn-ep__icon {\r\n  box-shadow:\r\n    0 0 0 2px var(--ep-surface, #fff),\r\n    0 0 0 4px color-mix(in srgb, currentColor 42%, transparent),\r\n    inset 0 1px 0 rgba(255,255,255,.46);\r\n}\r\n\r\n.sn-ep__action[disabled] .sn-ep__icon,\r\n.sn-ep__action[aria-disabled="true"] .sn-ep__icon {\r\n  opacity: .46;\r\n  filter: saturate(.55);\r\n  transform: none;\r\n  box-shadow: none;\r\n}\r\n\r\n.sn-ep__action .sn-ep__icon::before { inset: 6px; }\r\n.sn-ep__action .sn-ep__icon svg { width: 18px; height: 18px; stroke-width: 1.9; }\r\n\r\n.sn-ep__action[data-action="quick-draft"] .sn-ep__icon,\r\n.sn-ep__action[data-action="generate-email-draft"] .sn-ep__icon,\r\n.sn-ep__action[data-action="generate-all-notes"] .sn-ep__icon,\r\n.sn-ep__action[data-action="generate-menu-toggle"] .sn-ep__icon,\r\n.sn-ep__action[data-action="quick-draft-top3"] .sn-ep__icon {\r\n  color: #2563eb;\r\n  background: rgba(37,99,235,.11);\r\n}\r\n\r\n.sn-ep__action[data-action="assign-to-my-group"] .sn-ep__icon,\r\n.sn-ep__action[data-action="configure-assign-group"] .sn-ep__icon {\r\n  color: #4f46e5;\r\n  background: rgba(79,70,229,.11);\r\n}\r\n\r\n.sn-ep__action[data-action="open-work-notes"] .sn-ep__icon,\r\n.sn-ep__action[data-action="generate-work-notes"] .sn-ep__icon,\r\n.sn-ep__action[data-action="open-ep-links"] .sn-ep__icon {\r\n  color: #0f766e;\r\n  background: rgba(15,118,110,.11);\r\n}\r\n\r\n.sn-ep__action[data-action="user-info"] .sn-ep__icon {\r\n  color: #475569;\r\n  background: rgba(71,85,105,.10);\r\n}\r\n.sn-ep__action[data-action="user-open-tickets"] .sn-ep__icon {\r\n  color: #0369a1;\r\n  background: rgba(3,105,161,.11);\r\n}\r\n.sn-ep__action[data-action="find-ci"] .sn-ep__icon {\r\n  color: #15803d;\r\n  background: rgba(21,128,61,.11);\r\n}\r\n.sn-ep__action[data-action="create-calendar-event"] .sn-ep__icon {\r\n  color: #0284c7;\r\n  background: rgba(2,132,199,.11);\r\n}\r\n.sn-ep__action[data-action="open-pdf"] .sn-ep__icon {\r\n  color: #7c3aed;\r\n  background: rgba(124,58,237,.11);\r\n}\r\n.sn-ep__action[data-action="open-reminder"] .sn-ep__icon {\r\n  color: #d97706;\r\n  background: rgba(217,119,6,.12);\r\n}\r\n.sn-ep__action[data-action="generate-close-notes"] .sn-ep__icon,\r\n.sn-ep__action[data-action="incident-resolution-notes"] .sn-ep__icon {\r\n  color: #b45309;\r\n  background: rgba(180,83,9,.11);\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action {\r\n  min-height: 40px;\r\n  padding: 4px;\r\n  border-radius: 11px;\r\n}\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action:hover {\r\n  background: color-mix(in srgb, var(--ep-ink, #0f172a) 4%, transparent);\r\n}\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action .sn-ep__icon {\r\n  width: 34px;\r\n  height: 34px;\r\n  border-radius: 11px;\r\n}\r\n\r\n.sn-ep__action--mini-bolt,\r\n.sn-ep__action[data-action="quick-draft-top3"],\r\n.sn-ep__action[data-action="generate-menu-toggle"],\r\n.sn-ep__action[data-action="configure-assign-group"] {\r\n  border-radius: 10px;\r\n}\r\n.sn-ep__action--mini-bolt {\r\n  min-width: 34px;\r\n  min-height: 34px;\r\n  display: inline-grid;\r\n  place-items: center;\r\n  border: 1px solid color-mix(in srgb, var(--ep-ink, #0f172a) 9%, transparent);\r\n  background: color-mix(in srgb, var(--ep-ink, #0f172a) 3.5%, transparent);\r\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.38);\r\n}\r\n.sn-ep__action--mini-bolt:hover {\r\n  background: color-mix(in srgb, var(--ep-ink, #0f172a) 7%, transparent);\r\n  border-color: color-mix(in srgb, var(--ep-ink, #0f172a) 16%, transparent);\r\n  transform: translateY(-1px);\r\n}\r\n\r\n[data-sn-assistant-theme="dark"] .sn-ep__action .sn-ep__icon,\r\n[data-sn-assistant-theme="noirGraphite"] .sn-ep__action .sn-ep__icon,\r\n[data-sn-assistant-theme="midnightSteel"] .sn-ep__action .sn-ep__icon,\r\n[data-sn-assistant-theme="obsidianGold"] .sn-ep__action .sn-ep__icon {\r\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 3px rgba(0,0,0,.24);\r\n}\r\n[data-sn-assistant-theme="dark"] .sn-ep__action .sn-ep__icon::after,\r\n[data-sn-assistant-theme="noirGraphite"] .sn-ep__action .sn-ep__icon::after,\r\n[data-sn-assistant-theme="midnightSteel"] .sn-ep__action .sn-ep__icon::after,\r\n[data-sn-assistant-theme="obsidianGold"] .sn-ep__action .sn-ep__icon::after { opacity: .28; }\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-ep__action,\r\n  .sn-ep__action .sn-ep__icon,\r\n  .sn-ep__action--mini-bolt {\r\n    transition: none !important;\r\n    transform: none !important;\r\n  }\r\n}\r\n';
+  var iconography_polish_default = '/* Visual polish for Edge Panel action icons. */\r\n\r\n.sn-ep__action .sn-ep__icon {\r\n  isolation: isolate;\r\n  display: inline-grid;\r\n  place-items: center;\r\n  flex: 0 0 auto;\r\n  width: 32px;\r\n  height: 32px;\r\n  border-radius: 10px;\r\n  overflow: hidden;\r\n  background: color-mix(in srgb, currentColor 8%, transparent);\r\n  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);\r\n  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 1px 2px rgba(15, 23, 42, 0.06);\r\n}\r\n.sn-ep__action .sn-ep__icon::after { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; background:linear-gradient(145deg,rgba(255,255,255,.28),transparent 58%); opacity:.8; pointer-events:none; }\r\n.sn-ep__action:hover .sn-ep__icon { transform:translateY(-1px) scale(1.035); background:color-mix(in srgb,currentColor 12%,transparent); border-color:color-mix(in srgb,currentColor 24%,transparent); box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 5px 12px color-mix(in srgb,currentColor 14%,transparent); }\r\n.sn-ep__action:active .sn-ep__icon { transform:translateY(0) scale(.965); box-shadow:inset 0 1px 2px rgba(15,23,42,.08); }\r\n.sn-ep__action:focus-visible{outline:none}.sn-ep__action:focus-visible .sn-ep__icon{box-shadow:0 0 0 2px var(--ep-surface,#fff),0 0 0 4px color-mix(in srgb,currentColor 42%,transparent),inset 0 1px 0 rgba(255,255,255,.46)}\r\n.sn-ep__action[disabled] .sn-ep__icon,.sn-ep__action[aria-disabled="true"] .sn-ep__icon{opacity:.46;filter:saturate(.55);transform:none;box-shadow:none}.sn-ep__action .sn-ep__icon::before{inset:6px}.sn-ep__action .sn-ep__icon svg{width:18px;height:18px;stroke-width:1.9}\r\n.sn-ep__action[data-action="quick-draft"] .sn-ep__icon,.sn-ep__action[data-action="generate-email-draft"] .sn-ep__icon,.sn-ep__action[data-action="generate-all-notes"] .sn-ep__icon,.sn-ep__action[data-action="generate-menu-toggle"] .sn-ep__icon,.sn-ep__action[data-action="quick-draft-top3"] .sn-ep__icon{color:#2563eb;background:rgba(37,99,235,.11)}\r\n.sn-ep__action[data-action="assign-to-my-group"] .sn-ep__icon,.sn-ep__action[data-action="configure-assign-group"] .sn-ep__icon{color:#4f46e5;background:rgba(79,70,229,.11)}\r\n.sn-ep__action[data-action="open-work-notes"] .sn-ep__icon,.sn-ep__action[data-action="generate-work-notes"] .sn-ep__icon,.sn-ep__action[data-action="open-ep-links"] .sn-ep__icon{color:#0f766e;background:rgba(15,118,110,.11)}\r\n.sn-ep__action[data-action="user-info"] .sn-ep__icon{color:#475569;background:rgba(71,85,105,.10)}.sn-ep__action[data-action="user-open-tickets"] .sn-ep__icon{color:#0369a1;background:rgba(3,105,161,.11)}.sn-ep__action[data-action="find-ci"] .sn-ep__icon{color:#15803d;background:rgba(21,128,61,.11)}.sn-ep__action[data-action="create-calendar-event"] .sn-ep__icon{color:#0284c7;background:rgba(2,132,199,.11)}.sn-ep__action[data-action="open-pdf"] .sn-ep__icon{color:#7c3aed;background:rgba(124,58,237,.11)}.sn-ep__action[data-action="open-reminder"] .sn-ep__icon{color:#d97706;background:rgba(217,119,6,.12)}.sn-ep__action[data-action="generate-close-notes"] .sn-ep__icon,.sn-ep__action[data-action="incident-resolution-notes"] .sn-ep__icon{color:#b45309;background:rgba(180,83,9,.11)}\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action{min-height:40px;padding:4px;border-radius:11px}.sn-ep[data-ep-mode="icons"] .sn-ep__action:hover{background:color-mix(in srgb,var(--ep-ink,#0f172a) 4%,transparent)}.sn-ep[data-ep-mode="icons"] .sn-ep__action .sn-ep__icon{width:34px;height:34px;border-radius:11px}\r\n.sn-ep__action--mini-bolt,.sn-ep__action[data-action="quick-draft-top3"],.sn-ep__action[data-action="generate-menu-toggle"],.sn-ep__action[data-action="configure-assign-group"]{border-radius:10px}.sn-ep__action--mini-bolt{min-width:34px;min-height:34px;display:inline-grid;place-items:center;border:1px solid color-mix(in srgb,var(--ep-ink,#0f172a) 9%,transparent);background:color-mix(in srgb,var(--ep-ink,#0f172a) 3.5%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.38)}.sn-ep__action--mini-bolt:hover{background:color-mix(in srgb,var(--ep-ink,#0f172a) 7%,transparent);border-color:color-mix(in srgb,var(--ep-ink,#0f172a) 16%,transparent);transform:translateY(-1px)}\r\n\r\n/* Assigned-work badges: compact, legible and clearly clickable. */\r\n.sn-assistant-header-counts{display:flex;align-items:center;gap:5px;margin-top:5px;min-height:24px;overflow:visible}\r\n.sn-assistant-header-counts__badge{appearance:none;position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:23px;padding:0 9px;border-radius:999px;border:1px solid transparent;font:800 10px/1 var(--sn-assistant-font);letter-spacing:.025em;cursor:pointer;white-space:nowrap;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(15,23,42,.08);transition:transform 150ms ease,box-shadow 150ms ease,filter 150ms ease,border-color 150ms ease}\r\n.sn-assistant-header-counts__badge::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 18%,rgba(255,255,255,.48) 48%,transparent 78%);transform:translateX(-125%);transition:transform 420ms ease}\r\n.sn-assistant-header-counts__badge:hover::before,.sn-assistant-header-counts__badge:focus-visible::before{transform:translateX(125%)}\r\n.sn-assistant-header-counts__badge:hover{transform:translateY(-1px) scale(1.025);filter:saturate(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 5px 12px rgba(15,23,42,.14)}\r\n.sn-assistant-header-counts__badge:active{transform:translateY(0) scale(.96);box-shadow:inset 0 1px 2px rgba(15,23,42,.12),0 1px 3px rgba(15,23,42,.08)}\r\n.sn-assistant-header-counts__badge:focus-visible{outline:none;box-shadow:0 0 0 2px var(--ep-surface,#fff),0 0 0 4px currentColor,inset 0 1px 0 rgba(255,255,255,.7)}\r\n.sn-assistant-header-counts__badge--inc{color:#b42318;background:linear-gradient(180deg,#fff4f2,#fee4e2);border-color:rgba(180,35,24,.22)}\r\n.sn-assistant-header-counts__badge--task{color:#175cd3;background:linear-gradient(180deg,#eff8ff,#dbeafe);border-color:rgba(23,92,211,.22)}\r\n.sn-assistant-header-counts__badge[data-loading="true"]{color:var(--ep-muted);background:var(--ep-neutral-bg);border-color:var(--ep-border);cursor:progress;animation:sn-header-count-loading 1.1s ease-in-out infinite}\r\n.sn-assistant-header-counts__badge[data-ready="false"]{opacity:.58;filter:saturate(.55)}\r\n@keyframes sn-header-count-loading{0%,100%{opacity:.58}50%{opacity:1}}\r\n\r\n[data-sn-assistant-theme="dark"] .sn-ep__action .sn-ep__icon,[data-sn-assistant-theme="noirGraphite"] .sn-ep__action .sn-ep__icon,[data-sn-assistant-theme="midnightSteel"] .sn-ep__action .sn-ep__icon,[data-sn-assistant-theme="obsidianGold"] .sn-ep__action .sn-ep__icon{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 3px rgba(0,0,0,.24)}\r\n[data-sn-assistant-theme="dark"] .sn-ep__action .sn-ep__icon::after,[data-sn-assistant-theme="noirGraphite"] .sn-ep__action .sn-ep__icon::after,[data-sn-assistant-theme="midnightSteel"] .sn-ep__action .sn-ep__icon::after,[data-sn-assistant-theme="obsidianGold"] .sn-ep__action .sn-ep__icon::after{opacity:.28}\r\n[data-sn-assistant-theme="dark"] .sn-assistant-header-counts__badge--inc,[data-sn-assistant-theme="noirGraphite"] .sn-assistant-header-counts__badge--inc,[data-sn-assistant-theme="midnightSteel"] .sn-assistant-header-counts__badge--inc{color:#fda29b;background:rgba(180,35,24,.18);border-color:rgba(253,162,155,.24)}\r\n[data-sn-assistant-theme="dark"] .sn-assistant-header-counts__badge--task,[data-sn-assistant-theme="noirGraphite"] .sn-assistant-header-counts__badge--task,[data-sn-assistant-theme="midnightSteel"] .sn-assistant-header-counts__badge--task{color:#84caff;background:rgba(23,92,211,.18);border-color:rgba(132,202,255,.24)}\r\n\r\n@media (prefers-reduced-motion:reduce){.sn-ep__action,.sn-ep__action .sn-ep__icon,.sn-ep__action--mini-bolt,.sn-assistant-header-counts__badge{transition:none!important;transform:none!important;animation:none!important}.sn-assistant-header-counts__badge::before{display:none}}\r\n';
 
   // Assistant/ui/styles/iconography-icons-mode.css
   var iconography_icons_mode_default = '/* Icon-only mode: one visual surface per action.\r\n   The compact rail previously rendered a rounded button around a second rounded\r\n   icon tile, and action rows displayed their secondary control beside the main\r\n   action. That read as duplicated UI. Flatten the primary surface and turn the\r\n   secondary action into a small corner affordance instead. */\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__group-buttons {\r\n  gap: 6px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action {\r\n  position: relative;\r\n  min-width: 42px;\r\n  width: 42px;\r\n  min-height: 42px;\r\n  padding: 4px;\r\n  margin: 0 auto;\r\n  border: 0 !important;\r\n  background: transparent !important;\r\n  box-shadow: none !important;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action:hover,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action:focus-visible {\r\n  background: transparent !important;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action > .sn-ep__icon {\r\n  width: 36px;\r\n  height: 36px;\r\n  border-radius: 11px;\r\n  border-width: 1px;\r\n  box-shadow: 0 1px 2px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.34);\r\n}\r\n\r\n/* Remove the glossy second outline in the compact rail. */\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action > .sn-ep__icon::after {\r\n  display: none;\r\n}\r\n\r\n/* Rows such as Draft + Top3, Assign + group config and Work Notes + Smart\r\n   generator become one button with a small bottom-right secondary affordance. */\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row {\r\n  position: relative;\r\n  display: block;\r\n  width: 42px;\r\n  min-height: 42px;\r\n  margin: 0 auto;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action:first-child {\r\n  width: 42px;\r\n  min-width: 42px;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="quick-draft-top3"],\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="generate-menu-toggle"],\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="configure-assign-group"] {\r\n  position: absolute;\r\n  right: -1px;\r\n  bottom: -1px;\r\n  z-index: 3;\r\n  width: 17px !important;\r\n  min-width: 17px !important;\r\n  height: 17px !important;\r\n  min-height: 17px !important;\r\n  padding: 0 !important;\r\n  border: 2px solid var(--ep-surface, #fff) !important;\r\n  border-radius: 6px !important;\r\n  background: var(--ep-surface, #fff) !important;\r\n  box-shadow: 0 1px 4px rgba(15,23,42,.18) !important;\r\n  overflow: visible;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt > .sn-ep__icon,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="quick-draft-top3"] > .sn-ep__icon,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="generate-menu-toggle"] > .sn-ep__icon,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="configure-assign-group"] > .sn-ep__icon {\r\n  width: 13px !important;\r\n  height: 13px !important;\r\n  min-width: 13px !important;\r\n  min-height: 13px !important;\r\n  border: 0 !important;\r\n  border-radius: 4px !important;\r\n  background: transparent !important;\r\n  box-shadow: none !important;\r\n  transform: none !important;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt > .sn-ep__icon::before,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="quick-draft-top3"] > .sn-ep__icon::before,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="generate-menu-toggle"] > .sn-ep__icon::before,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="configure-assign-group"] > .sn-ep__icon::before {\r\n  inset: 1px !important;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt > .sn-ep__icon svg,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="quick-draft-top3"] > .sn-ep__icon svg,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="generate-menu-toggle"] > .sn-ep__icon svg,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="configure-assign-group"] > .sn-ep__icon svg {\r\n  width: 11px !important;\r\n  height: 11px !important;\r\n}\r\n\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt:hover,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="quick-draft-top3"]:hover,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="generate-menu-toggle"]:hover,\r\n.sn-ep[data-ep-mode="icons"] .sn-ep__action-row > [data-action="configure-assign-group"]:hover {\r\n  transform: scale(1.08);\r\n}\r\n\r\n[data-sn-assistant-theme="dark"] .sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt,\r\n[data-sn-assistant-theme="noirGraphite"] .sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt,\r\n[data-sn-assistant-theme="midnightSteel"] .sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt,\r\n[data-sn-assistant-theme="obsidianGold"] .sn-ep[data-ep-mode="icons"] .sn-ep__action-row > .sn-ep__action--mini-bolt {\r\n  border-color: color-mix(in srgb, var(--ep-surface, #111827) 82%, white 18%) !important;\r\n  background: var(--ep-surface, #111827) !important;\r\n}\r\n';
@@ -18548,6 +18279,9 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   // Assistant/ui/styles/workNotes-enhanced.css
   var workNotes_enhanced_default = '/* \u2500\u2500\u2500 Work Notes canned phrase chips \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-worknotes__canned {\r\n  margin-bottom: 2px;\r\n}\r\n\r\n.sn-assistant-worknotes__canned-chips {\r\n  flex-wrap: wrap;\r\n  gap: 4px;\r\n  max-height: 64px;\r\n  padding: 6px 0 0;\r\n}\r\n\r\n.sn-assistant-worknotes__canned-chip {\r\n  font-size: 10px;\r\n  padding: 4px 8px;\r\n  border-radius: 7px;\r\n  background: color-mix(in srgb, var(--sn-assistant-accent-soft) 75%, var(--sn-assistant-panel));\r\n  color: color-mix(in srgb, var(--sn-assistant-accent-strong) 85%, var(--sn-assistant-ink));\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 12%, transparent);\r\n  display: inline-flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-worknotes__canned-chip:hover {\r\n  background: var(--sn-assistant-accent);\r\n  color: #fff;\r\n}\r\n\r\n.sn-assistant-worknotes__canned-label {\r\n  max-width: 170px;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-worknotes__canned-remove {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  width: 14px;\r\n  height: 14px;\r\n  border-radius: 999px;\r\n  font-size: 11px;\r\n  line-height: 1;\r\n  font-weight: 700;\r\n  background: rgba(0, 0, 0, 0.12);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   WORK NOTES \u2014 COMPACT / FOCUSED LAYOUT\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-worknotes__editor-header {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  margin-bottom: 3px;\r\n}\r\n\r\n.sn-assistant-worknotes__char-count {\r\n  font-size: 10px;\r\n  color: var(--sn-assistant-muted);\r\n  font-weight: 500;\r\n  flex-shrink: 0;\r\n  font-variant-numeric: tabular-nums;\r\n}\r\n\r\n.sn-assistant-worknotes__textarea {\r\n  min-height: 112px;\r\n  resize: vertical;\r\n  line-height: 1.45;\r\n  padding: 9px 10px;\r\n}\r\n\r\n.sn-assistant-worknotes__editor--primary {\r\n  order: -1;\r\n}\r\n\r\n.sn-assistant-worknotes__editor--primary .sn-assistant-worknotes__textarea {\r\n  min-height: 124px;\r\n}\r\n\r\n/* Keep the picker visually quiet: editor first, search second, templates on demand. */\r\n.sn-assistant-worknotes__picker {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 7px;\r\n  padding: 0;\r\n  border: 0;\r\n  border-radius: 0;\r\n  background: transparent;\r\n}\r\n\r\n.sn-assistant-worknotes__picker .sn-assistant-searchbar {\r\n  min-height: 32px;\r\n  border-radius: 8px;\r\n  background: color-mix(in srgb, var(--sn-assistant-surface) 42%, var(--sn-assistant-panel));\r\n}\r\n\r\n.sn-assistant-worknotes__picker .sn-assistant-searchbar:focus-within {\r\n  background: var(--sn-assistant-panel);\r\n}\r\n\r\n.sn-assistant-worknotes__templates {\r\n  gap: 4px;\r\n}\r\n\r\n.sn-assistant-worknotes__templates-header {\r\n  min-height: 18px;\r\n}\r\n\r\n.sn-assistant-worknotes__section-hint {\r\n  font-size: 9px;\r\n  font-weight: 500;\r\n  color: var(--sn-assistant-muted);\r\n  opacity: 0.72;\r\n}\r\n\r\n.sn-assistant-worknotes__chips--suggested {\r\n  max-height: none;\r\n  overflow: visible;\r\n  gap: 4px;\r\n}\r\n\r\n.sn-assistant-worknotes__chip {\r\n  font-size: 10.5px;\r\n  line-height: 1.2;\r\n  padding: 4px 8px;\r\n  border-radius: 7px;\r\n  gap: 4px;\r\n}\r\n\r\n.sn-assistant-worknotes__chip-badge {\r\n  min-width: 16px;\r\n  height: 13px;\r\n  padding: 0 3px;\r\n  font-size: 8px;\r\n}\r\n\r\n/* Native details keep the complete catalog available without flooding the panel. */\r\n.sn-assistant-worknotes__browse,\r\n.sn-assistant-worknotes__quick {\r\n  margin: 0;\r\n  padding: 0;\r\n  border: 1px solid color-mix(in srgb, var(--sn-assistant-border) 72%, transparent);\r\n  border-radius: 8px;\r\n  background: color-mix(in srgb, var(--sn-assistant-surface) 30%, transparent);\r\n  overflow: hidden;\r\n}\r\n\r\n.sn-assistant-worknotes__browse-summary {\r\n  min-height: 30px;\r\n  padding: 0 9px;\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  cursor: pointer;\r\n  list-style: none;\r\n  user-select: none;\r\n  font-size: 10.5px;\r\n  font-weight: 600;\r\n  color: color-mix(in srgb, var(--sn-assistant-ink) 82%, var(--sn-assistant-muted));\r\n}\r\n\r\n.sn-assistant-worknotes__browse-summary::-webkit-details-marker {\r\n  display: none;\r\n}\r\n\r\n.sn-assistant-worknotes__browse-summary::after {\r\n  content: "\u203A";\r\n  margin-left: 2px;\r\n  color: var(--sn-assistant-muted);\r\n  font-size: 14px;\r\n  line-height: 1;\r\n  transform: rotate(90deg);\r\n  transition: transform 120ms ease;\r\n}\r\n\r\n.sn-assistant-worknotes__browse[open] > .sn-assistant-worknotes__browse-summary::after,\r\n.sn-assistant-worknotes__quick[open] > .sn-assistant-worknotes__browse-summary::after {\r\n  transform: rotate(-90deg);\r\n}\r\n\r\n.sn-assistant-worknotes__browse-summary:hover {\r\n  background: color-mix(in srgb, var(--sn-assistant-ink) 3%, transparent);\r\n}\r\n\r\n.sn-assistant-worknotes__browse-count {\r\n  margin-left: auto;\r\n  min-width: 20px;\r\n  height: 18px;\r\n  padding: 0 6px;\r\n  border-radius: 999px;\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  background: color-mix(in srgb, var(--sn-assistant-surface) 78%, transparent);\r\n  color: var(--sn-assistant-muted);\r\n  font-size: 9px;\r\n  font-weight: 700;\r\n  font-variant-numeric: tabular-nums;\r\n}\r\n\r\n.sn-assistant-worknotes__chips--browse {\r\n  max-height: min(22vh, 150px);\r\n  overflow-y: auto;\r\n  padding: 6px 8px 8px;\r\n  border-top: 1px solid color-mix(in srgb, var(--sn-assistant-border) 60%, transparent);\r\n  gap: 4px;\r\n}\r\n\r\n.sn-assistant-worknotes__browse:not([open]) .sn-assistant-worknotes__chips--browse,\r\n.sn-assistant-worknotes__quick:not([open]) .sn-assistant-worknotes__canned-chips {\r\n  display: none;\r\n}\r\n\r\n.sn-assistant-worknotes__quick .sn-assistant-worknotes__canned-chips {\r\n  max-height: 76px;\r\n  overflow-y: auto;\r\n  padding: 6px 8px 8px;\r\n  border-top: 1px solid color-mix(in srgb, var(--sn-assistant-border) 60%, transparent);\r\n}\r\n\r\n.sn-assistant-worknotes__footer {\r\n  flex-direction: row;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 8px;\r\n}\r\n\r\n.sn-assistant-worknotes__footer-actions {\r\n  display: flex;\r\n  flex: 1;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-worknotes__footer-actions .sn-assistant-button {\r\n  flex: 1;\r\n  min-width: 0;\r\n  height: 32px;\r\n  padding-inline: 10px;\r\n}\r\n\r\n.sn-assistant-worknotes__footer-tools {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  gap: 3px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-worknotes__footer-tools .sn-assistant-mini-button {\r\n  width: 30px;\r\n  height: 30px;\r\n  border-radius: 7px;\r\n}\r\n\r\n.sn-assistant-worknotes__footer-primary,\r\n.sn-assistant-worknotes__footer-secondary {\r\n  display: flex;\r\n  gap: 8px;\r\n  flex: 1;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   OPTION 2 \u2014 TEMPLATE-FIRST WORK NOTES\r\n   The DOM stays backward compatible; visual order now follows:\r\n   choose template -> preview/edit -> apply.\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-worknotes-panel .sn-assistant-panel__body {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 9px;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__picker {\r\n  order: -20;\r\n  gap: 8px;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__editor--primary {\r\n  order: -10;\r\n  margin-top: 2px;\r\n  padding: 9px;\r\n  border: 1px solid color-mix(in srgb, var(--sn-assistant-border) 78%, transparent);\r\n  border-radius: 10px;\r\n  background: color-mix(in srgb, var(--sn-assistant-surface) 34%, var(--sn-assistant-panel));\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__editor-header .sn-assistant-field__label {\r\n  font-size: 0;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__editor-header .sn-assistant-field__label::after {\r\n  content: "Preview";\r\n  font-size: 10.5px;\r\n  font-weight: 700;\r\n  letter-spacing: .02em;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__editor--primary .sn-assistant-worknotes__textarea {\r\n  min-height: 104px;\r\n  max-height: 190px;\r\n  border: 0;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-panel);\r\n  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sn-assistant-border) 62%, transparent);\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__templates-header > span:first-child {\r\n  font-size: 0;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__templates-header > span:first-child::after {\r\n  content: "Common templates";\r\n  font-size: 10px;\r\n  font-weight: 800;\r\n  letter-spacing: .04em;\r\n  text-transform: uppercase;\r\n  color: var(--sn-assistant-accent-strong);\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__section-hint {\r\n  font-size: 0;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__section-hint::after {\r\n  content: "Short description match + recent";\r\n  font-size: 9px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-muted);\r\n  opacity: .8;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chips--suggested {\r\n  display: grid;\r\n  grid-template-columns: repeat(2, minmax(0, 1fr));\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chips--suggested .sn-assistant-worknotes__chip {\r\n  min-height: 44px;\r\n  width: 100%;\r\n  justify-content: flex-start;\r\n  text-align: left;\r\n  padding: 8px 9px;\r\n  border-radius: 9px;\r\n  border: 1px solid color-mix(in srgb, var(--sn-assistant-border) 78%, transparent);\r\n  background: color-mix(in srgb, var(--sn-assistant-surface) 36%, var(--sn-assistant-panel));\r\n  white-space: normal;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chips--suggested .sn-assistant-worknotes__chip:hover {\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 42%, var(--sn-assistant-border));\r\n  background: color-mix(in srgb, var(--sn-assistant-accent-soft) 54%, var(--sn-assistant-panel));\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chips--suggested .sn-assistant-worknotes__chip.is-active,\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chips--suggested .sn-assistant-worknotes__chip.is-recommended {\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 58%, var(--sn-assistant-border));\r\n  background: color-mix(in srgb, var(--sn-assistant-accent-soft) 72%, var(--sn-assistant-panel));\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chip-badge {\r\n  margin-left: auto;\r\n  min-width: 22px;\r\n  height: 16px;\r\n  border-radius: 999px;\r\n  background: var(--sn-assistant-accent);\r\n  color: #fff;\r\n  font-size: 8px;\r\n  font-weight: 800;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-searchbar {\r\n  order: -2;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__templates {\r\n  order: -1;\r\n  padding: 2px 0;\r\n}\r\n\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__browse,\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__quick {\r\n  background: color-mix(in srgb, var(--sn-assistant-surface) 34%, var(--sn-assistant-panel));\r\n}\r\n\r\n/* Template clicks auto-apply. Keep one explicit action only for technicians who\r\n   manually edit the preview after selecting a template. */\r\n.sn-assistant-worknotes-panel [data-action="work-notes-append"] {\r\n  display: none;\r\n}\r\n\r\n.sn-assistant-worknotes-panel [data-action="work-notes-write"] {\r\n  font-size: 0;\r\n}\r\n\r\n.sn-assistant-worknotes-panel [data-action="work-notes-write"]::after {\r\n  content: "Apply edited note";\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n}\r\n\r\n@media (max-width: 520px) {\r\n  .sn-assistant-worknotes-panel .sn-assistant-worknotes__chips--suggested {\r\n    grid-template-columns: 1fr;\r\n  }\r\n}\r\n';
 
+  // Assistant/ui/styles/workNotes-visibility.css
+  var workNotes_visibility_default = "/* Filtering must win over chip/card display declarations in every theme. */\r\n.sn-assistant-worknotes-panel [hidden],\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__chip[hidden],\r\n.sn-assistant-worknotes-panel .sn-assistant-worknotes__canned-chip[hidden] {\r\n  display: none !important;\r\n}\r\n";
+
   // Assistant/ui/styles/userTickets.css
   var userTickets_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   PANEL BODY \u2014 FLUSH (no padding, used for tables / lists)\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-panel__body--flush {\r\n  padding: 0;\r\n  gap: 0;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   USER OPEN TICKETS PANEL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-panel--user-tickets {\r\n  width: 520px;\r\n  max-width: calc(100vw - 24px);\r\n}\r\n\r\n.sn-assistant-tickets-table-wrapper {\r\n  overflow-x: auto;\r\n  overflow-y: auto;\r\n  max-height: min(55vh, 440px);\r\n}\r\n\r\n.sn-assistant-tickets-table {\r\n  width: 100%;\r\n  border-collapse: collapse;\r\n  font-size: 11.5px;\r\n  font-family: inherit;\r\n}\r\n\r\n.sn-assistant-tickets-table thead tr {\r\n  background: var(--sn-assistant-surface);\r\n  position: sticky;\r\n  top: 0;\r\n  z-index: 1;\r\n}\r\n\r\n.sn-assistant-tickets-table th {\r\n  padding: 7px 10px;\r\n  text-align: left;\r\n  font-size: 10px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.06em;\r\n  text-transform: uppercase;\r\n  color: var(--sn-assistant-muted);\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-tickets-table td {\r\n  padding: 8px 10px;\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  vertical-align: middle;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-tickets-table__row {\r\n  cursor: pointer;\r\n  transition: background 120ms ease;\r\n}\r\n\r\n.sn-assistant-tickets-table__row:hover td,\r\n.sn-assistant-tickets-table__row:focus td {\r\n  background: var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-tickets-table__row:last-child td {\r\n  border-bottom: none;\r\n}\r\n\r\n.sn-assistant-tickets-table__number {\r\n  white-space: nowrap;\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 5px;\r\n}\r\n\r\n.sn-assistant-tickets-table__badge {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  padding: 2px 5px;\r\n  border-radius: 4px;\r\n  font-size: 9px;\r\n  font-weight: 800;\r\n  letter-spacing: 0.04em;\r\n  background: var(--sn-assistant-accent-soft);\r\n  color: var(--sn-assistant-accent);\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-tickets-table__badge--incident {\r\n  background: rgba(220, 38, 38, 0.08);\r\n  color: #dc2626;\r\n}\r\n\r\n.sn-assistant-tickets-table__badge--sc_req_item {\r\n  background: rgba(5, 150, 105, 0.08);\r\n  color: #059669;\r\n}\r\n\r\n.sn-assistant-tickets-table__badge--sc_request {\r\n  background: rgba(217, 119, 6, 0.08);\r\n  color: #d97706;\r\n}\r\n\r\n.sn-assistant-tickets-table__badge--sc_task {\r\n  background: rgba(37, 99, 235, 0.08);\r\n  color: #2563eb;\r\n}\r\n\r\n.sn-assistant-tickets-table__num-val {\r\n  font-weight: 700;\r\n  color: var(--sn-assistant-accent);\r\n  font-size: 11px;\r\n}\r\n\r\n.sn-assistant-tickets-table__desc {\r\n  max-width: 220px;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-tickets-table__state {\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  padding: 2px 7px;\r\n  border-radius: 999px;\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  white-space: nowrap;\r\n  line-height: 1.5;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill--new {\r\n  background: rgba(37, 99, 235, 0.1);\r\n  color: #2563eb;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill--inprogress {\r\n  background: rgba(5, 150, 105, 0.1);\r\n  color: #059669;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill--pending {\r\n  background: rgba(217, 119, 6, 0.1);\r\n  color: #d97706;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill--resolved {\r\n  background: rgba(107, 114, 128, 0.1);\r\n  color: #6b7280;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill--closed {\r\n  background: rgba(107, 114, 128, 0.06);\r\n  color: #9ca3af;\r\n}\r\n\r\n.sn-assistant-tickets-table__state-pill--default {\r\n  color: var(--sn-assistant-muted);\r\n}\r\n\r\n.sn-assistant-tickets-table__date {\r\n  white-space: nowrap;\r\n  font-size: 11px;\r\n  color: var(--sn-assistant-muted);\r\n  font-variant-numeric: tabular-nums;\r\n}\r\n\r\n.sn-assistant-tickets-loading,\r\n.sn-assistant-ci-loading {\r\n  padding: 20px 16px;\r\n  text-align: center;\r\n  font-size: 12px;\r\n  color: var(--sn-assistant-muted);\r\n  font-style: italic;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   SCTASK GROUPED BY PARENT RITM\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-sctask-view {\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-sctask-view__toolbar {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n  padding: 8px 10px;\r\n  background: var(--sn-assistant-surface);\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-sctask-view__label {\r\n  margin-right: 2px;\r\n  font-size: 10px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.05em;\r\n  text-transform: uppercase;\r\n  color: var(--sn-assistant-muted);\r\n}\r\n\r\n.sn-assistant-sctask-view__toggle {\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 999px;\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-muted);\r\n  padding: 4px 9px;\r\n  font: inherit;\r\n  font-size: 10.5px;\r\n  font-weight: 650;\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-assistant-sctask-view__toggle:hover,\r\n.sn-assistant-sctask-view__toggle.is-active {\r\n  border-color: var(--sn-assistant-accent);\r\n  color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-sctask-view__flat {\r\n  display: none;\r\n}\r\n\r\n.sn-assistant-sctask-view.is-flat .sn-assistant-sctask-view__grouped {\r\n  display: none;\r\n}\r\n\r\n.sn-assistant-sctask-view.is-flat .sn-assistant-sctask-view__flat {\r\n  display: block;\r\n}\r\n\r\n.sn-assistant-sctask-view__grouped {\r\n  max-height: min(58vh, 470px);\r\n  overflow: auto;\r\n  padding: 8px;\r\n  background: var(--sn-assistant-surface);\r\n}\r\n\r\n.sn-assistant-ritm-group {\r\n  overflow: hidden;\r\n  margin-bottom: 8px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 9px;\r\n  background: var(--sn-assistant-panel);\r\n}\r\n\r\n.sn-assistant-ritm-group:last-child {\r\n  margin-bottom: 0;\r\n}\r\n\r\n.sn-assistant-ritm-group__header {\r\n  padding: 9px 10px;\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  background: linear-gradient(180deg, var(--sn-assistant-panel), var(--sn-assistant-surface));\r\n}\r\n\r\n.sn-assistant-ritm-group__header[role="button"] {\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-assistant-ritm-group__header[role="button"]:hover,\r\n.sn-assistant-ritm-group__header[role="button"]:focus {\r\n  background: var(--sn-assistant-accent-soft);\r\n  outline: none;\r\n}\r\n\r\n.sn-assistant-ritm-group__title-row {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-ritm-group__number {\r\n  color: var(--sn-assistant-accent);\r\n  font-size: 11.5px;\r\n}\r\n\r\n.sn-assistant-ritm-group__summary {\r\n  margin-left: auto;\r\n  color: var(--sn-assistant-muted);\r\n  font-size: 9.5px;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-ritm-group__description {\r\n  margin-top: 4px;\r\n  overflow: hidden;\r\n  color: var(--sn-assistant-muted);\r\n  font-size: 10.5px;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-ritm-group__tasks {\r\n  display: flex;\r\n  flex-direction: column;\r\n}\r\n\r\n.sn-assistant-sctask-card {\r\n  width: 100%;\r\n  display: grid;\r\n  grid-template-columns: minmax(0, 1fr) auto;\r\n  gap: 10px;\r\n  align-items: center;\r\n  padding: 8px 10px;\r\n  border: 0;\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  text-align: left;\r\n  font: inherit;\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-assistant-sctask-card:last-child {\r\n  border-bottom: 0;\r\n}\r\n\r\n.sn-assistant-sctask-card:hover,\r\n.sn-assistant-sctask-card:focus {\r\n  background: var(--sn-assistant-accent-soft);\r\n  outline: none;\r\n}\r\n\r\n.sn-assistant-sctask-card__main,\r\n.sn-assistant-sctask-card__meta {\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-sctask-card__main {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 2px;\r\n}\r\n\r\n.sn-assistant-sctask-card__number {\r\n  color: var(--sn-assistant-accent);\r\n  font-size: 10.5px;\r\n  font-weight: 750;\r\n}\r\n\r\n.sn-assistant-sctask-card__description {\r\n  overflow: hidden;\r\n  max-width: 255px;\r\n  color: var(--sn-assistant-ink);\r\n  font-size: 10px;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n\r\n.sn-assistant-sctask-card__meta {\r\n  display: grid;\r\n  grid-template-columns: auto minmax(70px, 110px);\r\n  gap: 3px 7px;\r\n  align-items: center;\r\n  justify-items: end;\r\n}\r\n\r\n.sn-assistant-sctask-card__assigned,\r\n.sn-assistant-sctask-card__date {\r\n  color: var(--sn-assistant-muted);\r\n  font-size: 9.5px;\r\n}\r\n\r\n.sn-assistant-sctask-card__date {\r\n  grid-column: 2;\r\n  font-variant-numeric: tabular-nums;\r\n}\r\n\r\n@media (max-width: 560px) {\r\n  .sn-assistant-sctask-card {\r\n    grid-template-columns: 1fr;\r\n  }\r\n\r\n  .sn-assistant-sctask-card__meta {\r\n    grid-template-columns: auto 1fr auto;\r\n    justify-items: start;\r\n  }\r\n\r\n  .sn-assistant-sctask-card__date {\r\n    grid-column: auto;\r\n  }\r\n\r\n  .sn-assistant-ritm-group__summary {\r\n    display: none;\r\n  }\r\n}';
 
@@ -18595,6 +18329,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
     responsive_default,
     epLinks_default,
     workNotes_enhanced_default,
+    workNotes_visibility_default,
     userTickets_default,
     findCi_default,
     workNotes_apply_default,
@@ -19431,16 +19166,16 @@ Are you sure you want to download this calendar event?`
         rootWindow
       )
     ].filter((val) => val && !looksLikeTicketIdentifier3(val)).find(Boolean) || "";
-    const email = emailFields.map((fieldName) => getFieldText(fieldName, rootWindow)).find(Boolean) || "";
+    const email2 = emailFields.map((fieldName) => getFieldText(fieldName, rootWindow)).find(Boolean) || "";
     const phone = phoneFields.map((fieldName) => getFieldText(fieldName, rootWindow)).find(Boolean) || "";
-    const parsedFromEmail = !displayName && email ? splitPersonName(email.split("@")[0].replace(/[._-]+/g, " ")) : null;
+    const parsedFromEmail = !displayName && email2 ? splitPersonName(email2.split("@")[0].replace(/[._-]+/g, " ")) : null;
     const parsedFromName = splitPersonName(displayName);
     return {
       firstName: cleanText(parsedFromEmail?.firstName || parsedFromName.firstName),
       lastName: cleanText(parsedFromEmail?.lastName || parsedFromName.lastName),
       fullName: cleanText(displayName || parsedFromEmail?.fullName),
       display: cleanText(displayName),
-      email: cleanText(email),
+      email: cleanText(email2),
       phone: cleanText(phone)
     };
   }
@@ -37293,7 +37028,7 @@ Kind regards,
 ${assignedTo}`
       }
     };
-    const email = internalTask ? "(none)" : emailMap[type] || {
+    const email2 = internalTask ? "(none)" : emailMap[type] || {
       subject: `${number} - Assistance required`,
       body: `Dear ${requestedFor},
 
@@ -37433,7 +37168,7 @@ ${assignedTo}`]
       classifierText: classification.classifierText,
       cleanDevice,
       piAsset,
-      email,
+      email: email2,
       closeNotes: { subject: closeSubject, body: closeBody },
       workNotes: workNote,
       closeWorkNotes: closeWorkNote,
@@ -37880,18 +37615,10 @@ ${bundle.email.body}`,
     const recent = Array.isArray(state.ui.workNotesRecentPhrases) ? state.ui.workNotesRecentPhrases : [];
     return [phrase, ...recent.filter((item) => item !== phrase)].slice(0, RECENT_PHRASES_MAX);
   }
-  function createWorkNotesHandlers({
-    state,
-    store,
-    logger,
-    rootWindow,
-    runAction,
-    buildTicketContext,
-    getEffectiveSettings,
-    scheduleRecovery,
-    scheduleAutoHideTimer,
-    clearAutoHideTimer
-  }) {
+  function resolveWorkNoteText(state, model) {
+    return state?.ui?.workNotesSource === "manual" ? String(state.ui.workNotesText ?? "") : cleanText(state?.ui?.workNotesText) || model?.draftText || model?.smartText || "";
+  }
+  function createWorkNotesHandlers({ state, store, logger, rootWindow, runAction, buildTicketContext, getEffectiveSettings, scheduleRecovery, scheduleAutoHideTimer, clearAutoHideTimer }) {
     function pushPhrase(phrase) {
       const next = nextRecentPhrases(state, phrase);
       if (next) {
@@ -37906,43 +37633,10 @@ ${bundle.email.body}`,
           store.dispatch(setWorkNotesRecentPhrases, loadRecentWorkNotePhrases(rootWindow));
           store.dispatch(setWorkNotesRecentPhrasesReset, true);
         }
-        const recommendationState = {
-          ...state,
-          ui: {
-            ...state.ui,
-            workNotesTemplateId: "",
-            workNotesText: "",
-            workNotesSearch: ""
-          }
-        };
-        const settings = getEffectiveSettings();
-        const model = buildWorkNoteModel(currentContext, settings, recommendationState);
-        const shortDescriptionRecommendation = recommendWorkNoteFromShortDescription(
-          model.templates,
-          currentContext,
-          model.recommendedTemplateId || model.selectedTemplateId
-        );
-        const recommendedTemplateId = shortDescriptionRecommendation.templateId || model.recommendedTemplateId || model.selectedTemplateId;
-        const recommendedTemplate = model.templates.find((template) => template.id === recommendedTemplateId) || model.selectedTemplate || null;
-        const renderedRecommended = recommendedTemplate ? renderTemplate(recommendedTemplate, { context: currentContext, settings }) : null;
-        const draftText = shortDescriptionRecommendation.source === "short-description" ? renderedRecommended?.body || model.draftText || model.smartText : model.draftText || renderedRecommended?.body || model.smartText;
-        store.dispatch(openWorkNotes, {
-          templateId: recommendedTemplateId,
-          draftText,
-          generatedTemplateId: recommendedTemplateId
-        });
+        const recommendationState = { ...state, ui: { ...state.ui, workNotesTemplateId: "", workNotesText: "", workNotesSearch: "", workNotesSource: "template" } }, settings = getEffectiveSettings(), model = buildWorkNoteModel(currentContext, settings, recommendationState), shortDescriptionRecommendation = recommendWorkNoteFromShortDescription(model.templates, currentContext, model.recommendedTemplateId || model.selectedTemplateId), recommendedTemplateId = shortDescriptionRecommendation.templateId || model.recommendedTemplateId || model.selectedTemplateId, recommendedTemplate = model.templates.find((t) => t.id === recommendedTemplateId) || model.selectedTemplate || null, renderedRecommended = recommendedTemplate ? renderTemplate(recommendedTemplate, { context: currentContext, settings }) : null, draftText = shortDescriptionRecommendation.source === "short-description" ? renderedRecommended?.body || model.draftText || model.smartText : model.draftText || renderedRecommended?.body || model.smartText;
+        store.dispatch(openWorkNotes, { templateId: recommendedTemplateId, draftText, generatedTemplateId: recommendedTemplateId });
         clearAutoHideTimer();
-        logger.info("work-notes:open", {
-          table: currentContext?.table || "",
-          ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "",
-          shortDescription: cleanText(currentContext?.shortDescription || currentContext?.short_description || ""),
-          selectedTemplateId: recommendedTemplateId || "",
-          recommendationIntent: model.recommendation?.intent || "",
-          recommendationSource: shortDescriptionRecommendation.source,
-          recommendationScore: shortDescriptionRecommendation.score,
-          recommendationCandidates: shortDescriptionRecommendation.candidates,
-          source: "short-description"
-        });
+        logger.info("work-notes:open", { table: currentContext?.table || "", ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", selectedTemplateId: recommendedTemplateId || "", recommendationSource: shortDescriptionRecommendation.source });
         scheduleRecovery("work-notes-open", 0);
       },
       onCloseWorkNotes() {
@@ -37951,69 +37645,28 @@ ${bundle.email.body}`,
         scheduleRecovery("work-notes-close", 0);
       },
       onSelectWorkNoteTemplate(templateId) {
-        const previousTemplateId = state.ui.workNotesTemplateId || "";
-        const selectedId = cleanText(templateId || "");
-        const currentContext = state.context || getCurrentContext(rootWindow);
-        const settings = getEffectiveSettings();
-        const model = buildWorkNoteModel(currentContext, settings, state);
-        const selectedTemplate = model.templates.find((entry) => entry.id === selectedId) || null;
-        if (!selectedTemplate) {
-          throw new Error("Work note template not found");
-        }
-        const renderedSelected = renderTemplate(selectedTemplate, { context: currentContext, settings });
-        const templateText = cleanText(renderedSelected?.body || "");
-        if (!templateText) {
-          throw new Error("Work note template rendered empty");
-        }
-        store.dispatch(applyWorkNoteTemplate, {
-          templateId: selectedId,
-          text: templateText,
-          generatedTemplateId: selectedId
-        });
+        const previousTemplateId = state.ui.workNotesTemplateId || "", selectedId = cleanText(templateId || ""), currentContext = state.context || getCurrentContext(rootWindow), settings = getEffectiveSettings(), model = buildWorkNoteModel(currentContext, settings, state), selectedTemplate = model.templates.find((e) => e.id === selectedId) || null;
+        if (!selectedTemplate) throw new Error("Work note template not found");
+        const renderedSelected = renderTemplate(selectedTemplate, { context: currentContext, settings }), templateText = cleanText(renderedSelected?.body || "");
+        if (!templateText) throw new Error("Work note template rendered empty");
+        store.dispatch(applyWorkNoteTemplate, { templateId: selectedId, text: templateText, generatedTemplateId: selectedId });
         state.ui.workNotesSource = "template-preview";
-        logger.info("work-notes:template-selected", {
-          ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "",
-          selectedTemplateId: selectedId,
-          previousTemplateId,
-          source: "template-preview"
-        });
-        showToast(state.host.document, {
-          message: `Template selected: ${selectedTemplate.label || selectedId}`,
-          tone: "info"
-        });
+        logger.info("work-notes:template-selected", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", selectedTemplateId: selectedId, previousTemplateId, source: "template-preview" });
+        showToast(state.host.document, { message: `Template selected: ${selectedTemplate.label || selectedId}`, tone: "info" });
         scheduleRecovery("work-notes-template", 0);
       },
       onAppendWorkNoteTemplate(templateId, baseText = "") {
-        const currentContext = state.context || getCurrentContext(rootWindow);
-        const model = buildWorkNoteModel(currentContext, getEffectiveSettings(), state);
-        const template = model.templates.find((entry) => entry.id === templateId) || model.selectedTemplate || null;
-        if (!template) {
-          throw new Error("No work note template selected");
-        }
-        const renderedTemplate = renderTemplate(template, {
-          context: currentContext,
-          settings: getEffectiveSettings()
-        });
-        const addition = renderedTemplate?.body || "";
-        const currentText = baseText || state.ui.workNotesText || model.draftText || "";
-        const fullText = currentText ? `${currentText}
+        const currentContext = state.context || getCurrentContext(rootWindow), model = buildWorkNoteModel(currentContext, getEffectiveSettings(), state), template = model.templates.find((e) => e.id === templateId) || model.selectedTemplate || null;
+        if (!template) throw new Error("No work note template selected");
+        const renderedTemplate = renderTemplate(template, { context: currentContext, settings: getEffectiveSettings() }), addition = cleanText(renderedTemplate?.body || "");
+        if (!addition) throw new Error("Work note template rendered empty");
+        const currentText = baseText !== "" ? baseText : resolveWorkNoteText(state, model), fullText = currentText ? `${currentText}
 
-${addition}` : addition;
-        const writeResult = writeWorkNoteToField(addition, currentContext, { append: true });
-        if (!writeResult.ok) {
-          throw new Error("Work notes could not be written");
-        }
-        logger.info("work-notes:append-template", {
-          ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "",
-          templateId: template.id,
-          targetField: writeResult.targetField || ""
-        });
-        store.dispatch(appendWorkNoteText, {
-          templateId: template.id,
-          fullText,
-          generatedTemplateId: template.id
-        });
+${addition}` : addition, writeResult = writeWorkNoteToField(addition, currentContext, { append: true });
+        if (!writeResult.ok) throw new Error(`Work notes could not be written (${writeResult.kind || "unverified"})`);
+        store.dispatch(appendWorkNoteText, { templateId: template.id, fullText, generatedTemplateId: template.id });
         noteWorkNoteTemplateUsage(state, rootWindow, template.id);
+        logger.info("work-notes:append-template", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", templateId: template.id, targetField: writeResult.targetField || "", verified: Boolean(writeResult.verified) });
         scheduleRecovery("work-notes-append-template", 0);
       },
       onWorkNoteTextChange(value2) {
@@ -38033,75 +37686,42 @@ ${addition}` : addition;
       },
       onCopyWorkNote() {
         runAction("workNotes", async () => {
-          const model = buildWorkNoteModel(state.context || {}, getEffectiveSettings(), state);
-          const text2 = state.ui.workNotesText || model.draftText || model.smartText;
-          if (!text2) {
-            throw new Error("No work note text available");
-          }
-          const copied = await copyToClipboard(text2, state.host.document);
-          if (!copied) {
-            throw new Error("Clipboard copy failed");
-          }
+          const model = buildWorkNoteModel(state.context || {}, getEffectiveSettings(), state), text2 = resolveWorkNoteText(state, model);
+          if (!cleanText(text2)) throw new Error("No work note text available");
+          if (!await copyToClipboard(text2, state.host.document)) throw new Error("Clipboard copy failed");
           showToast(state.host.document, { message: "Work note copied", tone: "info" });
         });
       },
       onWriteWorkNote(mode = "replace") {
         runAction("workNotes", async () => {
           const currentContext = state.context || getCurrentContext(rootWindow);
-          if (!currentContext?.table && !currentContext?.recordNumber && !currentContext?.ticketNumber) {
-            throw new Error("No ticket context detected");
+          if (!currentContext?.table && !currentContext?.recordNumber && !currentContext?.ticketNumber) throw new Error("No ticket context detected");
+          const model = buildWorkNoteModel(currentContext, getEffectiveSettings(), state), text2 = resolveWorkNoteText(state, model);
+          if (!cleanText(text2)) {
+            logger.warn("work-notes:write-blocked", { mode, kind: "empty-manual-draft" });
+            throw new Error("Work note is empty");
           }
-          const model = buildWorkNoteModel(currentContext, getEffectiveSettings(), state);
-          const text2 = state.ui.workNotesText || model.draftText || model.smartText;
-          logger.info("audit:work-note", {
-            ticket: currentContext?.ticketNumber || currentContext?.recordNumber || "unknown",
-            mode
-          });
+          logger.info("audit:work-note", { ticket: currentContext?.ticketNumber || currentContext?.recordNumber || "unknown", mode, source: state.ui.workNotesSource || "" });
           if (mode === "replace") {
-            const preview = String(text2 || "").slice(0, 80).replace(/\n/g, " ") + (String(text2 || "").length > 80 ? "..." : "");
-            const confirmed = await showConfirmationModal(state.host.document, {
-              title: "Replace Work Notes",
-              description: "This will replace all existing work notes with the new content. This action cannot be undone.",
-              details: [
-                { label: "Action", value: "Replace all work notes" },
-                { label: "Preview", value: preview }
-              ]
-            });
+            const preview = String(text2).slice(0, 80).replace(/\n/g, " ") + (String(text2).length > 80 ? "..." : ""), confirmed = await showConfirmationModal(state.host.document, { title: "Replace Work Notes", description: "This will replace all existing work notes with the new content. This action cannot be undone.", details: [{ label: "Action", value: "Replace all work notes" }, { label: "Preview", value: preview }] });
             if (!confirmed) return;
           }
           const result = writeWorkNoteToField(text2, currentContext, { append: mode === "append" });
-          if (!result.ok) {
-            throw new Error("Work notes could not be written");
-          }
-          const phrase = extractPhrases(text2)[0] || "";
-          pushPhrase(phrase);
-          logger.info("work-notes:write", {
-            ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "",
-            mode,
-            targetField: result.targetField || "",
-            appended: Boolean(result.appended),
-            source: state.ui.workNotesSource || ""
-          });
+          if (!result.ok) throw new Error(`Work notes could not be written (${result.kind || "unverified"})`);
+          pushPhrase(extractPhrases(text2)[0] || "");
+          logger.info("work-notes:write", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", mode, targetField: result.targetField || "", appended: Boolean(result.appended), verified: Boolean(result.verified), source: state.ui.workNotesSource || "" });
           if (state.ui.workNotesTemplateId) {
             noteWorkNoteTemplateUsage(state, rootWindow, state.ui.workNotesTemplateId);
             pushRecentWorkNote(rootWindow, state.ui.workNotesTemplateId, model.selectedTemplate?.label || "");
           }
           state.ui.workNotesSource = "manual";
-          showToast(state.host.document, {
-            message: result.appended ? "Work notes appended" : "Work notes written",
-            tone: "info"
-          });
-          logger.info("work notes written", {
-            targetField: result.targetField || "work_notes",
-            appended: Boolean(result.appended)
-          });
+          showToast(state.host.document, { message: result.appended ? "Work notes appended" : "Work notes written", tone: "success" });
         });
       },
       onCannedPhrase(phrase) {
         const text2 = cleanText(phrase);
         if (!text2) return;
-        const current = cleanText(state.ui.workNotesText);
-        const nextText = current ? `${current}
+        const current = String(state.ui.workNotesText ?? ""), nextText = cleanText(current) ? `${current}
 ${text2}` : text2;
         store.dispatch(setWorkNotesText, nextText);
         pushPhrase(text2);
@@ -38110,8 +37730,7 @@ ${text2}` : text2;
       onRemoveQuickPhrase(phrase) {
         const text2 = cleanText(phrase);
         if (!text2) return;
-        const recent = Array.isArray(state.ui.workNotesRecentPhrases) ? state.ui.workNotesRecentPhrases : [];
-        const next = recent.filter((item) => cleanText(item) !== text2);
+        const recent = Array.isArray(state.ui.workNotesRecentPhrases) ? state.ui.workNotesRecentPhrases : [], next = recent.filter((item) => cleanText(item) !== text2);
         store.dispatch(setWorkNotesRecentPhrases, next);
         saveRecentWorkNotePhrases(rootWindow, next);
         scheduleRecovery("work-notes-quick-phrase-remove", 0);
@@ -38119,140 +37738,86 @@ ${text2}` : text2;
       onQuickWriteWorkNote(templateId) {
         runAction("workNotes", async () => {
           const currentContext = state.context || getCurrentContext(rootWindow);
-          if (!currentContext?.table && !currentContext?.recordNumber && !currentContext?.ticketNumber) {
-            throw new Error("No ticket context detected");
-          }
-          const settings = getEffectiveSettings();
-          const model = buildWorkNoteModel(currentContext, settings, state);
-          const template = model.templates.find((t) => t.id === cleanText(templateId));
+          if (!currentContext?.table && !currentContext?.recordNumber && !currentContext?.ticketNumber) throw new Error("No ticket context detected");
+          const settings = getEffectiveSettings(), model = buildWorkNoteModel(currentContext, settings, state), template = model.templates.find((t) => t.id === cleanText(templateId));
           if (!template) throw new Error("Template not found");
-          const rendered = renderTemplate(template, { context: currentContext, settings });
-          const text2 = cleanText(rendered?.body || "");
+          const rendered = renderTemplate(template, { context: currentContext, settings }), text2 = cleanText(rendered?.body || "");
           if (!text2) throw new Error("Template rendered empty");
           const result = writeWorkNoteToField(text2, currentContext, { append: true });
-          if (!result.ok) throw new Error("Work notes could not be written");
+          if (!result.ok) throw new Error(`Work notes could not be written (${result.kind || "unverified"})`);
           noteWorkNoteTemplateUsage(state, rootWindow, template.id);
           pushRecentWorkNote(rootWindow, template.id, template.label || "");
-          logger.info("work-notes:quick-write", {
-            templateId: template.id,
-            ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "unknown"
-          });
-          showToast(state.host.document, {
-            message: `Work note written: ${template.label || template.id}`,
-            tone: "success"
-          });
+          logger.info("work-notes:quick-write", { templateId: template.id, ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "unknown", verified: Boolean(result.verified) });
+          showToast(state.host.document, { message: `Work note written: ${template.label || template.id}`, tone: "success" });
         });
       }
     };
   }
 
   // Assistant/application/templates/custom-templates.js
+  var TEMPLATE_CATEGORIES = /* @__PURE__ */ new Set(["email", "reminder", "close_note", "work_note", "appointment"]);
+  var TARGET_BY_CATEGORY = Object.freeze({ email: "comments", reminder: "comments", close_note: "close_notes", work_note: "work_notes", appointment: "comments" });
+  function normalizeCategory(category) {
+    const raw = cleanText(category);
+    if (TEMPLATE_CATEGORIES.has(raw)) return raw;
+    if (raw === "resolution") return "close_note";
+    if (raw === "internal") return "work_note";
+    return "email";
+  }
   function createCustomTemplateId(category) {
-    return `custom_${cleanText(category || "email")}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    return `custom_${normalizeCategory(category)}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
   function looksGeneratedCustomId(value2 = "") {
     return /^custom_(?:email|reminder|close_note|work_note|appointment)_[a-z0-9]+_[a-z0-9]+$/i.test(cleanText(value2));
   }
   function templateFingerprint(template = {}) {
-    return JSON.stringify([
-      cleanText(template.category),
-      cleanText(template.label),
-      cleanText(template.target),
-      cleanText(template.subject),
-      String(template.body || ""),
-      cleanText(template.paragraphSpacing || "standard")
-    ]);
+    return JSON.stringify([cleanText(template.category), cleanText(template.label), cleanText(template.target), cleanText(template.subject), String(template.body || ""), cleanText(template.paragraphSpacing || "standard")]);
+  }
+  function normalizeCustomTemplate(template = {}, fallbackCategory = "email") {
+    const category = normalizeCategory(template.category || fallbackCategory);
+    const id = cleanText(template.id);
+    if (!id) return null;
+    return {
+      ...template,
+      id,
+      category,
+      label: cleanText(template.label) || id,
+      target: cleanText(template.target) || TARGET_BY_CATEGORY[category],
+      subject: String(template.subject || ""),
+      body: String(template.body || ""),
+      paragraphSpacing: cleanText(template.paragraphSpacing || "standard") || "standard",
+      isCustom: true,
+      source: "settings"
+    };
   }
   function getDefaultCustomTemplate(category) {
-    const rawCategory = cleanText(category);
-    const safeCategory = ["email", "reminder", "close_note", "work_note", "appointment"].includes(rawCategory) ? rawCategory : rawCategory === "resolution" ? "close_note" : rawCategory === "internal" ? "work_note" : "email";
-    if (safeCategory === "reminder") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New reminder template",
-        target: "comments",
-        subject: "Reminder: {{ticket_number}}",
-        body: "Dear {{user_name}},\n\nReminder regarding ticket {{ticket_number}}.\n\nWe are following up on the previous message and kindly ask you to confirm your availability or share the missing details.\n\nKind regards,\n{{agent_name}}",
-        isCustom: true
-      };
-    }
-    if (safeCategory === "work_note") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New work note template",
-        target: "work_notes",
-        body: "Write your work note here.\nYou can use placeholders like {{ticket_number}} and {{user_name}}.",
-        isCustom: true
-      };
-    }
-    if (safeCategory === "appointment") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New appointment template",
-        target: "comments",
-        subject: "Appointment confirmation - {{ticket_number}}",
-        body: "Dear {{user_name}},\n\nWe confirm your appointment on {{appointment_date}} at {{appointment_time}}.\n\nLocation: {{office_location}}\n\nKind regards,\n{{agent_name}}",
-        isCustom: true
-      };
-    }
-    if (safeCategory === "close_note") {
-      return {
-        id: createCustomTemplateId(safeCategory),
-        category: safeCategory,
-        label: "New close note template",
-        target: "close_notes",
-        subject: "",
-        body: "Dear {{user_name}},\n\nWe would like to inform you that your incident {{ticket_number}} has been successfully resolved.\n\n{{dynamic_resolution}}\n\nIf you continue to experience any issues or require further assistance, please do not hesitate to contact us.\n\nKind regards,\nIT Support Team",
-        isCustom: true
-      };
-    }
-    return {
-      id: createCustomTemplateId(safeCategory),
-      category: safeCategory,
-      label: "New email template",
-      target: "comments",
-      subject: "Follow-up on {{ticket_number}}",
-      body: "Dear {{user_name}},\n\nWe are contacting you regarding ticket {{ticket_number}}.\n\nPlease share any additional details so we can proceed.\n\nKind regards,\n{{agent_name}}",
-      isCustom: true
-    };
+    const safeCategory = normalizeCategory(category), base = { id: createCustomTemplateId(safeCategory), category: safeCategory, target: TARGET_BY_CATEGORY[safeCategory], isCustom: true, source: "settings", paragraphSpacing: "standard" };
+    if (safeCategory === "reminder") return { ...base, label: "New reminder template", subject: "Reminder: {{ticket_number}}", body: "Dear {{user_name}},\n\nReminder regarding ticket {{ticket_number}}.\n\nWe are following up on the previous message and kindly ask you to confirm your availability or share the missing details.\n\nKind regards,\n{{agent_name}}" };
+    if (safeCategory === "work_note") return { ...base, label: "New work note template", subject: "", body: "Write your work note here.\nYou can use placeholders like {{ticket_number}} and {{user_name}}." };
+    if (safeCategory === "appointment") return { ...base, label: "New appointment template", subject: "Appointment confirmation - {{ticket_number}}", body: "Dear {{user_name}},\n\nWe confirm your appointment on {{appointment_date}} at {{appointment_time}}.\n\nLocation: {{office_location}}\n\nKind regards,\n{{agent_name}}" };
+    if (safeCategory === "close_note") return { ...base, label: "New close note template", subject: "", body: "Dear {{user_name}},\n\nWe would like to inform you that your incident {{ticket_number}} has been successfully resolved.\n\n{{dynamic_resolution}}\n\nIf you continue to experience any issues or require further assistance, please do not hesitate to contact us.\n\nKind regards,\nIT Support Team" };
+    return { ...base, label: "New email template", subject: "Follow-up on {{ticket_number}}", body: "Dear {{user_name}},\n\nWe are contacting you regarding ticket {{ticket_number}}.\n\nPlease share any additional details so we can proceed.\n\nKind regards,\n{{agent_name}}" };
   }
   function duplicateTemplateAsCustom(category, templateId, settings) {
-    const rawCategory = cleanText(category);
-    const safeCategory = ["email", "reminder", "close_note", "work_note", "appointment"].includes(rawCategory) ? rawCategory : rawCategory === "resolution" ? "close_note" : rawCategory === "internal" ? "work_note" : "email";
-    const sourceTemplate = getTemplate(safeCategory, templateId, settings);
-    if (!sourceTemplate) {
-      return getDefaultCustomTemplate(safeCategory);
-    }
-    return {
-      ...sourceTemplate,
-      id: createCustomTemplateId(safeCategory),
-      category: safeCategory,
-      label: `${cleanText(sourceTemplate.label) || "New template"} Copy`,
-      isCustom: true
-    };
+    const safeCategory = normalizeCategory(category), sourceTemplate = getTemplate(safeCategory, templateId, settings);
+    if (!sourceTemplate) return getDefaultCustomTemplate(safeCategory);
+    return normalizeCustomTemplate({ ...sourceTemplate, id: createCustomTemplateId(safeCategory), category: safeCategory, label: `${cleanText(sourceTemplate.label) || "New template"} Copy`, isCustom: true, source: "settings" }, safeCategory);
   }
   function upsertCustomTemplate(draft, template, { previousId = "" } = {}) {
-    const next = Array.isArray(draft.customTemplates) ? [...draft.customTemplates] : [];
-    const normalizedTemplate = { ...template, id: cleanText(template?.id) };
-    if (!normalizedTemplate.id) return;
+    const normalizedTemplate = normalizeCustomTemplate(template, template?.category);
+    if (!normalizedTemplate) return null;
+    const next = Array.isArray(draft.customTemplates) ? draft.customTemplates.map((item) => normalizeCustomTemplate(item, item?.category)).filter(Boolean) : [];
     let index = next.findIndex((item) => item.id === normalizedTemplate.id);
-    if (index < 0 && cleanText(previousId)) {
-      index = next.findIndex((item) => item.id === cleanText(previousId));
-    }
+    const oldId = cleanText(previousId);
+    if (index < 0 && oldId) index = next.findIndex((item) => item.id === oldId);
     if (index < 0 && normalizedTemplate.isCustom && !looksGeneratedCustomId(normalizedTemplate.id)) {
-      const fingerprint = templateFingerprint(normalizedTemplate);
-      const matches = next.map((item, candidateIndex) => ({ item, candidateIndex })).filter(({ item }) => item?.isCustom && templateFingerprint(item) === fingerprint);
+      const fingerprint = templateFingerprint(normalizedTemplate), matches = next.map((item, candidateIndex) => ({ item, candidateIndex })).filter(({ item }) => templateFingerprint(item) === fingerprint);
       if (matches.length === 1) index = matches[0].candidateIndex;
     }
-    if (index >= 0) {
-      next[index] = normalizedTemplate;
-    } else {
-      next.push(normalizedTemplate);
-    }
-    draft.customTemplates = next;
+    if (index >= 0) next[index] = normalizedTemplate;
+    else next.push(normalizedTemplate);
+    draft.customTemplates = oldId && oldId !== normalizedTemplate.id ? next.filter((item, i3) => item.id !== oldId || i3 === index) : next;
+    return normalizedTemplate;
   }
 
   // Assistant/handlers/settings.js
@@ -38262,8 +37827,10 @@ ${text2}` : text2;
     pastel: { "quick-draft": "#60a5fa", "open-work-notes": "#5eead4", "open-reminder": "#fbbf24", "incident-resolution-notes": "#fb923c", "open-ep-links": "#2dd4bf", "create-calendar-event": "#38bdf8", "open-pdf": "#a78bfa", "open-settings": "#94a3b8", "force-close": "#f87171" }
   };
   function normalizeCustomTemplateId(value2 = "", fallback = "") {
-    const normalized = cleanText(value2).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80);
-    return normalized || cleanText(fallback);
+    return cleanText(value2).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) || cleanText(fallback);
+  }
+  function makeId(prefix) {
+    return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
   }
   function applyDraftFieldChange(state, name, value2) {
     const draft = cloneSettings(ensureSettingsDraft(state));
@@ -38272,13 +37839,13 @@ ${text2}` : text2;
       return { rerender: true };
     }
     if (name === "templateSearch") {
-      const category = state.ui.templateManagerCategory || "email";
-      state.ui.templateSearch[category] = String(value2 || "");
+      const c = state.ui.templateManagerCategory || "email";
+      state.ui.templateSearch[c] = String(value2 || "");
       return { rerender: true };
     }
     if (name === "templateSubcategory") {
-      const category = state.ui.templateManagerCategory || "email";
-      state.ui.templateSubcategory[category] = cleanText(value2 || "all").toLowerCase() || "all";
+      const c = state.ui.templateManagerCategory || "email";
+      state.ui.templateSubcategory[c] = cleanText(value2 || "all").toLowerCase() || "all";
       return { rerender: true };
     }
     if (name === "autoHideAssistantDelay") {
@@ -38292,14 +37859,13 @@ ${text2}` : text2;
       return { rerender: true };
     }
     if (name.startsWith("toggle:")) {
+      draft.toggles = draft.toggles || {};
       draft.toggles[name.split(":")[1]] = Boolean(value2);
       setSettingsDraft(state, sanitizeSettings(draft));
       return { rerender: false };
     }
     if (name.startsWith("btnColor:")) {
-      const id = name.split(":")[1];
-      const colors = typeof draft.buttonColors === "object" ? { ...draft.buttonColors } : {};
-      const safe3 = cleanText(value2);
+      const id = name.split(":")[1], colors = { ...draft.buttonColors || {} }, safe3 = cleanText(value2);
       if (safe3 && safe3 !== DEFAULT_BUTTON_COLOR) colors[id] = safe3;
       else delete colors[id];
       draft.buttonColors = colors;
@@ -38307,38 +37873,31 @@ ${text2}` : text2;
       return { rerender: false };
     }
     if (name.startsWith("launcherBtn:")) {
-      const id = name.split(":")[1];
-      const hidden = Array.isArray(draft.hiddenButtons) ? draft.hiddenButtons : [];
-      if (value2) draft.hiddenButtons = hidden.filter((x) => x !== id);
-      else if (!hidden.includes(id)) draft.hiddenButtons = [...hidden, id];
+      const id = name.split(":")[1], hidden = Array.isArray(draft.hiddenButtons) ? draft.hiddenButtons : [];
+      draft.hiddenButtons = value2 ? hidden.filter((x) => x !== id) : hidden.includes(id) ? hidden : [...hidden, id];
       setSettingsDraft(state, sanitizeSettings(draft));
       return { rerender: false };
     }
     if (name.startsWith("customLink:")) {
-      const [, id, field] = name.split(":");
-      const links = Array.isArray(draft.customLinks) ? draft.customLinks : [];
-      const idx4 = links.findIndex((l) => l.id === id);
+      const [, id, field] = name.split(":"), links = [...draft.customLinks || []], idx4 = links.findIndex((x) => x.id === id);
       if (idx4 >= 0) {
-        const next = [...links];
-        next[idx4] = { ...links[idx4], [field]: cleanText(value2) };
-        draft.customLinks = next;
+        links[idx4] = { ...links[idx4], [field]: cleanText(value2) };
+        draft.customLinks = links;
         setSettingsDraft(state, sanitizeSettings(draft));
       }
       return { rerender: false };
     }
     if (name.startsWith("cannedPhrase:")) {
-      const idx4 = parseInt(name.split(":")[1], 10);
-      const arr = Array.isArray(draft.cannedPhrases) ? [...draft.cannedPhrases] : [];
-      if (!isNaN(idx4) && idx4 >= 0 && idx4 < arr.length) {
-        arr[idx4] = cleanText(value2);
-        draft.cannedPhrases = arr;
+      const idx4 = parseInt(name.split(":")[1], 10), items = [...draft.cannedPhrases || []];
+      if (Number.isInteger(idx4) && idx4 >= 0 && idx4 < items.length) {
+        items[idx4] = cleanText(value2);
+        draft.cannedPhrases = items;
         setSettingsDraft(state, sanitizeSettings(draft));
       }
       return { rerender: false };
     }
     if (name.startsWith("tpl:")) {
-      const [, category, templateId, fieldName] = name.split(":");
-      const custom = (draft.customTemplates || []).find((t) => t.id === templateId);
+      const [, category, templateId, fieldName] = name.split(":"), custom = (draft.customTemplates || []).find((t) => t.id === templateId);
       if (custom) {
         const updated = { ...custom };
         if (fieldName === "id") {
@@ -38351,27 +37910,34 @@ ${text2}` : text2;
           if (state.ui.editingTemplate?.category === category && state.ui.editingTemplate?.templateId === templateId) state.ui.editingTemplate = { category, templateId: nextId };
           return { rerender: true, renamedTemplateId: nextId };
         }
-        updated[fieldName] = String(value2 || "");
+        updated[fieldName] = String(value2 ?? "");
         upsertCustomTemplate(draft, updated);
         setSettingsDraft(state, sanitizeSettings(draft));
         return { rerender: false };
       }
       draft.templateOverrides[category] = draft.templateOverrides[category] || {};
       draft.templateOverrides[category][templateId] = draft.templateOverrides[category][templateId] || {};
-      draft.templateOverrides[category][templateId][fieldName] = String(value2 || "");
+      draft.templateOverrides[category][templateId][fieldName] = String(value2 ?? "");
       setSettingsDraft(state, sanitizeSettings(draft));
       return { rerender: false };
     }
     if (["officeName", "officeRoom", "officeLabel"].includes(name)) draft.officeProfile = "custom";
-    draft[name] = String(value2 || "");
+    draft[name] = String(value2 ?? "");
     setSettingsDraft(state, sanitizeSettings(draft));
     return { rerender: false };
   }
   function createSettingsHandlers({ state, store, logger, rootWindow, scheduleRecovery, scheduleAutoHideTimer }) {
-    const persist = (settings) => {
-      const saved = saveSettings(rootWindow, sanitizeSettings(settings), logger);
-      setSettings(state, saved);
-      return saved;
+    const toast = (message, tone = "info") => showToast(state.host.document, { message, tone });
+    const setDraft = (next, reason) => {
+      store.dispatch(setSettingsDraft2, sanitizeSettings(next));
+      scheduleRecovery(reason, 0);
+    };
+    const applyColor = (settings, id, color) => {
+      const next = cloneSettings(settings), colors = { ...next.buttonColors || {} }, safe3 = cleanText(color);
+      if (safe3 && safe3 !== DEFAULT_BUTTON_COLOR) colors[cleanText(id)] = safe3;
+      else delete colors[cleanText(id)];
+      next.buttonColors = colors;
+      return sanitizeSettings(next);
     };
     return {
       onOpenSettings() {
@@ -38381,7 +37947,7 @@ ${text2}` : text2;
       },
       onCloseSettings() {
         const d = state.ui.settingsDraft;
-        if (d && JSON.stringify(state.settings) !== JSON.stringify(d)) showToast(state.host.document, { message: "Unsaved changes discarded.", tone: "info" });
+        if (d && JSON.stringify(state.settings) !== JSON.stringify(d)) toast("Unsaved changes discarded.");
         store.dispatch(closeSettingsModal);
         scheduleAutoHideTimer();
         scheduleRecovery("settings-close", 0);
@@ -38399,21 +37965,34 @@ ${text2}` : text2;
         scheduleRecovery("template-select", 0);
       },
       onFieldChange(name, value2) {
-        const result = applyDraftFieldChange(state, name, value2);
-        const draft = sanitizeSettings(state.ui.settingsDraft || state.settings);
-        if (result.error) showToast(state.host.document, { message: result.error, tone: "error" });
+        const r = applyDraftFieldChange(state, name, value2), draft = sanitizeSettings(state.ui.settingsDraft || state.settings);
+        if (r.error) toast(r.error, "error");
         if (name === "theme" || name === "enableThemeSkin") {
           applyThemeToAll(rootWindow, draft.theme, draft.enableThemeSkin);
           scheduleRecovery("settings-theme-preview", TIMING.themePreviewMs);
-          return;
+          return r;
         }
-        if (result.rerender) scheduleRecovery("settings-field-change", 0);
+        if (r.rerender) scheduleRecovery("settings-field-change", 0);
+        return r;
       },
       onSaveSettings() {
-        const saved = persist(state.ui.settingsDraft || state.settings);
-        store.dispatch(setSettingsDraft2, cloneSettings(saved));
-        showToast(state.host.document, { message: "Settings saved", tone: "success" });
-        scheduleRecovery("settings-save", 0);
+        const draft = sanitizeSettings(state.ui.settingsDraft || state.settings);
+        if (!hasRequiredSettings(draft)) {
+          toast("Complete the required settings before saving.", "error");
+          return { ok: false, kind: "invalid-settings" };
+        }
+        try {
+          const saved = saveSettings(rootWindow, draft, logger);
+          setSettings(state, saved);
+          store.dispatch(setSettingsDraft2, cloneSettings(saved));
+          toast("Settings saved", "success");
+          scheduleRecovery("settings-saved", 0);
+          return { ok: true, settings: saved };
+        } catch (error2) {
+          logger?.error?.("settings-save-failed", error2);
+          toast("Settings could not be saved. Your changes are still open.", "error");
+          return { ok: false, kind: "storage-error", error: error2 };
+        }
       },
       onTemplateManagerCategory(category) {
         store.dispatch(setTemplateManagerCategory, category);
@@ -38437,88 +38016,121 @@ ${text2}` : text2;
         store.dispatch(clearEditingTemplate);
         scheduleRecovery("settings-template-edit-close", 0);
       },
-      onNewCustomTemplate(category) {
+      onRestoreTemplate(category, templateId) {
         const draft = cloneSettings(ensureSettingsDraft(state));
-        const template = getDefaultCustomTemplate(category || state.ui.templateManagerCategory || "email");
+        if (draft.templateOverrides?.[category]) delete draft.templateOverrides[category][templateId];
+        setDraft(draft, "settings-template-restore");
+      },
+      onNewCustomTemplate(category) {
+        const draft = cloneSettings(ensureSettingsDraft(state)), template = getDefaultCustomTemplate(category || state.ui.templateManagerCategory || "email");
         upsertCustomTemplate(draft, template);
-        const saved = persist(draft);
-        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        setDraft(draft, "settings-template-created");
         store.dispatch(setActiveCategory2, template.category);
         store.dispatch(setTemplateManagerCategory, template.category);
         store.dispatch(setSelectedTemplate2, { category: template.category, templateId: template.id });
         store.dispatch(setEditingTemplate, { category: template.category, templateId: template.id });
-        showToast(state.host.document, { message: `New template created: ${template.label}`, tone: "info" });
-        scheduleRecovery("settings-template-created", 0);
+        toast(`New template created: ${template.label}`);
+        return template;
       },
       onDuplicateTemplate(category, templateId) {
-        const draft = cloneSettings(ensureSettingsDraft(state));
-        const cat = category || state.ui.templateManagerCategory || "email";
-        const id = templateId || state.ui.selectedTemplates?.[cat] || "";
-        const template = duplicateTemplateAsCustom(cat, id, draft);
+        const draft = cloneSettings(ensureSettingsDraft(state)), cat = category || state.ui.templateManagerCategory || "email", id = templateId || state.ui.selectedTemplates?.[cat] || "", template = duplicateTemplateAsCustom(cat, id, draft);
         upsertCustomTemplate(draft, template);
-        const saved = persist(draft);
-        store.dispatch(setSettingsDraft2, cloneSettings(saved));
+        setDraft(draft, "settings-template-duplicated");
+        store.dispatch(setActiveCategory2, template.category);
+        store.dispatch(setTemplateManagerCategory, template.category);
+        store.dispatch(setSelectedTemplate2, { category: template.category, templateId: template.id });
         store.dispatch(setEditingTemplate, { category: template.category, templateId: template.id });
-        scheduleRecovery("settings-template-duplicated", 0);
+        return template;
       },
       onDeleteCustomTemplate(category, templateId) {
         const draft = cloneSettings(ensureSettingsDraft(state));
         draft.customTemplates = (draft.customTemplates || []).filter((t) => t.id !== templateId);
-        const saved = persist(draft);
-        store.dispatch(setSettingsDraft2, cloneSettings(saved));
-        if (state.ui.selectedTemplates?.[category] === templateId) store.dispatch(setSelectedTemplate2, { category, templateId: getFirstTemplateId(category, saved) });
-        store.dispatch(clearEditingTemplate);
-        scheduleRecovery("settings-template-deleted", 0);
+        setDraft(draft, "settings-template-deleted");
+        if (state.ui.selectedTemplates?.[category] === templateId) store.dispatch(setSelectedTemplate2, { category, templateId: getFirstTemplateId(category, sanitizeSettings(draft)) });
+        if (state.ui.editingTemplate?.category === category && state.ui.editingTemplate?.templateId === templateId) store.dispatch(clearEditingTemplate);
       },
-      onToggleFavorite(category, templateId) {
+      onAddCustomLink() {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        draft.customLinks = [...draft.customLinks || [], { id: makeId("link"), label: "New link", url: "https://" }];
+        setDraft(draft, "settings-custom-link-added");
+      },
+      onRemoveCustomLink(id) {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        draft.customLinks = (draft.customLinks || []).filter((x) => x.id !== id);
+        setDraft(draft, "settings-custom-link-removed");
+      },
+      onAddCannedPhrase() {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        draft.cannedPhrases = [...draft.cannedPhrases || [], ""];
+        setDraft(draft, "settings-canned-added");
+      },
+      onRemoveCannedPhrase(index) {
+        const draft = cloneSettings(ensureSettingsDraft(state));
+        draft.cannedPhrases = (draft.cannedPhrases || []).filter((_, i3) => i3 !== Number(index));
+        setDraft(draft, "settings-canned-removed");
+      },
+      onToggleFavoriteTemplate(category, templateId) {
         const favorites = toggleFavoriteTemplate(rootWindow, category, templateId, logger);
         store.dispatch(setFavoriteTemplates, favorites);
         scheduleRecovery("settings-favorite", 0);
+        return favorites;
+      },
+      onToggleFavorite(category, templateId) {
+        return this.onToggleFavoriteTemplate(category, templateId);
       },
       onResetSettings() {
-        const saved = persist(getDefaultSettings());
-        store.dispatch(setSettingsDraft2, cloneSettings(saved));
-        scheduleRecovery("settings-reset", 0);
+        setDraft(getDefaultSettings(), "settings-reset");
       },
       onExportSettings() {
-        return exportSettingsPackage(state.settings);
+        return exportSettingsPackage(state.ui.settingsDraft || state.settings);
       },
       onImportSettings(payload) {
-        const imported = importSettingsPackage(rootWindow, payload, logger);
-        if (imported) {
-          setSettings(state, imported);
-          store.dispatch(setSettingsDraft2, cloneSettings(imported));
-          scheduleRecovery("settings-import", 0);
+        try {
+          const imported = importSettingsPackage(rootWindow, payload, logger);
+          if (imported) {
+            setSettings(state, imported);
+            store.dispatch(setSettingsDraft2, cloneSettings(imported));
+            scheduleRecovery("settings-import", 0);
+          }
+          return imported;
+        } catch (error2) {
+          logger?.error?.("settings-import-failed", error2);
+          toast("Settings import failed.", "error");
+          return null;
         }
-        return imported;
+      },
+      async onImportSettingsFile(file) {
+        if (!file) return null;
+        try {
+          return this.onImportSettings(await file.text());
+        } catch (error2) {
+          logger?.error?.("settings-file-read-failed", error2);
+          toast("Settings file could not be read.", "error");
+          return null;
+        }
       },
       onApplyOfficePreset(profile) {
         const draft = applyOfficePreset(profile, cloneSettings(ensureSettingsDraft(state)));
-        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-        scheduleRecovery("settings-office-preset", 0);
+        setDraft(draft, "settings-office-preset");
       },
       onValidateSettings() {
         return hasRequiredSettings(state.ui.settingsDraft || state.settings);
       },
       onSetButtonColor(buttonId, color) {
-        const draft = cloneSettings(state.settings);
-        draft.buttonColors = { ...draft.buttonColors || {}, [cleanText(buttonId)]: cleanText(color) };
-        persist(draft);
+        const saved = saveSettings(rootWindow, applyColor(state.settings, buttonId, color), logger);
+        setSettings(state, saved);
+        if (state.ui.settingsDraft) setSettingsDraft(state, applyColor(state.ui.settingsDraft, buttonId, color));
         scheduleRecovery("launcher-button-color-inline", 0);
       },
       onResetButtonColor(buttonId) {
-        const draft = cloneSettings(state.settings);
-        if (draft.buttonColors) delete draft.buttonColors[cleanText(buttonId)];
-        persist(draft);
-        scheduleRecovery("launcher-button-color-reset", 0);
+        return this.onSetButtonColor(buttonId, "");
       },
       onApplyLauncherPalette(name) {
         const palette = LAUNCHER_COLOR_PALETTES[name];
         if (!palette) return;
         const draft = cloneSettings(ensureSettingsDraft(state));
         draft.buttonColors = { ...draft.buttonColors || {}, ...palette };
-        store.dispatch(setSettingsDraft2, sanitizeSettings(draft));
-        scheduleRecovery("launcher-palette", 0);
+        setDraft(draft, "launcher-palette");
       }
     };
   }
@@ -38800,43 +38412,136 @@ ${text2}` : text2;
   }
 
   // Assistant/application/assign/assignToMyGroup.js
+  var VERIFY_DELAY_MS = 350;
   function getCurrentUserDisplayName(rootWindow) {
     const w = rootWindow || getRootWindow();
-    return cleanText(w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" "));
+    return cleanText(
+      w?.NOW?.user_display_name || w?.NOW?.user?.displayName || w?.NOW?.user?.name || w?.g_user?.fullName || [w?.g_user?.firstName, w?.g_user?.lastName].filter(Boolean).join(" ")
+    );
+  }
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+  function getTableName2(gForm) {
+    try {
+      return cleanText(gForm?.getTableName?.());
+    } catch {
+      return "";
+    }
+  }
+  function findDomField(rootWindow, field) {
+    const selectors = [
+      `[id^="sys_display."][id$=".${field}"]`,
+      `input[name="${field}"]`,
+      `input[id="${field}"]`
+    ];
+    for (const doc of getAccessibleDocuments(rootWindow)) {
+      for (const selector of selectors) {
+        const el = doc.querySelector(selector);
+        if (el) return el;
+      }
+    }
+    return null;
+  }
+  function readByDom(rootWindow, field, expected) {
+    const el = findDomField(rootWindow, field);
+    if (!el) return { ok: false, value: "", source: "dom", kind: "field-not-found" };
+    const value2 = cleanText(el.value);
+    return {
+      ok: value2 === cleanText(expected),
+      value: value2,
+      source: "dom",
+      elementId: cleanText(el.id),
+      elementName: cleanText(el.name)
+    };
   }
   function setByDom(rootWindow, field, value2) {
-    const selectors = [`#sys_display\\.sc_task\\.${field}`, `input[id="sys_display.sc_task.${field}"]`, `input[name="${field}"]`, `input[id="${field}"]`];
-    for (const doc of getAccessibleDocuments(rootWindow)) for (const sel of selectors) {
-      const el = doc.querySelector(sel);
-      if (!el) continue;
-      const EventCtor = doc.defaultView?.Event || globalThis.Event;
-      el.value = value2;
-      if (typeof EventCtor === "function") ["input", "change", "blur"].forEach((evt) => el.dispatchEvent(new EventCtor(evt, { bubbles: true })));
-      return { ok: cleanText(el.value) === cleanText(value2), value: cleanText(el.value), source: "dom" };
+    const el = findDomField(rootWindow, field);
+    if (!el) return { ok: false, value: "", source: "dom", kind: "field-not-found" };
+    const EventCtor = el.ownerDocument?.defaultView?.Event || globalThis.Event;
+    el.value = value2;
+    if (typeof EventCtor === "function") {
+      ["input", "change", "blur"].forEach(
+        (eventName) => el.dispatchEvent(new EventCtor(eventName, { bubbles: true }))
+      );
     }
-    return { ok: false, value: "", source: "dom" };
+    return readByDom(rootWindow, field, value2);
   }
-  function prefillScTaskAssignment({ rootWindow, currentUserSysId, currentUserDisplayName, assignmentGroupSysId = "", assignmentGroupDisplayName = "", keepGroup = false }) {
-    const gForm = getBestGForm(rootWindow)?.gForm;
+  async function prefillAssignment({
+    rootWindow,
+    currentUserSysId,
+    currentUserDisplayName,
+    assignmentGroupSysId = "",
+    assignmentGroupDisplayName = "",
+    keepGroup = false
+  }) {
+    const best = getBestGForm(rootWindow);
+    const gForm = best?.gForm;
     if (gForm && typeof gForm.setValue === "function") {
-      const before = { assignedTo: cleanText(gForm.getValue?.("assigned_to")), assignmentGroup: cleanText(gForm.getValue?.("assignment_group")) };
-      if (!keepGroup && assignmentGroupSysId) gForm.setValue("assignment_group", assignmentGroupSysId, assignmentGroupDisplayName || assignmentGroupSysId);
+      const table = getTableName2(gForm);
+      const before = {
+        assignedTo: cleanText(gForm.getValue?.("assigned_to")),
+        assignmentGroup: cleanText(gForm.getValue?.("assignment_group"))
+      };
+      if (!keepGroup && assignmentGroupSysId) {
+        gForm.setValue("assignment_group", assignmentGroupSysId, assignmentGroupDisplayName || assignmentGroupSysId);
+      }
       gForm.setValue("assigned_to", currentUserSysId, currentUserDisplayName || currentUserSysId);
-      const after = { assignedTo: cleanText(gForm.getValue?.("assigned_to")), assignmentGroup: cleanText(gForm.getValue?.("assignment_group")) };
+      const immediate = {
+        assignedTo: cleanText(gForm.getValue?.("assigned_to")),
+        assignmentGroup: cleanText(gForm.getValue?.("assignment_group"))
+      };
+      await wait(VERIFY_DELAY_MS);
+      const after = {
+        assignedTo: cleanText(gForm.getValue?.("assigned_to")),
+        assignmentGroup: cleanText(gForm.getValue?.("assignment_group"))
+      };
       const assignedOk = after.assignedTo === cleanText(currentUserSysId);
       const groupOk = keepGroup || !assignmentGroupSysId || after.assignmentGroup === cleanText(assignmentGroupSysId);
-      return { ok: assignedOk && groupOk, verified: assignedOk && groupOk, usedGForm: true, before, after, kind: assignedOk ? groupOk ? "ok" : "group-rejected" : "assignee-rejected" };
+      const immediateAssignedOk = immediate.assignedTo === cleanText(currentUserSysId);
+      const immediateGroupOk = keepGroup || !assignmentGroupSysId || immediate.assignmentGroup === cleanText(assignmentGroupSysId);
+      const reverted = immediateAssignedOk && immediateGroupOk && !(assignedOk && groupOk);
+      return {
+        ok: assignedOk && groupOk,
+        verified: assignedOk && groupOk,
+        usedGForm: true,
+        table,
+        before,
+        immediate,
+        after,
+        kind: reverted ? "reverted" : assignedOk ? groupOk ? "ok" : "group-rejected" : "assignee-rejected"
+      };
     }
-    const groupResult = keepGroup || !assignmentGroupDisplayName ? { ok: true } : setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
+    const groupResult = keepGroup || !assignmentGroupDisplayName ? { ok: true, source: "dom" } : setByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
     const userResult = setByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
-    return { ok: Boolean(groupResult.ok && userResult.ok), verified: Boolean(groupResult.ok && userResult.ok), usedGForm: false, groupResult, userResult, kind: groupResult.ok && userResult.ok ? "ok" : "dom-rejected" };
+    await wait(VERIFY_DELAY_MS);
+    const groupVerify = keepGroup || !assignmentGroupDisplayName ? groupResult : readByDom(rootWindow, "assignment_group", assignmentGroupDisplayName);
+    const userVerify = readByDom(rootWindow, "assigned_to", currentUserDisplayName || currentUserSysId);
+    const ok = Boolean(groupResult.ok && userResult.ok && groupVerify.ok && userVerify.ok);
+    return {
+      ok,
+      verified: ok,
+      usedGForm: false,
+      groupResult,
+      userResult,
+      groupVerify,
+      userVerify,
+      kind: ok ? "ok" : "dom-rejected"
+    };
   }
   async function assignToMyGroup({ userGroup, currentUserSysId, rootWindow = typeof window !== "undefined" ? window : null } = {}) {
     const groupSysId = cleanText(userGroup?.group_sys_id);
     if (!groupSysId) return { ok: false, kind: "no-group-configured" };
     if (!isValidGroupSysId(groupSysId)) return { ok: false, kind: "invalid-group" };
     if (!currentUserSysId) return { ok: false, kind: "no-current-user" };
-    return prefillScTaskAssignment({ rootWindow, currentUserSysId, currentUserDisplayName: getCurrentUserDisplayName(rootWindow), assignmentGroupSysId: groupSysId, assignmentGroupDisplayName: cleanText(userGroup?.name), keepGroup: false });
+    return prefillAssignment({
+      rootWindow,
+      currentUserSysId,
+      currentUserDisplayName: getCurrentUserDisplayName(rootWindow),
+      assignmentGroupSysId: groupSysId,
+      assignmentGroupDisplayName: cleanText(userGroup?.name),
+      keepGroup: false
+    });
   }
 
   // Assistant/handlers/assign.js
@@ -38904,51 +38609,56 @@ ${text2}` : text2;
     return w?.g_ck || w?.frames?.[0]?.g_ck || "";
   }
   async function fetchCount({ table, query, rootWindow }) {
-    const params = new URLSearchParams({
-      sysparm_query: query,
-      sysparm_count: "true"
-    });
-    const response = await fetch(`/api/now/stats/${table}?${params.toString()}`, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json",
-        "X-UserToken": getUserToken(rootWindow)
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`${table} count failed: ${response.status}`);
-    }
-    const json = await response.json();
-    const count = Number(json?.result?.stats?.count);
+    const params = new URLSearchParams({ sysparm_query: query, sysparm_count: "true" });
+    const response = await fetch(`/api/now/stats/${table}?${params.toString()}`, { method: "GET", credentials: "same-origin", headers: { Accept: "application/json", "X-UserToken": getUserToken(rootWindow) } });
+    if (!response.ok) throw new Error(`${table} count failed: ${response.status}`);
+    const json = await response.json(), count = Number(json?.result?.stats?.count);
     return Number.isFinite(count) && count >= 0 ? count : 0;
   }
-  async function refreshHeaderCounts({
-    state,
-    store,
-    rootWindow,
-    logger,
-    forceRefresh = false
-  } = {}) {
+  function notifyNewAssignedWork(rootWindow, previous = {}, next = {}, logger) {
+    if (!previous?.ready) return;
+    const incDelta = Math.max(0, Number(next.inc || 0) - Number(previous.inc || 0));
+    const taskDelta = Math.max(0, Number(next.task || 0) - Number(previous.task || 0));
+    if (!incDelta && !taskDelta) return;
+    const parts = [];
+    if (incDelta) parts.push(`${incDelta} new incident${incDelta === 1 ? "" : "s"}`);
+    if (taskDelta) parts.push(`${taskDelta} new task${taskDelta === 1 ? "" : "s"}`);
+    const message = `New assigned work: ${parts.join(" and ")}`;
+    logger?.info?.("header-counts:new-assignment", { incDelta, taskDelta, previous: { inc: previous.inc, task: previous.task }, next });
+    try {
+      const doc = rootWindow?.document;
+      if (doc) {
+        const existing = doc.querySelector("[data-sn-assistant-assignment-notification]");
+        existing?.remove?.();
+        const toast = doc.createElement("div");
+        toast.className = "sn-assistant-toast sn-assistant-toast--assignment";
+        toast.dataset.snAssistantAssignmentNotification = "true";
+        toast.setAttribute("role", "status");
+        toast.setAttribute("aria-live", "polite");
+        toast.innerHTML = `<div class="sn-assistant-toast__content"><span class="sn-assistant-toast__icon" aria-hidden="true">\u25CF</span><span class="sn-assistant-toast__message"><strong>New ticket assigned</strong><br>${message}</span></div>`;
+        (doc.body || doc.documentElement).appendChild(toast);
+        rootWindow.setTimeout?.(() => {
+          toast.classList.add("sn-assistant-toast--dismissing");
+          rootWindow.setTimeout?.(() => toast.remove(), 320);
+        }, 5200);
+      }
+    } catch (error2) {
+      logger?.warn?.("header-counts:notification-failed", { error: error2 });
+    }
+    try {
+      if (rootWindow?.Notification?.permission === "granted") new rootWindow.Notification("SN Assistant - New ticket assigned", { body: message, tag: "sn-assistant-new-assignment", renotify: true });
+    } catch (error2) {
+      logger?.info?.("header-counts:browser-notification-skipped", { error: error2 });
+    }
+  }
+  async function refreshHeaderCounts({ state, store, rootWindow, logger, forceRefresh = false } = {}) {
     const recordKey2 = state?.context?.recordKey || "";
-    if (!recordKey2) {
-      return { ok: false, kind: "no-record" };
-    }
+    if (!recordKey2) return { ok: false, kind: "no-record" };
     const current = state?.ui?.headerCounts;
-    if (current?.loading) {
-      return {
-        ok: true,
-        kind: "in-flight",
-        counts: { inc: current?.inc || 0, task: current?.task || 0 }
-      };
-    }
-    const now = Date.now();
-    const isFresh = Number(current?.fetchedAt || 0) > 0 && now - Number(current?.fetchedAt || 0) < HEADER_COUNTS_REFRESH_MS;
-    if (!forceRefresh && current?.ready && current?.recordKey === recordKey2 && isFresh) {
-      return { ok: true, kind: "cached", counts: { inc: current.inc, task: current.task } };
-    }
-    const online = rootWindow?.navigator?.onLine;
-    if (online === false) {
+    if (current?.loading) return { ok: true, kind: "in-flight", counts: { inc: current?.inc || 0, task: current?.task || 0 } };
+    const now = Date.now(), isFresh = Number(current?.fetchedAt || 0) > 0 && now - Number(current?.fetchedAt || 0) < HEADER_COUNTS_REFRESH_MS;
+    if (!forceRefresh && current?.ready && current?.recordKey === recordKey2 && isFresh) return { ok: true, kind: "cached", counts: { inc: current.inc, task: current.task } };
+    if (rootWindow?.navigator?.onLine === false) {
       logger?.info?.("header-counts:offline-skip", { recordKey: recordKey2 });
       return { ok: true, kind: "offline-skip", counts: { inc: current?.inc || 0, task: current?.task || 0 } };
     }
@@ -38956,10 +38666,7 @@ ${text2}` : text2;
     const perfT0 = typeof performance !== "undefined" ? performance.now() : Date.now();
     let counts;
     try {
-      const [task, inc] = await Promise.all([
-        fetchCount({ table: "sc_task", query: TASK_QUERY, rootWindow }),
-        fetchCount({ table: "incident", query: INC_QUERY, rootWindow })
-      ]);
+      const [task, inc] = await Promise.all([fetchCount({ table: "sc_task", query: TASK_QUERY, rootWindow }), fetchCount({ table: "incident", query: INC_QUERY, rootWindow })]);
       counts = { inc, task };
     } catch (error2) {
       logger?.warn?.("header-counts:fetch-failed", { recordKey: recordKey2, error: error2 });
@@ -38968,11 +38675,8 @@ ${text2}` : text2;
     }
     const elapsed = ((typeof performance !== "undefined" ? performance.now() : Date.now()) - perfT0).toFixed(1);
     logger?.info?.(`[SN Assistant][Perf] header counts REST fetch took ${elapsed}ms`, { counts });
-    store?.dispatch?.(setHeaderCounts, {
-      inc: counts.inc,
-      task: counts.task,
-      recordKey: recordKey2
-    });
+    notifyNewAssignedWork(rootWindow, current, counts, logger);
+    store?.dispatch?.(setHeaderCounts, { inc: counts.inc, task: counts.task, recordKey: recordKey2 });
     return { ok: true, kind: "fetched", counts };
   }
 
