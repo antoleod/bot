@@ -37653,6 +37653,17 @@ ${bundle.email.body}`,
         logger.info("work-notes:open", { table: currentContext?.table || "", ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", selectedTemplateId: recommendedTemplateId || "", recommendationSource: shortDescriptionRecommendation.source });
         scheduleRecovery("work-notes-open", 0);
       },
+      onOpenSettings() {
+        openSettings(state, false);
+        store.dispatch(setSettingsSection, "templates");
+        store.dispatch(setTemplateManagerCategory, "work_note");
+        store.dispatch(setActiveCategory2, "work_note");
+        state.ui.templateSearch.work_note = "";
+        state.ui.templateSubcategory.work_note = "all";
+        clearAutoHideTimer();
+        showToast(state.host.document, { message: "Template Workspace opened for Work Notes", tone: "info" });
+        scheduleRecovery("work-notes-settings", 0);
+      },
       onCloseWorkNotes() {
         store.dispatch(closeWorkNotes);
         scheduleAutoHideTimer();
