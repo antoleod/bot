@@ -38194,7 +38194,7 @@ ${text3}` : text3;
         lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons"
       });
     };
-    const setMode2 = (mode, reason = "launcher-mode") => {
+    const setMode = (mode, reason = "launcher-mode") => {
       if (!["tab", "icons", "expanded"].includes(mode)) return;
       if (mode === "tab" && state.ui.edgePanelPinned) {
         store.dispatch(setEdgePanelPinned, false);
@@ -38221,7 +38221,7 @@ ${text3}` : text3;
       const activate = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        setMode2(mode, `control-${mode}`);
+        setMode(mode, `control-${mode}`);
       };
       control.addEventListener("pointerdown", (event) => event.stopPropagation());
       control.addEventListener("click", activate);
@@ -38301,17 +38301,17 @@ ${text3}` : text3;
         queueInject();
       },
       onEdgePanelToggle() {
-        if (state.ui.edgePanelMode === "tab") setMode2(state.ui.edgePanelLastUsefulMode || "icons", "tab-restore");
-        else setMode2("tab", "minimal");
+        if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons", "tab-restore");
+        else setMode("tab", "minimal");
       },
       onEdgePanelIconsToggle() {
-        setMode2("icons", "icons");
+        setMode("icons", "icons");
       },
       onEdgePanelExpand() {
-        setMode2("expanded", "expanded");
+        setMode("expanded", "expanded");
       },
       onEdgePanelMinimize() {
-        setMode2("tab", "minimal");
+        setMode("tab", "minimal");
       },
       onEdgePanelClose() {
         if (state.ui.workNotesOpen) store.dispatch(closeWorkNotes);
@@ -38320,7 +38320,7 @@ ${text3}` : text3;
         if (state.ui.findCiOpen) store.dispatch(closeFindCi);
         if (state.ui.edgePanelPinned) store.dispatch(setEdgePanelPinned, false);
         state.ui.edgePanelPinned = false;
-        setMode2("tab", "close");
+        setMode("tab", "close");
       },
       onHideLauncherButton(buttonId) {
         const id = cleanText(buttonId);
@@ -40523,101 +40523,8 @@ ${text3}` : text3;
     return instance;
   }
 
-  // Assistant/ui/launcherModeControls.js
-  var MODE_ICONS = {
-    icons: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeIcons" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#22d3ee"/><stop offset=".52" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect x="3.5" y="4" width="4.5" height="4.5" rx="2.25" fill="url(#snModeIcons)"/><path d="M11 6.25h9" stroke="url(#snModeIcons)" stroke-width="2" stroke-linecap="round"/><rect x="3.5" y="9.75" width="4.5" height="4.5" rx="2.25" fill="url(#snModeIcons)"/><path d="M11 12h7" stroke="url(#snModeIcons)" stroke-width="2" stroke-linecap="round"/><rect x="3.5" y="15.5" width="4.5" height="4.5" rx="2.25" fill="url(#snModeIcons)"/><path d="M11 17.75h9" stroke="url(#snModeIcons)" stroke-width="2" stroke-linecap="round"/></svg>`,
-    expanded: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeExpand" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#60a5fa"/><stop offset=".5" stop-color="#2563eb"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" stroke="url(#snModeExpand)" stroke-width="2.25" stroke-linecap="round"/><path d="M12 7.8l1.25 2.95L16.2 12l-2.95 1.25L12 16.2l-1.25-2.95L7.8 12l2.95-1.25L12 7.8Z" fill="url(#snModeExpand)"/></svg>`,
-    tab: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeMinimal" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#34d399"/><stop offset=".55" stop-color="#14b8a6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="url(#snModeMinimal)" stroke-width="2"/><rect x="6.5" y="6.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><rect x="13.5" y="6.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><rect x="6.5" y="13.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><path d="M17.5 14.5h-3m0 0 1.5-1.5m-1.5 1.5L16 16" stroke="url(#snModeMinimal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-  };
-  var LABELS = { icons: "Icons view", expanded: "Expand assistant", tab: "Minimal view" };
-  function clickAction(shell, action) {
-    shell.querySelector(`[data-action="${action}"]`)?.click();
-  }
-  function setMode(shell, requestedMode) {
-    const current = shell.dataset.epMode || "icons";
-    if (current === requestedMode) return;
-    if (requestedMode === "tab") {
-      if (current !== "tab") clickAction(shell, "ep-toggle");
-      return;
-    }
-    if (current === "tab") clickAction(shell, "ep-toggle");
-    queueMicrotask(() => {
-      const liveShell = document.querySelector(".sn-ep");
-      if (!liveShell) return;
-      const liveMode = liveShell.dataset.epMode || "icons";
-      if (requestedMode === "expanded" && liveMode === "icons") clickAction(liveShell, "ep-icons");
-      if (requestedMode === "icons" && liveMode === "expanded") clickAction(liveShell, "ep-icons");
-    });
-  }
-  function syncControls(shell, controls) {
-    const current = shell.dataset.epMode || "icons";
-    controls.querySelectorAll("[data-sn-mode]").forEach((button) => {
-      const active = button.dataset.snMode === current;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", active ? "true" : "false");
-      button.style.transform = active ? "translateY(-1px)" : "";
-      button.style.background = active ? "linear-gradient(135deg, rgba(37,99,235,.16), rgba(139,92,246,.12))" : "";
-      button.style.boxShadow = active ? "0 0 0 1px rgba(59,130,246,.38), 0 4px 12px rgba(37,99,235,.16)" : "";
-    });
-  }
-  function installControls() {
-    const shell = document.querySelector(".sn-ep");
-    const tab = shell?.querySelector(':scope > [data-action="ep-toggle"]');
-    if (!shell || !tab) return;
-    shell.querySelector('[data-sn-mode-controls="console-test"]')?.remove();
-    let controls = shell.querySelector(':scope > [data-sn-mode-controls="launcher"]');
-    if (!controls) {
-      controls = document.createElement("div");
-      controls.dataset.snModeControls = "launcher";
-      controls.setAttribute("role", "group");
-      controls.setAttribute("aria-label", "Assistant view");
-      controls.style.cssText = "display:inline-flex;align-items:center;gap:4px;padding:3px;border:1px solid rgba(96,165,250,.22);border-radius:12px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(59,130,246,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.35);position:absolute;z-index:21;pointer-events:auto;";
-      for (const mode of ["icons", "expanded", "tab"]) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "sn-ep__icon-btn sn-ep__mode-btn";
-        button.dataset.snMode = mode;
-        button.title = LABELS[mode];
-        button.setAttribute("aria-label", LABELS[mode]);
-        button.style.cssText = "position:relative;display:inline-grid;place-items:center;transition:transform .16s,box-shadow .16s,background .16s;border-radius:10px;";
-        button.innerHTML = MODE_ICONS[mode];
-        button.addEventListener("pointerdown", (event) => event.stopPropagation());
-        button.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          setMode(shell, mode);
-        });
-        controls.appendChild(button);
-      }
-      tab.insertAdjacentElement("afterend", controls);
-    }
-    const tabRect = tab.getBoundingClientRect();
-    const shellRect = shell.getBoundingClientRect();
-    const onLeft = shell.classList.contains("sn-ep--left") || shellRect.left < window.innerWidth / 2;
-    controls.style.top = `${Math.max(0, tabRect.top - shellRect.top)}px`;
-    controls.style.left = onLeft ? `${tabRect.right - shellRect.left + 6}px` : "auto";
-    controls.style.right = onLeft ? "auto" : `${shellRect.right - tabRect.left + 6}px`;
-    syncControls(shell, controls);
-  }
-  function installLauncherModeControls() {
-    let scheduled = false;
-    const schedule = () => {
-      if (scheduled) return;
-      scheduled = true;
-      queueMicrotask(() => {
-        scheduled = false;
-        installControls();
-      });
-    };
-    schedule();
-    const observer = new MutationObserver(schedule);
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-ep-mode", "class"] });
-    window.addEventListener("resize", schedule, { passive: true });
-  }
-
   // entry.js
   startAssistant();
-  installLauncherModeControls();
 })();
 /*! Bundled license information:
 
