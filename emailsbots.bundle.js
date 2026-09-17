@@ -38171,16 +38171,28 @@ ${text3}` : text3;
     minimal: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="snModeMinimal" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#34d399"/><stop offset=".55" stop-color="#14b8a6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="url(#snModeMinimal)" stroke-width="2"/><rect x="6.5" y="6.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><rect x="13.5" y="6.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><rect x="6.5" y="13.5" width="4" height="4" rx="1" fill="url(#snModeMinimal)"/><path d="M17.5 14.5h-3m0 0 1.5-1.5m-1.5 1.5L16 16" stroke="url(#snModeMinimal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   };
   function createLauncherHandlers({ state, store, rootWindow, scheduleRecovery, scheduleAutoHideTimer, clearAutoHideTimer, logger }) {
-    let lastLoggedMode = "", observer = null, injectQueued = false;
+    let lastLoggedMode = "";
+    let observer = null;
+    let injectQueued = false;
     const logMode = (reason, mode) => {
       const key = `${reason}:${mode}:${Boolean(state.ui.edgePanelPinned)}`;
       if (key === lastLoggedMode) return;
       lastLoggedMode = key;
-      logger?.info?.("[SN Assistant][EdgeMode]", { reason, mode, pinned: Boolean(state.ui.edgePanelPinned), lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
+      logger?.info?.("[SN Assistant][EdgeMode]", {
+        reason,
+        mode,
+        pinned: Boolean(state.ui.edgePanelPinned),
+        lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons"
+      });
     };
     const persist = (mode) => {
       if (mode === "icons" || mode === "expanded") state.ui.edgePanelLastUsefulMode = mode;
-      savePinState(rootWindow, { pinned: Boolean(state.ui.edgePanelPinned), lastOpenState: mode !== "tab", mode, lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
+      savePinState(rootWindow, {
+        pinned: Boolean(state.ui.edgePanelPinned),
+        lastOpenState: mode !== "tab",
+        mode,
+        lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons"
+      });
     };
     const setMode = (mode, reason = "launcher-mode") => {
       if (!["tab", "icons", "expanded"].includes(mode)) return;
@@ -38197,50 +38209,75 @@ ${text3}` : text3;
       scheduleRecovery(reason, 0);
     };
     const modeButton = (doc, mode, title, svg) => {
-      const b = doc.createElement("button");
-      b.type = "button";
-      b.className = "sn-ep__icon-btn sn-ep__mode-btn";
-      b.dataset.snMode = mode;
-      b.title = title;
-      b.setAttribute("aria-label", title);
-      b.innerHTML = svg;
-      b.style.cssText = "position:relative;display:inline-grid;place-items:center;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;border-radius:10px;";
-      b.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      const button = doc.createElement("button");
+      button.type = "button";
+      button.className = "sn-ep__icon-btn sn-ep__mode-btn";
+      button.dataset.snMode = mode;
+      button.title = title;
+      button.setAttribute("aria-label", title);
+      button.innerHTML = svg;
+      button.style.cssText = "position:relative;display:inline-grid;place-items:center;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;border-radius:10px;";
+      button.addEventListener("pointerdown", (event) => event.stopPropagation());
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         setMode(mode, `control-${mode}`);
       });
-      return b;
+      return button;
     };
     const injectModeControls = () => {
       injectQueued = false;
       const doc = state.host?.document;
       if (!doc) return;
-      const footer = doc.querySelector("#sn-assistant-launcher .sn-ep__footer-actions, [data-sn-assistant-root] .sn-ep__footer-actions, .sn-ep__footer-actions");
-      if (!footer) return;
-      let group = footer.querySelector("[data-sn-mode-controls]");
+      const shell = doc.querySelector("#sn-assistant-launcher .sn-ep, [data-sn-assistant-root] .sn-ep, .sn-ep");
+      const tab = shell?.querySelector(':scope > .sn-ep__tab[data-action="ep-toggle"]');
+      if (!shell || !tab) return;
+      let group = shell.querySelector(':scope > [data-sn-mode-controls="true"]');
       if (!group) {
+        shell.querySelectorAll(".sn-ep__footer-actions [data-sn-mode-controls]").forEach((node) => node.remove());
         group = doc.createElement("div");
         group.dataset.snModeControls = "true";
         group.setAttribute("role", "group");
         group.setAttribute("aria-label", "Assistant view");
-        group.style.cssText = "display:inline-flex;align-items:center;gap:4px;padding:3px;border:1px solid rgba(96,165,250,.22);border-radius:12px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(59,130,246,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.35);";
-        group.append(modeButton(doc, "icons", "Icons view", MODE_SVG.icons), modeButton(doc, "expanded", "Expand assistant", MODE_SVG.expanded), modeButton(doc, "tab", "Minimal view", MODE_SVG.minimal));
-        const old = footer.querySelector('[data-action="ep-icons"]');
-        if (old) {
-          old.style.display = "none";
-          old.setAttribute("aria-hidden", "true");
-        }
-        footer.insertBefore(group, footer.firstChild);
+        group.style.cssText = [
+          "position:absolute",
+          "top:50%",
+          "right:100%",
+          "transform:translateY(-50%)",
+          "z-index:4",
+          "display:flex",
+          "flex-direction:column",
+          "align-items:center",
+          "gap:4px",
+          "margin-right:6px",
+          "padding:4px",
+          "border:1px solid rgba(96,165,250,.22)",
+          "border-radius:12px",
+          "background:var(--ep-surface,#fff)",
+          "box-shadow:0 6px 18px rgba(15,23,42,.14),inset 0 1px 0 rgba(255,255,255,.35)",
+          "pointer-events:auto"
+        ].join(";");
+        group.append(
+          modeButton(doc, "icons", "Icons view", MODE_SVG.icons),
+          modeButton(doc, "expanded", "Expand assistant", MODE_SVG.expanded),
+          modeButton(doc, "tab", "Minimal view", MODE_SVG.minimal)
+        );
+        shell.insertBefore(group, tab);
+      }
+      const oldIconsButton = shell.querySelector('.sn-ep__footer-actions [data-action="ep-icons"]');
+      if (oldIconsButton) {
+        oldIconsButton.style.display = "none";
+        oldIconsButton.setAttribute("aria-hidden", "true");
+        oldIconsButton.tabIndex = -1;
       }
       const current = state.ui.edgePanelMode || "icons";
-      group.querySelectorAll("[data-sn-mode]").forEach((b) => {
-        const active = b.dataset.snMode === current;
-        b.classList.toggle("is-active", active);
-        b.setAttribute("aria-pressed", active ? "true" : "false");
-        b.style.transform = active ? "translateY(-1px)" : "";
-        b.style.background = active ? "linear-gradient(135deg,rgba(37,99,235,.16),rgba(139,92,246,.12))" : "";
-        b.style.boxShadow = active ? "0 0 0 1px rgba(59,130,246,.38),0 4px 12px rgba(37,99,235,.16)" : "";
+      group.querySelectorAll("[data-sn-mode]").forEach((button) => {
+        const active = button.dataset.snMode === current;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+        button.style.transform = active ? "translateY(-1px)" : "";
+        button.style.background = active ? "linear-gradient(135deg,rgba(37,99,235,.16),rgba(139,92,246,.12))" : "";
+        button.style.boxShadow = active ? "0 0 0 1px rgba(59,130,246,.38),0 4px 12px rgba(37,99,235,.16)" : "";
       });
     };
     const queueInject = () => {
@@ -38303,7 +38340,10 @@ ${text3}` : text3;
         if (current.includes(id)) return;
         const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
         setSettings(state, next);
-        showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
+        showToast(state.host.document, {
+          message: "Button hidden. You can re-enable it in Settings > Launcher.",
+          tone: "info"
+        });
         scheduleRecovery("launcher-hide-button", 0);
         queueInject();
       }
