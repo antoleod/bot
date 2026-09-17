@@ -38208,22 +38208,27 @@ ${text3}` : text3;
       else clearAutoHideTimer();
       scheduleRecovery(reason, 0);
     };
-    const modeButton = (doc, mode, title, svg) => {
-      const button = doc.createElement("button");
-      button.type = "button";
-      button.className = "sn-ep__icon-btn sn-ep__mode-btn";
-      button.dataset.snMode = mode;
-      button.title = title;
-      button.setAttribute("aria-label", title);
-      button.innerHTML = svg;
-      button.style.cssText = "position:relative;display:inline-grid;place-items:center;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;border-radius:10px;";
-      button.addEventListener("pointerdown", (event) => event.stopPropagation());
-      button.addEventListener("click", (event) => {
+    const modeControl = (doc, mode, title, svg) => {
+      const control = doc.createElement("span");
+      control.className = "sn-ep__icon-btn sn-ep__mode-btn";
+      control.dataset.snMode = mode;
+      control.setAttribute("role", "button");
+      control.setAttribute("tabindex", "0");
+      control.setAttribute("aria-label", title);
+      control.title = title;
+      control.innerHTML = svg;
+      control.style.cssText = "position:relative;display:inline-grid;place-items:center;width:26px;height:26px;min-width:26px;min-height:26px;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;border-radius:9px;";
+      const activate = (event) => {
         event.preventDefault();
         event.stopPropagation();
         setMode(mode, `control-${mode}`);
+      };
+      control.addEventListener("pointerdown", (event) => event.stopPropagation());
+      control.addEventListener("click", activate);
+      control.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") activate(event);
       });
-      return button;
+      return control;
     };
     const injectModeControls = () => {
       injectQueued = false;
@@ -38232,37 +38237,21 @@ ${text3}` : text3;
       const shell = doc.querySelector("#sn-assistant-launcher .sn-ep, [data-sn-assistant-root] .sn-ep, .sn-ep");
       const tab = shell?.querySelector(':scope > .sn-ep__tab[data-action="ep-toggle"]');
       if (!shell || !tab) return;
-      let group = shell.querySelector(':scope > [data-sn-mode-controls="true"]');
+      shell.querySelectorAll(':scope > [data-sn-mode-controls="true"], .sn-ep__footer-actions [data-sn-mode-controls]').forEach((node) => node.remove());
+      let group = tab.querySelector(':scope > [data-sn-mode-controls="true"]');
       if (!group) {
-        shell.querySelectorAll(".sn-ep__footer-actions [data-sn-mode-controls]").forEach((node) => node.remove());
-        group = doc.createElement("div");
+        group = doc.createElement("span");
         group.dataset.snModeControls = "true";
         group.setAttribute("role", "group");
         group.setAttribute("aria-label", "Assistant view");
-        group.style.cssText = [
-          "position:absolute",
-          "top:50%",
-          "right:100%",
-          "transform:translateY(-50%)",
-          "z-index:4",
-          "display:flex",
-          "flex-direction:column",
-          "align-items:center",
-          "gap:4px",
-          "margin-right:6px",
-          "padding:4px",
-          "border:1px solid rgba(96,165,250,.22)",
-          "border-radius:12px",
-          "background:var(--ep-surface,#fff)",
-          "box-shadow:0 6px 18px rgba(15,23,42,.14),inset 0 1px 0 rgba(255,255,255,.35)",
-          "pointer-events:auto"
-        ].join(";");
+        group.style.cssText = "display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px 1px;border-radius:10px;pointer-events:auto;";
         group.append(
-          modeButton(doc, "icons", "Icons view", MODE_SVG.icons),
-          modeButton(doc, "expanded", "Expand assistant", MODE_SVG.expanded),
-          modeButton(doc, "tab", "Minimal view", MODE_SVG.minimal)
+          modeControl(doc, "icons", "Icons view", MODE_SVG.icons),
+          modeControl(doc, "expanded", "Expand assistant", MODE_SVG.expanded),
+          modeControl(doc, "tab", "Minimal view", MODE_SVG.minimal)
         );
-        shell.insertBefore(group, tab);
+        const chevron = tab.querySelector(".sn-ep__chevron");
+        tab.insertBefore(group, chevron || null);
       }
       const oldIconsButton = shell.querySelector('.sn-ep__footer-actions [data-action="ep-icons"]');
       if (oldIconsButton) {
@@ -38271,13 +38260,13 @@ ${text3}` : text3;
         oldIconsButton.tabIndex = -1;
       }
       const current = state.ui.edgePanelMode || "icons";
-      group.querySelectorAll("[data-sn-mode]").forEach((button) => {
-        const active = button.dataset.snMode === current;
-        button.classList.toggle("is-active", active);
-        button.setAttribute("aria-pressed", active ? "true" : "false");
-        button.style.transform = active ? "translateY(-1px)" : "";
-        button.style.background = active ? "linear-gradient(135deg,rgba(37,99,235,.16),rgba(139,92,246,.12))" : "";
-        button.style.boxShadow = active ? "0 0 0 1px rgba(59,130,246,.38),0 4px 12px rgba(37,99,235,.16)" : "";
+      group.querySelectorAll("[data-sn-mode]").forEach((control) => {
+        const active = control.dataset.snMode === current;
+        control.classList.toggle("is-active", active);
+        control.setAttribute("aria-pressed", active ? "true" : "false");
+        control.style.transform = active ? "translateY(-1px)" : "";
+        control.style.background = active ? "linear-gradient(135deg,rgba(37,99,235,.16),rgba(139,92,246,.12))" : "";
+        control.style.boxShadow = active ? "0 0 0 1px rgba(59,130,246,.38),0 3px 9px rgba(37,99,235,.16)" : "";
       });
     };
     const queueInject = () => {
