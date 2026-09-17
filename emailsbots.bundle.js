@@ -38178,21 +38178,11 @@ ${text3}` : text3;
       const key = `${reason}:${mode}:${Boolean(state.ui.edgePanelPinned)}`;
       if (key === lastLoggedMode) return;
       lastLoggedMode = key;
-      logger?.info?.("[SN Assistant][EdgeMode]", {
-        reason,
-        mode,
-        pinned: Boolean(state.ui.edgePanelPinned),
-        lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons"
-      });
+      logger?.info?.("[SN Assistant][EdgeMode]", { reason, mode, pinned: Boolean(state.ui.edgePanelPinned), lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
     };
     const persist = (mode) => {
       if (mode === "icons" || mode === "expanded") state.ui.edgePanelLastUsefulMode = mode;
-      savePinState(rootWindow, {
-        pinned: Boolean(state.ui.edgePanelPinned),
-        lastOpenState: mode !== "tab",
-        mode,
-        lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons"
-      });
+      savePinState(rootWindow, { pinned: Boolean(state.ui.edgePanelPinned), lastOpenState: mode !== "tab", mode, lastUsefulMode: state.ui.edgePanelLastUsefulMode || "icons" });
     };
     const setMode = (mode, reason = "launcher-mode") => {
       if (!["tab", "icons", "expanded"].includes(mode)) return;
@@ -38245,11 +38235,7 @@ ${text3}` : text3;
         group.setAttribute("role", "group");
         group.setAttribute("aria-label", "Assistant view");
         group.style.cssText = "display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px 1px;border-radius:10px;pointer-events:auto;";
-        group.append(
-          modeControl(doc, "icons", "Icons view", MODE_SVG.icons),
-          modeControl(doc, "expanded", "Expand assistant", MODE_SVG.expanded),
-          modeControl(doc, "tab", "Minimal view", MODE_SVG.minimal)
-        );
+        group.append(modeControl(doc, "icons", "Icons view", MODE_SVG.icons), modeControl(doc, "expanded", "Expand assistant", MODE_SVG.expanded), modeControl(doc, "tab", "Minimal view", MODE_SVG.minimal));
         const chevron = tab.querySelector(".sn-ep__chevron");
         tab.insertBefore(group, chevron || null);
       }
@@ -38301,11 +38287,20 @@ ${text3}` : text3;
         queueInject();
       },
       onEdgePanelToggle() {
-        if (state.ui.edgePanelMode === "tab") setMode(state.ui.edgePanelLastUsefulMode || "icons", "tab-restore");
-        else setMode("tab", "minimal");
+        const isOpen = state.ui.edgePanelMode === "expanded" || state.ui.edgePanelMode === "icons";
+        const next = isOpen ? "tab" : "expanded";
+        if (next === "tab" && state.ui.edgePanelPinned) return;
+        state.ui.edgePanelMode = next;
+        state.ui.assistantHidden = false;
+        if (state.ui.edgePanelPinned) savePinState(rootWindow, { pinned: true, lastOpenState: next !== "tab", mode: next });
+        scheduleRecovery("launcher-mode", 0);
       },
       onEdgePanelIconsToggle() {
-        setMode("icons", "icons");
+        const next = state.ui.edgePanelMode === "icons" ? "expanded" : "icons";
+        state.ui.edgePanelMode = next;
+        state.ui.assistantHidden = false;
+        if (state.ui.edgePanelPinned) savePinState(rootWindow, { pinned: true, lastOpenState: true, mode: next });
+        scheduleRecovery("launcher-mode", 0);
       },
       onEdgePanelExpand() {
         setMode("expanded", "expanded");
@@ -38329,10 +38324,7 @@ ${text3}` : text3;
         if (current.includes(id)) return;
         const next = saveSettings(rootWindow, { ...state.settings, hiddenButtons: [...current, id] });
         setSettings(state, next);
-        showToast(state.host.document, {
-          message: "Button hidden. You can re-enable it in Settings > Launcher.",
-          tone: "info"
-        });
+        showToast(state.host.document, { message: "Button hidden. You can re-enable it in Settings > Launcher.", tone: "info" });
         scheduleRecovery("launcher-hide-button", 0);
         queueInject();
       }
