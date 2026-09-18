@@ -40757,6 +40757,18 @@ ${text3}` : text3;
   }
 
   // entry.js
+  var EMAILSBOTS_BUILD = Object.freeze({
+    branch: "main",
+    commit: "07a4c506+",
+    label: "smart-template-routing"
+  });
+  try {
+    window.__EMAILSBOTS_BUILD__ = EMAILSBOTS_BUILD;
+    console.info(
+      `[EmailsBots] loaded | branch=${EMAILSBOTS_BUILD.branch} | build=${EMAILSBOTS_BUILD.commit} | ${EMAILSBOTS_BUILD.label}`
+    );
+  } catch {
+  }
   startAssistant();
 })();
 /*! Bundled license information:
