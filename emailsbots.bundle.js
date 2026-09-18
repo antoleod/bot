@@ -7230,7 +7230,9 @@ Asset tag: ${item.equipmentAssetTag}`;
     const softwareName = cleanText(metadata.softwareName);
     const deviceContext = [deviceType, softwareName, metadata.location].filter(Boolean).join(" ");
     if (hasAny(text3, ["workspace", "new workspace", "desk move", "office move", "quality check after move", "quality check"])) return "workspace_quality_check";
-    if (hasAny(text3, ["lost", "stolen", "missing", "theft", "perdu", "vole"])) return "loss_or_theft";
+    const physicalLoss = hasAny(text3, ["lost", "stolen", "missing", "theft", "perdu", "vole"]) && hasAny(text3, ["device", "equipment", "laptop", "tablet", "phone", "mobile", "iphone", "ipad", "computer", "pc", "asset", "material", "charger"]);
+    const serviceLoss = hasAny(text3, ["loss of access", "lost access", "missing access", "access lost", "lost connection", "connection lost", "wifi", "wi-fi", "network", "vpn", "certificate", "login", "authentication"]);
+    if (physicalLoss && !serviceLoss) return "loss_or_theft";
     if (hasAny(text3, ["validation", "eligibility", "eligible", "approval", "under review"])) return "validation_approval";
     if (hasAny(text3, ["recover", "retrieve", "return", "collect", "pickup", "pick up", "bring back", "handover", "hand over", "collect equipment", "retrieve device", "return laptop", "return equipment", "device collection"]) && hasAny(text3, ["device", "equipment", "laptop", "tablet", "phone", "mobile", "iphone", "computer", "asset", "material"])) return "asset_recovery";
     if (hasAny(text3, ["appointment", "visit", "schedule", "rendez-vous", "rdv", "intervention planned"])) {
@@ -7240,9 +7242,9 @@ Asset tag: ${item.equipmentAssetTag}`;
       return "appointment";
     }
     if (hasAny(text3, ["deliver", "delivery", "livraison", "remise", "handover", "ready for delivery", "preparation", "prepare", "loan", "replacement"]) && hasAny(text3, ["laptop", "desktop", "smartphone", "phone", "mobile", "tablet", "ipad", "iphone", "device", "item", "hybrid"])) return "request_delivery";
+    if (hasAny(text3, ["vpn", "wifi", "wi-fi", "network", "connection", "connectivity", "sync", "drops", "drop", "no connection", "cannot connect", "wired", "ethernet", "disconnect", "disconnects", "loss of access"]) && !hasAny(text3, ["lost laptop", "lost phone", "lost device", "stolen laptop", "stolen phone", "stolen device"])) return "connectivity_issue";
     if (hasAny(text3, ["certificate"])) return "request_user_action";
-    if (hasAny(text3, ["password", "reset", "unlock", "shared mailbox", "mailbox", "sharepoint", "eu login", "login", "authentication"]) || hasAny(text3, ["access"]) && !hasAny(text3, ["install", "installation", "software", "application", "update", "web2print", "adobe", "teams", "outlook", "calendar"])) return "account_access";
-    if (hasAny(text3, ["vpn", "wifi", "wi-fi", "network", "connection", "connectivity", "sync", "drops", "drop", "no connection", "cannot connect", "wired", "ethernet", "disconnect", "disconnects"])) return "connectivity_issue";
+    if (hasAny(text3, ["password", "reset", "unlock", "shared mailbox", "mailbox", "sharepoint", "eu login", "login", "authentication"]) || hasAny(text3, ["access"]) && !hasAny(text3, ["install", "installation", "software", "application", "update", "web2print", "adobe", "teams", "outlook", "calendar", "wifi", "wi-fi", "network", "vpn"])) return "account_access";
     if (hasAny(text3, ["outlook", "calendar", "teams"]) && hasAny(text3, ["freeze", "frozen", "crash", "not responding", "scheduling assistant", "profile"])) return "incident_active";
     if (hasAny(text3, ["screen", "keyboard", "monitor", "webcam", "printer", "battery", "sim", "dock", "docking", "audio", "speaker"]) && hasAny(text3, ["broken", "not working", "not detected", "stuck", "flickering", "missing", "response"])) return "hardware_issue";
     if (hasAny(text3, ["install", "installation", "software", "application", "license", "licence", "update", "adobe", "web2print"]) || hasAny(text3, ["outlook", "calendar", "teams", "email", "sharepoint"]) && hasAny(text3, ["request", "access", "update", "support"])) return "software_request";
@@ -7751,17 +7753,17 @@ Asset tag: ${item.equipmentAssetTag}`;
   var GREETING = "Dear {{user_name}}";
   var SIGN_OFF = "Kind regards,\n{{agent_name}}";
   var CLOSINGS = {
-    reply: "Thank you in advance for your reply. Should you need any assistance in the meantime, please do not hesitate to contact us.",
-    confirm: "Thank you in advance for your confirmation. Should you have any questions, please do not hesitate to contact us.",
-    review: "We will keep you informed as soon as there is an update on your request. Should you have any questions in the meantime, please do not hesitate to contact us.",
-    schedule: "Thank you in advance for your feedback so that we can schedule this at a time that suits you.",
-    info: "Should you require any further clarification, please do not hesitate to contact us."
+    reply: "Thank you for your help. If you have any questions or need any further assistance, please do not hesitate to contact us.",
+    confirm: "Thank you for your confirmation. If you have any questions or need any further assistance, please do not hesitate to contact us.",
+    review: "We will keep you informed as soon as we have an update. In the meantime, if you have any questions or need any assistance, please do not hesitate to contact us.",
+    schedule: "Thank you for letting us know what works best for you. We will be happy to arrange this at a convenient time. If you have any questions, please do not hesitate to contact us.",
+    info: "We hope this information is helpful. If anything remains unclear or you need further assistance, please do not hesitate to contact us."
   };
   function aboutTicket(topic) {
-    return `We are contacting you regarding ticket {{ticket_number}} concerning ${topic}.`;
+    return `I am following up with you regarding ticket {{ticket_number}} about ${topic}.`;
   }
   function reminderAbout(topic) {
-    return `This is a friendly reminder regarding ticket {{ticket_number}} concerning ${topic}.`;
+    return `I am following up with a friendly reminder regarding ticket {{ticket_number}} about ${topic}.`;
   }
   function buildEmail({ greeting = GREETING, context, action, closing = CLOSINGS.reply }) {
     return [`${greeting},`, context, action, closing, SIGN_OFF].filter(Boolean).join("\n\n");
@@ -7804,7 +7806,7 @@ ${configurationItemLine}`,
       subject: "{{ticket_number}} - Headset request follow-up",
       body: buildEmail({
         context: aboutTicket("your headset request"),
-        action: "Could you please confirm whether the headset is still required? Once confirmed, we will proceed with the delivery or handover without delay.",
+        action: "Could you please let us know whether you still need the headset? Once we have your confirmation, we will be happy to arrange the delivery or handover.",
         closing: CLOSINGS.reply
       })
     },
@@ -7842,7 +7844,7 @@ ${configurationItemLine}`,
       subject: "{{ticket_number}} - Additional information required",
       body: buildEmail({
         context: aboutTicket("your request"),
-        action: "To direct your request to the most suitable team, could you please provide some additional details, including the device or application concerned and the exact error message displayed, if any?",
+        action: "To make sure we understand the situation correctly and can assist you efficiently, could you please share a few more details? In particular, it would be helpful to know which device or application is affected and the exact error message you see, if any.",
         closing: CLOSINGS.reply
       })
     },
@@ -8279,8 +8281,8 @@ ${configurationItemLine}`,
       target: "comments",
       subject: "{{ticket_number}} - Wi-Fi connectivity follow-up",
       body: buildEmail({
-        context: aboutTicket("the reported Wi-Fi connectivity issue"),
-        action: "Could you please confirm whether the issue is still occurring, and whether it affects only your corporate laptop or other devices as well? Your building or floor location would also help us investigate.",
+        context: aboutTicket("the reported loss of access or connectivity issue affecting the corporate Wi-Fi service"),
+        action: "Could you please let us know whether you are currently unable to connect to the Wi-Fi service and, if so, what happens when you try? If an error message appears, please send us the exact message or a screenshot if convenient. As a certificate was recently installed or renewed, it would also help us to know whether the issue started before or after that change.",
         closing: CLOSINGS.reply
       })
     },
@@ -8545,7 +8547,7 @@ ${configurationItemLine}`,
       subject: "{{ticket_number}} - Confirmation before closure",
       body: buildEmail({
         context: aboutTicket("the issue you reported"),
-        action: "Could you please confirm whether the issue has now been resolved and whether we may proceed with the closure of the ticket? If it is not yet resolved, kindly let us know what is still failing so that we can continue.",
+        action: "Could you please let us know whether everything is now working as expected? If so, we can proceed with closing the ticket. If the issue is still present, please tell us what is not working and we will continue to assist you.",
         closing: CLOSINGS.reply
       })
     },
@@ -8557,7 +8559,7 @@ ${configurationItemLine}`,
       subject: "{{ticket_number}} - Reported loss or theft follow-up",
       body: buildEmail({
         context: aboutTicket("the reported loss or theft of IT equipment"),
-        action: "We kindly ask you to confirm whether a formal report has already been filed, and whether you require any supporting documentation or further assistance.",
+        action: "Could you please confirm whether a formal loss or theft report has already been filed? If you need any supporting documentation or assistance with the next steps, please let us know and we will be happy to help.",
         closing: CLOSINGS.reply
       })
     },
@@ -8569,7 +8571,7 @@ ${configurationItemLine}`,
       subject: "{{ticket_number}} - Account access follow-up",
       body: buildEmail({
         context: aboutTicket("your account access request"),
-        action: "Could you please confirm whether access is still failing, and share the exact step or error message encountered, if possible?",
+        action: "Could you please let us know whether you are still unable to access the service? If the issue persists, please tell us at which step it occurs and share the exact error message, if one is displayed.",
         closing: CLOSINGS.reply
       })
     },
@@ -8606,7 +8608,7 @@ ${configurationItemLine}`,
       subject: "{{ticket_number}} - Ticket follow-up",
       body: buildEmail({
         context: aboutTicket("the following request: {{short_description}}"),
-        action: "Please let us know whether you require an update, or whether you have a preferred next step. We remain at your disposal to assist you.",
+        action: "Could you please let us know how things are progressing on your side and whether you still need our assistance? If there is a particular next step you would prefer, please let us know and we will be happy to help.",
         closing: CLOSINGS.reply
       })
     },
@@ -16305,6 +16307,31 @@ ${solution}`);
     const result = selectTemplateByStudioMetadata(templates, context);
     return result.template ? result : null;
   }
+  function getContextualBuiltinOverride(templates = [], context = {}) {
+    const text3 = normalizeMatchText([
+      context.shortDescription,
+      context.short_description,
+      context.description,
+      context.category,
+      context.subcategory,
+      context.assignmentGroup,
+      context.configurationItem
+    ].filter(Boolean).join(" "));
+    const find = (id) => templates.find((template) => template.id === id && template.enabled !== false) || null;
+    const hasConnectivity = /\b(wifi|wi fi|network|vpn|ethernet|wired|connection|connectivity|disconnect|loss of access)\b/.test(text3);
+    const hasAccessProblem = /\b(loss of access|cannot access|unable to access|no access|access)\b/.test(text3);
+    const hasPhysicalAsset = /\b(laptop|computer|pc|phone|smartphone|iphone|ipad|tablet|device|equipment|asset|material|charger)\b/.test(text3);
+    const hasPhysicalLoss = /\b(lost|stolen|theft|missing)\b/.test(text3) && hasPhysicalAsset && !hasAccessProblem;
+    if (hasConnectivity) {
+      const template = find("wifi_connectivity_issue") || find("incident_connectivity_issue");
+      if (template) return { template, templateId: template.id, source: "context-connectivity", score: 1e4, candidates: [] };
+    }
+    if (hasPhysicalLoss) {
+      const template = find("loss_or_theft_follow_up");
+      if (template) return { template, templateId: template.id, source: "context-physical-loss", score: 1e4, candidates: [] };
+    }
+    return null;
+  }
   function selectSmartTemplateForCategory(state, settings, requestedCategory = state.ui.activeCategory) {
     const groups = getTemplateGroups(settings);
     const categories = getCategories();
@@ -16332,13 +16359,26 @@ ${solution}`);
     }
     const fullContext = state.context || {};
     const metadataSelection = getMetadataSelection(templates, fullContext);
+    const contextualBuiltinOverride = activeCategory === "email" ? getContextualBuiltinOverride(groups.email || [], fullContext) : null;
     const builtinShortSelection = ["email", "reminder"].includes(activeCategory) ? selectTemplateByShortDescription(groups.email || [], fullContext) : null;
     const { ticket: selectionTicket, detected: ticketContext } = getSmartSelectionSource(fullContext);
     let selectedTemplate = null;
     let selectedTemplateId = "";
     let emailSelection = null;
     let selectionSource = "intelligence";
-    if (metadataSelection) {
+    if (contextualBuiltinOverride) {
+      selectedTemplate = contextualBuiltinOverride.template;
+      selectedTemplateId = contextualBuiltinOverride.templateId;
+      selectionSource = contextualBuiltinOverride.source;
+      emailSelection = {
+        template: selectedTemplate,
+        templateId: selectedTemplateId,
+        score: contextualBuiltinOverride.score,
+        ambiguous: false,
+        candidates: [],
+        metadata: false
+      };
+    } else if (metadataSelection) {
       selectedTemplate = metadataSelection.template;
       selectedTemplateId = metadataSelection.templateId;
       selectionSource = metadataSelection.source;
@@ -37941,9 +37981,13 @@ ${completionEmail.body}`,
         const renderedSelected = renderTemplate(selectedTemplate, { context: currentContext, settings }), templateText = cleanText(renderedSelected?.body || "");
         if (!templateText) throw new Error("Work note template rendered empty");
         store.dispatch(applyWorkNoteTemplate, { templateId: selectedId, text: templateText, generatedTemplateId: selectedId });
-        state.ui.workNotesSource = "template-preview";
-        logger.info("work-notes:template-selected", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", selectedTemplateId: selectedId, previousTemplateId, source: "template-preview" });
-        showToast(state.host.document, { message: `Template selected: ${selectedTemplate.label || selectedId}`, tone: "info" });
+        const writeResult = writeWorkNoteToField(templateText, currentContext, { append: true });
+        if (!writeResult.ok) throw new Error(`Work notes could not be written (${writeResult.kind || "unverified"})`);
+        state.ui.workNotesSource = "template";
+        noteWorkNoteTemplateUsage(state, rootWindow, selectedId);
+        pushRecentWorkNote(rootWindow, selectedId, selectedTemplate.label || "");
+        logger.info("work-notes:template-selected", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", selectedTemplateId: selectedId, previousTemplateId, source: "template-click", targetField: writeResult.targetField || "", verified: Boolean(writeResult.verified), skipped: Boolean(writeResult.skipped) });
+        showToast(state.host.document, { message: writeResult.skipped ? `Work note already applied: ${selectedTemplate.label || selectedId}` : `Work note applied: ${selectedTemplate.label || selectedId}`, tone: "success" });
         scheduleRecovery("work-notes-template", 0);
       },
       onAppendWorkNoteTemplate(templateId, baseText = "") {
