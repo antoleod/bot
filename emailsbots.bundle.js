@@ -16308,25 +16308,33 @@ ${solution}`);
     return result.template ? result : null;
   }
   function getContextualBuiltinOverride(templates = [], context = {}) {
-    const text3 = normalizeMatchText([
-      context.shortDescription,
-      context.short_description,
-      context.description,
-      context.category,
-      context.subcategory,
-      context.assignmentGroup,
-      context.configurationItem
-    ].filter(Boolean).join(" "));
+    const shortText = normalizeMatchText(context.shortDescription || context.short_description);
+    const descriptionText = normalizeMatchText(context.description);
+    const categoryText = normalizeMatchText(context.category);
+    const subcategoryText = normalizeMatchText(context.subcategory);
+    const assignmentText = normalizeMatchText(context.assignmentGroup);
+    const ciText = normalizeMatchText(context.configurationItem);
+    const text3 = [shortText, descriptionText, categoryText, subcategoryText, assignmentText, ciText].filter(Boolean).join(" ");
     const find = (id) => templates.find((template) => template.id === id && template.enabled !== false) || null;
-    const hasConnectivity = /\b(wifi|wi fi|network|vpn|ethernet|wired|connection|connectivity|disconnect|loss of access)\b/.test(text3);
-    const hasAccessProblem = /\b(loss of access|cannot access|unable to access|no access|access)\b/.test(text3);
-    const hasPhysicalAsset = /\b(laptop|computer|pc|phone|smartphone|iphone|ipad|tablet|device|equipment|asset|material|charger)\b/.test(text3);
-    const hasPhysicalLoss = /\b(lost|stolen|theft|missing)\b/.test(text3) && hasPhysicalAsset && !hasAccessProblem;
-    if (hasConnectivity) {
-      const template = find("wifi_connectivity_issue") || find("incident_connectivity_issue");
-      if (template) return { template, templateId: template.id, source: "context-connectivity", score: 1e4, candidates: [] };
+    const networkCategory = /\b(network|connectivity|telecom|telecommunications)\b/.test(categoryText) || /\b(wifi|wi fi|wireless|network|vpn|ethernet|wired|lan)\b/.test(subcategoryText);
+    const wifiClassification = /\b(wifi|wi fi|wireless)\b/.test(subcategoryText);
+    const connectivityText = /\b(wifi|wi fi|wireless|network|vpn|ethernet|wired|connection|connectivity|disconnect|loss of access|cannot connect|unable to connect|no connection)\b/.test(text3);
+    const accessProblem = /\b(loss of access|lost access|access lost|cannot access|unable to access|no access)\b/.test(text3);
+    const physicalAsset = /\b(laptop|computer|pc|phone|smartphone|iphone|ipad|tablet|device|equipment|asset|material|charger)\b/.test(text3);
+    const explicitPhysicalLoss = /\b(lost|stolen|theft|missing)\b/.test(text3) && physicalAsset && !accessProblem;
+    if (networkCategory || connectivityText) {
+      const template = wifiClassification || /\b(wifi|wi fi|wireless)\b/.test(text3) ? find("wifi_connectivity_issue") || find("incident_connectivity_issue") : find("incident_connectivity_issue") || find("wifi_connectivity_issue");
+      if (template) {
+        return {
+          template,
+          templateId: template.id,
+          source: networkCategory ? "structured-network-classification" : "context-connectivity",
+          score: networkCategory ? 2e4 : 1e4,
+          candidates: []
+        };
+      }
     }
-    if (hasPhysicalLoss) {
+    if (explicitPhysicalLoss && !networkCategory) {
       const template = find("loss_or_theft_follow_up");
       if (template) return { template, templateId: template.id, source: "context-physical-loss", score: 1e4, candidates: [] };
     }
