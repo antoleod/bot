@@ -15609,10 +15609,10 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__card {
       position: fixed;
-      min-width: 168px;
-      max-width: 260px;
-      padding: 10px;
-      border-radius: 14px;
+      min-width: 280px;
+      max-width: 330px;
+      padding: 14px;
+      border-radius: 18px;
       border: 1px solid rgba(22, 33, 43, 0.12);
       background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(243, 237, 229, 0.98));
       box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
@@ -15622,22 +15622,22 @@ ${value2}` : value2;
       font-family: var(--sn-assistant-font, "Aptos", "Segoe UI", sans-serif);
     }
     .sn-assistant-pdf-selector__title {
-      margin: 0 0 8px;
-      font-size: 10px;
+      margin: 0 0 3px;
+      font-size: 12px;
       font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--sn-assistant-muted, #5a6873);
+      letter-spacing: -0.01em;
+      color: var(--sn-assistant-ink, #16212b);
     }
-    .sn-assistant-pdf-selector__buttons { display: grid; gap: 6px; }
+    .sn-assistant-pdf-selector__subtitle { margin: 0 30px 12px 0; font-size: 10px; line-height: 1.4; color: var(--sn-assistant-muted, #5a6873); }
+    .sn-assistant-pdf-selector__buttons { display: grid; gap: 8px; }
     .sn-assistant-pdf-selector__button {
       appearance: none;
       border: 0;
       border-radius: 10px;
-      min-height: 30px;
-      padding: 0 10px;
+      min-height: 40px;
+      padding: 0 12px;
       font-family: inherit;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 800;
       cursor: pointer;
       text-align: left;
@@ -15653,6 +15653,10 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__button--reception { border-left: 3px solid rgba(10, 99, 120, 0.9); }
     .sn-assistant-pdf-selector__button--return { border-left: 3px solid rgba(199, 122, 25, 0.9); }
+    .sn-assistant-pdf-selector__button--wifi { border-left: 3px solid rgba(106, 76, 147, 0.9); }
+    .sn-assistant-pdf-selector__button--primary { min-height: 46px; font-size: 12px; background: rgba(255, 255, 255, 0.98); }
+    .sn-assistant-pdf-selector__button--secondary { min-height: 34px; font-size: 10px; font-weight: 700; background: rgba(255, 255, 255, 0.72); }
+    .sn-assistant-pdf-selector__secondary-label { margin: 7px 0 1px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sn-assistant-muted, #5a6873); }
     .sn-assistant-pdf-selector__hint {
       margin-top: 8px;
       font-size: 9px;
@@ -15742,7 +15746,10 @@ ${value2}` : value2;
       card.className = "sn-assistant-pdf-selector__card";
       const title = hostDocument.createElement("div");
       title.className = "sn-assistant-pdf-selector__title";
-      title.textContent = "Select form type";
+      title.textContent = "Create a PDF form";
+      const subtitle = hostDocument.createElement("div");
+      subtitle.className = "sn-assistant-pdf-selector__subtitle";
+      subtitle.textContent = "Choose a frequently used form or open another reception template.";
       const closeButton = hostDocument.createElement("button");
       closeButton.type = "button";
       closeButton.className = "sn-assistant-pdf-selector__close";
@@ -15758,10 +15765,10 @@ ${value2}` : value2;
         cleanup();
         resolve(value2);
       };
-      const createButton = (label, value2, className) => {
+      const createButton = (label, value2, className, variant = "primary") => {
         const button = hostDocument.createElement("button");
         button.type = "button";
-        button.className = `sn-assistant-pdf-selector__button ${className}`;
+        button.className = `sn-assistant-pdf-selector__button sn-assistant-pdf-selector__button--${variant} ${className}`;
         button.textContent = label;
         button.addEventListener("click", (event) => {
           event.preventDefault();
@@ -15770,12 +15777,20 @@ ${value2}` : value2;
         });
         return button;
       };
-      buttons.appendChild(createButton("Reception", "reception", "sn-assistant-pdf-selector__button--reception"));
-      buttons.appendChild(createButton("Return", "return", "sn-assistant-pdf-selector__button--return"));
+      buttons.appendChild(createButton("Reception equipment", "reception", "sn-assistant-pdf-selector__button--reception"));
+      buttons.appendChild(createButton("Return equipment", "return", "sn-assistant-pdf-selector__button--return"));
+      buttons.appendChild(createButton("Wi-Fi reception", "wifi", "sn-assistant-pdf-selector__button--wifi"));
+      const secondaryLabel = hostDocument.createElement("div");
+      secondaryLabel.className = "sn-assistant-pdf-selector__secondary-label";
+      secondaryLabel.textContent = "Other reception forms";
+      buttons.appendChild(secondaryLabel);
+      buttons.appendChild(createButton("Reception equipment (all)", "receptionAll", "sn-assistant-pdf-selector__button--reception", "secondary"));
+      buttons.appendChild(createButton("Reception equipment (external)", "receptionExt", "sn-assistant-pdf-selector__button--reception", "secondary"));
       const hint = hostDocument.createElement("div");
       hint.className = "sn-assistant-pdf-selector__hint";
       hint.textContent = "No selection = do nothing.";
       card.appendChild(title);
+      card.appendChild(subtitle);
       card.appendChild(closeButton);
       card.appendChild(buttons);
       card.appendChild(hint);
@@ -18843,20 +18858,11 @@ Are you sure you want to download this calendar event?`
 
   // Assistant/pdf/pdf-mapper.js
   var PDF_TEMPLATE_TYPES = {
-    reception: {
-      id: "reception",
-      label: "Reception",
-      fileName: "reception-equipment-frm-all_en.pdf",
-      outputPrefix: "reception-equipment",
-      requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"]
-    },
-    return: {
-      id: "return",
-      label: "Return",
-      fileName: "return-equipment-frm_en.pdf",
-      outputPrefix: "return-equipment",
-      requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"]
-    }
+    receptionAll: { id: "receptionAll", label: "Reception equipment (all)", fileName: "reception-equipment-frm-all_en.pdf", outputPrefix: "reception-equipment", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
+    receptionExt: { id: "receptionExt", label: "Reception equipment (external)", fileName: "reception-equipment-frm-ext_en.pdf", outputPrefix: "reception-equipment-ext", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
+    reception: { id: "reception", label: "Reception equipment", fileName: "reception-equipment_frm_en.pdf", outputPrefix: "reception-equipment-standard", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
+    return: { id: "return", label: "Return equipment", fileName: "return-equipment_frm_en.pdf", outputPrefix: "return-equipment", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
+    wifi: { id: "wifi", label: "Wi-Fi reception", fileName: "wifi-reception_frm_v1.3_en.pdf", outputPrefix: "wifi-reception", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] }
   };
   function normalizePdfTemplateType(value2) {
     const normalized = cleanText(value2).toLowerCase();
@@ -18940,7 +18946,7 @@ Are you sure you want to download this calendar event?`
   }
   function getPdfTemplateAssetPath(templateType) {
     const template = getPdfTemplateConfig(templateType);
-    return template ? `pdf/${template.fileName}` : "";
+    return template ? `pdf/newpdf/${template.fileName}` : "";
   }
   function normalizePdfAssetBaseUrl(baseUrl = "") {
     const cleaned = cleanText(baseUrl);
