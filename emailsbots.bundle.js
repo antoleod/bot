@@ -15787,7 +15787,6 @@ ${value2}` : value2;
       secondaryLabel.className = "sn-assistant-pdf-selector__secondary-label";
       secondaryLabel.textContent = "Other reception forms";
       buttons.appendChild(secondaryLabel);
-      buttons.appendChild(createButton("Reception equipment (all)", "receptionAll", "sn-assistant-pdf-selector__button--reception", "secondary"));
       buttons.appendChild(createButton("Reception equipment (external)", "receptionExt", "sn-assistant-pdf-selector__button--reception", "secondary"));
       const hint = hostDocument.createElement("div");
       hint.className = "sn-assistant-pdf-selector__hint";
@@ -15826,81 +15825,6 @@ ${value2}` : value2;
       hostDocument.addEventListener("keydown", onKeyDown, true);
       root.addEventListener("mousedown", onRootMouseDown);
       closeButton.addEventListener("click", onCloseClick);
-    });
-  }
-  function openPdfConfigurationPrompt({ hostDocument = document, currentValue = "" } = {}) {
-    return new Promise((resolve) => {
-      cancelActive();
-      const root = createRoot(hostDocument);
-      const card = hostDocument.createElement("div");
-      card.className = "sn-assistant-pdf-selector__card";
-      card.setAttribute("role", "dialog");
-      card.setAttribute("aria-modal", "true");
-      card.setAttribute("aria-label", "Configuration item required");
-      const title = hostDocument.createElement("div");
-      title.className = "sn-assistant-pdf-selector__title";
-      title.textContent = "Configuration item required";
-      const input = hostDocument.createElement("input");
-      input.type = "text";
-      input.className = "sn-assistant-pdf-selector__field";
-      input.value = String(currentValue || "");
-      input.placeholder = "PI / CI name";
-      input.autocomplete = "off";
-      const hint = hostDocument.createElement("div");
-      hint.className = "sn-assistant-pdf-selector__hint";
-      hint.textContent = "Enter the PI/CI that should be written into the PDF.";
-      const actions = hostDocument.createElement("div");
-      actions.className = "sn-assistant-pdf-selector__prompt-actions";
-      const cancel = hostDocument.createElement("button");
-      cancel.type = "button";
-      cancel.className = "sn-assistant-pdf-selector__button";
-      cancel.textContent = "Cancel";
-      const confirm = hostDocument.createElement("button");
-      confirm.type = "button";
-      confirm.className = "sn-assistant-pdf-selector__button sn-assistant-pdf-selector__button--reception";
-      confirm.textContent = "Use CI";
-      actions.append(cancel, confirm);
-      card.append(title, input, hint, actions);
-      root.appendChild(card);
-      positionCard(card, null, hostDocument);
-      let settled = false;
-      const finish = (value2 = "") => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        resolve(String(value2 || "").trim());
-      };
-      const onKeyDown = (event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          finish("");
-        } else if (event.key === "Enter") {
-          event.preventDefault();
-          finish(input.value);
-        }
-      };
-      const onRootMouseDown = (event) => {
-        if (!card.contains(event.target)) finish("");
-      };
-      const onCancel = () => finish("");
-      const onConfirm = () => finish(input.value);
-      const cleanup = () => {
-        hostDocument.removeEventListener("keydown", onKeyDown, true);
-        root.removeEventListener("mousedown", onRootMouseDown);
-        cancel.removeEventListener("click", onCancel);
-        confirm.removeEventListener("click", onConfirm);
-        removeExisting(hostDocument);
-        activePdfSelectorCleanup = null;
-        activePdfSelectorResolve = null;
-      };
-      activePdfSelectorCleanup = cleanup;
-      activePdfSelectorResolve = finish;
-      hostDocument.addEventListener("keydown", onKeyDown, true);
-      root.addEventListener("mousedown", onRootMouseDown);
-      cancel.addEventListener("click", onCancel);
-      confirm.addEventListener("click", onConfirm);
-      input.focus();
-      input.select();
     });
   }
 
@@ -18861,15 +18785,15 @@ Are you sure you want to download this calendar event?`
 
   // Assistant/pdf/pdf-mapper.js
   var PDF_TEMPLATE_TYPES = {
-    receptionAll: { id: "receptionAll", label: "Reception equipment (all)", fileName: "reception-equipment-frm-all_en.pdf", outputPrefix: "reception-equipment", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
-    receptionExt: { id: "receptionExt", label: "Reception equipment (external)", fileName: "reception-equipment-frm-ext_en.pdf", outputPrefix: "reception-equipment-ext", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
-    reception: { id: "reception", label: "Reception equipment", fileName: "reception-equipment_frm_en.pdf", outputPrefix: "reception-equipment-standard", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
-    return: { id: "return", label: "Return equipment", fileName: "return-equipment_frm_en.pdf", outputPrefix: "return-equipment", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] },
-    wifi: { id: "wifi", label: "Wi-Fi reception", fileName: "wifi-reception_frm_v1.3_en.pdf", outputPrefix: "wifi-reception", requiredFields: ["FieldDisplayName", "FieldTicketNumber", "FieldPINumber"] }
+    receptionExt: { id: "receptionExt", label: "Reception equipment (external)", fileName: "reception-equipment-frm-ext_en.pdf", outputPrefix: "reception-equipment-ext", requiredFields: [] },
+    reception: { id: "reception", label: "Reception equipment", fileName: "reception-equipment_frm_en.pdf", outputPrefix: "reception-equipment-standard", requiredFields: [] },
+    return: { id: "return", label: "Return equipment", fileName: "return-equipment_frm_en.pdf", outputPrefix: "return-equipment", requiredFields: [] },
+    wifi: { id: "wifi", label: "Wi-Fi reception", fileName: "wifi-reception_frm_v1.3_en.pdf", outputPrefix: "wifi-reception", requiredFields: [] }
   };
   function normalizePdfTemplateType(value2) {
     const normalized = cleanText(value2).toLowerCase();
-    return PDF_TEMPLATE_TYPES[normalized] ? normalized : "";
+    const key = Object.keys(PDF_TEMPLATE_TYPES).find((templateKey) => templateKey.toLowerCase() === normalized);
+    return key || "";
   }
   function getPdfTemplateConfig(templateType) {
     const normalized = normalizePdfTemplateType(templateType);
@@ -19015,20 +18939,11 @@ Are you sure you want to download this calendar event?`
   function validatePdfContext(context = {}, templateType = "") {
     const ticketNumber = getValidTicketNumber(context);
     const ticketType = cleanText(context.ticketType).toUpperCase();
-    const requestedFor = cleanText(context.requestedFor?.fullName || context.requestedFor?.email);
-    const configurationItem = cleanText(context.configurationItem);
     if (!ticketNumber) {
       return "Unable to create PDF. A valid SCTASK, RITM, REQ or Incident is required.";
     }
     if (!["RITM", "INC", "REQ", "SCTASK"].includes(ticketType)) {
       return "Unable to create PDF. A valid SCTASK, RITM, REQ or Incident is required.";
-    }
-    const requiredFields = getPdfTemplateConfig(templateType)?.requiredFields || [];
-    if (requiredFields.includes("FieldDisplayName") && !requestedFor) {
-      return "Requested For is missing.";
-    }
-    if (requiredFields.includes("FieldPINumber") && !configurationItem) {
-      return "Configuration Item is missing.";
     }
     return "";
   }
@@ -34790,32 +34705,64 @@ Are you sure you want to download this calendar event?`
     }
     return false;
   }
-  async function fillPdfForm(pdfBytes, fieldMap = {}) {
+  async function fillPdfForm(pdfBytes, fieldMap = {}, templateType = "") {
     const pdfDoc = await PDFDocument_default.load(pdfBytes);
     stripEmbeddedJavaScript(pdfDoc);
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const entries = {
+    const today = /* @__PURE__ */ new Date();
+    const currentDate = [
+      String(today.getDate()).padStart(2, "0"),
+      String(today.getMonth() + 1).padStart(2, "0"),
+      String(today.getFullYear())
+    ].join("/");
+    const semanticValues = {
       user_name: fieldMap.FieldDisplayName,
       ticket_number: fieldMap.FieldTicketNumber,
-      configuration_item: fieldMap.FieldPINumber
+      configuration_item: fieldMap.FieldPINumber,
+      date: templateType === "wifi" ? currentDate : ""
     };
-    for (const [fieldName, rawValue] of Object.entries(entries)) {
-      const value2 = normalizeFieldValue(rawValue);
+    const aliases = {
+      user_name: ["user_name", "requested_for", "requestedfor", "name", "full_name", "fullname"],
+      ticket_number: ["ticket_number", "ticket", "number", "incident", "request"],
+      configuration_item: ["configuration_item", "configurationitem", "ci", "pi", "pi_number", "asset", "asset_tag"],
+      date: ["date", "today", "current_date", "reception_date"]
+    };
+    const normalizeName = (value2) => String(value2 || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    const fields = form.getFields();
+    for (const field of fields) {
+      const fieldName = field.getName?.() || "";
+      const normalizedName = normalizeName(fieldName);
+      let semanticKey = "";
+      for (const [key, names] of Object.entries(aliases)) {
+        if (names.some((name) => normalizedName === name || normalizedName.includes(name))) {
+          semanticKey = key;
+          break;
+        }
+      }
+      if (!semanticKey) continue;
+      const value2 = normalizeFieldValue(semanticValues[semanticKey]);
+      if (!value2) continue;
       try {
-        const field = form.getTextField(fieldName);
+        if (typeof field.setText !== "function") continue;
         field.setText(value2);
-        field.updateAppearances(font);
+        if (typeof field.updateAppearances === "function") field.updateAppearances(font);
       } catch (error2) {
+        console.warn("[SN Assistant][PDF_FIELD_SKIPPED]", {
+          fieldName,
+          reason: error2?.message || String(error2)
+        });
       }
     }
     try {
       form.updateFieldAppearances(font);
     } catch (error2) {
+      console.warn("[SN Assistant][PDF_APPEARANCE_SKIPPED]", error2?.message || String(error2));
     }
     try {
       form.flatten();
     } catch (error2) {
+      console.warn("[SN Assistant][PDF_FLATTEN_SKIPPED]", error2?.message || String(error2));
     }
     const outputBytes = await pdfDoc.save();
     if (!outputBytes?.length) {
@@ -34833,8 +34780,9 @@ Are you sure you want to download this calendar event?`
     const filledBytes = await fillPdfForm(bytes, {
       FieldDisplayName: fieldMap.FieldDisplayName,
       FieldTicketNumber: fieldMap.FieldTicketNumber,
-      FieldPINumber: fieldMap.FieldPINumber
-    });
+      FieldPINumber: fieldMap.FieldPINumber,
+      Today: fieldMap.Today
+    }, templateType);
     return {
       blob: new Blob([filledBytes], { type: "application/pdf" }),
       templateType,
@@ -34969,16 +34917,6 @@ Are you sure you want to download this calendar event?`
     }
     return { ticketNumber: "", ticketType: cleanText(context.ticketType).toUpperCase(), ticketSource: cleanText(context.ticketSource).toLowerCase() };
   }
-  async function requestConfigurationItem(rootWindow, hostDocument, currentValue = "") {
-    return cleanText(await openPdfConfigurationPrompt({
-      hostDocument: hostDocument || getHostDocument(rootWindow),
-      currentValue: cleanText(currentValue)
-    }));
-  }
-  function shouldForcePiPrompt(templateType, context = {}) {
-    if (cleanText(templateType).toLowerCase() !== "return") return false;
-    return !cleanText(context.selected_ci_name);
-  }
   function writePdfWorkNote(resolvedContext = {}, logger = null) {
     const table2 = cleanText(resolvedContext.table || resolvedContext.pageType);
     if (!table2) return { ok: false, reason: "missing-table" };
@@ -35011,51 +34949,14 @@ Are you sure you want to download this calendar event?`
       notify?.(message, "error");
       return { ok: false, message, sourceContext: resolvedContext };
     }
-    let validationError = validatePdfContext(resolvedContext, templateType);
-    const currentCi = cleanText(
-      resolvedContext.selected_ci_name || resolvedContext.asset_tag || resolvedContext.configurationItem || resolvedContext.configurationItemDisplay
-    );
-    if (shouldForcePiPrompt(templateType, resolvedContext)) {
-      const enteredPi = await requestConfigurationItem(rootWindow, hostDocument, currentCi);
-      if (enteredPi) {
-        resolvedContext.configurationItem = enteredPi;
-        resolvedContext.configurationItemDisplay = enteredPi;
-        validationError = validatePdfContext(resolvedContext, templateType);
-      } else {
-        const message = "PDF generation canceled: configuration item is required.";
-        notify?.(message, "warning");
-        return { ok: false, canceled: true, message };
-      }
-    } else if (validationError === "Configuration Item is missing.") {
-      const enteredPi = await requestConfigurationItem(rootWindow, hostDocument, currentCi);
-      if (enteredPi) {
-        resolvedContext.configurationItem = enteredPi;
-        resolvedContext.configurationItemDisplay = enteredPi;
-        validationError = validatePdfContext(resolvedContext, templateType);
-      } else {
-        const message = "PDF generation canceled: configuration item is required.";
-        notify?.(message, "warning");
-        return { ok: false, canceled: true, message };
-      }
-    }
+    const validationError = validatePdfContext(resolvedContext, templateType);
     if (validationError) {
       console.info("[SN Assistant][PDF_VALIDATION_FAILED]", {
         templateType,
         message: validationError,
         ticketNumber,
         ticketType: resolvedContext.ticketType || sourceTicket.ticketType || "",
-        ticketSource: resolvedContext.ticketSource || sourceTicket.ticketSource || "",
-        pageType: resolvedContext.pageType || "",
-        currentNumber: resolvedContext.currentNumber || "",
-        parentNumber: resolvedContext.parentNumber || "",
-        parentType: resolvedContext.parentType || "",
-        requestedFor: resolvedContext.requestedFor?.fullName || "",
-        requestedForEmail: resolvedContext.requestedFor?.email || "",
-        configurationItem: resolvedContext.configurationItem || "",
-        configurationItemDisplay: resolvedContext.configurationItemDisplay || "",
-        configurationItemValue: resolvedContext.configurationItemValue || "",
-        configurationItemRaw: resolvedContext.configurationItemRaw || {},
-        rawConfigurationItem: resolvedContext.rawConfigurationItem || {}
+        ticketSource: resolvedContext.ticketSource || sourceTicket.ticketSource || ""
       });
       notify?.(validationError, "error");
       return { ok: false, message: validationError, sourceContext: resolvedContext };
