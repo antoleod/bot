@@ -5685,8 +5685,8 @@ Asset tag: ${item.equipmentAssetTag}`;
       return addedOutside || removedOutside;
     });
   }
-  function syncObservers({ state, onMutation, logger }) {
-    const documents = getAccessibleDocuments(void 0, logger);
+  function syncObservers({ state, onMutation, logger, rootWindow }) {
+    const documents = getAccessibleDocuments(rootWindow, logger);
     state.lifecycle.observers = state.lifecycle.observers.filter((entry) => {
       if (!documents.includes(entry.documentRef) || !entry.documentRef.body) {
         entry.observer.disconnect();
@@ -5709,16 +5709,18 @@ Asset tag: ${item.equipmentAssetTag}`;
       logger?.info("observer attached");
     });
   }
-  function startHeartbeat({ state, onTick, intervalMs = 1500 }) {
+  function startHeartbeat({ state, onTick, intervalMs = 1500, rootWindow = window }) {
     if (state.lifecycle.heartbeatId) return;
-    state.lifecycle.heartbeatId = window.setInterval(onTick, intervalMs);
+    state.lifecycle.heartbeatWindow = rootWindow;
+    state.lifecycle.heartbeatId = rootWindow.setInterval(onTick, intervalMs);
   }
   function stopObserverSystem(state) {
     state.lifecycle.observers.forEach((entry) => entry.observer.disconnect());
     state.lifecycle.observers = [];
     if (state.lifecycle.heartbeatId) {
-      window.clearInterval(state.lifecycle.heartbeatId);
+      (state.lifecycle.heartbeatWindow || window).clearInterval(state.lifecycle.heartbeatId);
       state.lifecycle.heartbeatId = 0;
+      state.lifecycle.heartbeatWindow = null;
     }
   }
 
@@ -15614,13 +15616,13 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__card {
       position: relative;
-      width: min(380px, calc(100vw - 32px));
-      min-width: 300px;
-      max-width: 380px;
-      max-height: min(560px, calc(100vh - 32px));
+      width: min(420px, calc(100vw - 24px));
+      min-width: 280px;
+      max-width: 420px;
+      max-height: min(520px, calc(100vh - 24px));
       overflow: auto;
-      padding: 18px;
-      border-radius: 16px;
+      padding: 16px;
+      border-radius: 14px;
       border: 1px solid rgba(22, 33, 43, 0.12);
       background: var(--sn-assistant-panel, #ffffff);
       color: var(--sn-assistant-ink, #16212b);
@@ -15637,14 +15639,14 @@ ${value2}` : value2;
       letter-spacing: -0.01em;
       color: var(--sn-assistant-ink, #16212b);
     }
-    .sn-assistant-pdf-selector__subtitle { margin: 4px 34px 16px 0; font-size: 11px; line-height: 1.45; color: var(--sn-assistant-muted, #5a6873); }
-    .sn-assistant-pdf-selector__buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .sn-assistant-pdf-selector__subtitle { margin: 3px 34px 12px 0; font-size: 11px; line-height: 1.4; color: var(--sn-assistant-muted, #5a6873); }
+    .sn-assistant-pdf-selector__buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
     .sn-assistant-pdf-selector__button {
       appearance: none;
       border: 0;
       border-radius: 10px;
-      min-height: 52px;
-      padding: 10px 12px;
+      min-height: 58px;
+      padding: 9px 10px;
       font-family: inherit;
       font-size: 11px;
       line-height: 1.25;
@@ -15663,15 +15665,38 @@ ${value2}` : value2;
       background: rgba(255, 255, 255, 0.98);
       box-shadow: inset 0 0 0 1px rgba(10, 99, 120, 0.18), 0 8px 16px rgba(15, 23, 42, 0.08);
     }
+    .sn-assistant-pdf-selector__button:focus-visible {
+      outline: 2px solid var(--sn-assistant-accent, #2563eb);
+      outline-offset: 2px;
+    }
+    .sn-assistant-pdf-selector__button[aria-pressed="true"] {
+      background: rgba(37, 99, 235, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.34);
+    }
+    .sn-assistant-pdf-selector__button-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--sn-assistant-accent, #2563eb);
+      font-size: 15px;
+      line-height: 1;
+    }
+    .sn-assistant-pdf-selector__button-copy { min-width: 0; }
+    .sn-assistant-pdf-selector__button-title { display: block; font-size: 11px; font-weight: 800; line-height: 1.2; }
+    .sn-assistant-pdf-selector__button-description { display: block; margin-top: 2px; font-size: 9px; line-height: 1.3; font-weight: 500; color: var(--sn-assistant-muted, #5a6873); }
     .sn-assistant-pdf-selector__button--reception { border-left: 3px solid var(--sn-assistant-accent, #2563eb); }
     .sn-assistant-pdf-selector__button--return { border-left: 3px solid #14b8a6; }
     .sn-assistant-pdf-selector__button--wifi { border-left: 3px solid #8b5cf6; }
     .sn-assistant-pdf-selector__button--primary { background: var(--sn-assistant-surface, rgba(248, 250, 252, 0.96)); }
-    .sn-assistant-pdf-selector__button--secondary { min-height: 44px; font-size: 10px; font-weight: 700; grid-column: 1 / -1; }
-    .sn-assistant-pdf-selector__secondary-label { grid-column: 1 / -1; margin: 7px 0 1px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sn-assistant-muted, #5a6873); }
+    .sn-assistant-pdf-selector__button--secondary { min-height: 52px; grid-column: 1 / -1; }
+    .sn-assistant-pdf-selector__secondary-label { grid-column: 1 / -1; margin: 6px 0 0; padding-top: 7px; border-top: 1px solid rgba(22, 33, 43, 0.08); font-size: 9px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--sn-assistant-muted, #5a6873); }
     .sn-assistant-pdf-selector__hint {
-      margin-top: 12px;
-      padding-top: 10px;
+      margin-top: 8px;
+      padding-top: 7px;
       border-top: 1px solid rgba(22, 33, 43, 0.08);
       font-size: 9px;
       line-height: 1.4;
@@ -15680,14 +15705,14 @@ ${value2}` : value2;
     .sn-assistant-pdf-selector__close {
       appearance: none;
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 10px;
+      right: 10px;
       border: 0;
       background: transparent;
       color: var(--sn-assistant-muted, #5a6873);
-      width: 30px;
-      height: 30px;
-      border-radius: 9px;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
@@ -15717,6 +15742,13 @@ ${value2}` : value2;
     .sn-assistant-pdf-selector__field:focus {
       border-color: rgba(10, 99, 120, 0.72);
       box-shadow: 0 0 0 3px rgba(10, 99, 120, 0.12);
+    }
+    @media (max-width: 520px) {
+      .sn-assistant-pdf-selector { padding: 10px; }
+      .sn-assistant-pdf-selector__card { width: calc(100vw - 20px); min-width: 0; padding: 14px; }
+      .sn-assistant-pdf-selector__buttons { grid-template-columns: 1fr; }
+      .sn-assistant-pdf-selector__secondary-label,
+      .sn-assistant-pdf-selector__button--secondary { grid-column: 1; }
     }
     .sn-assistant-pdf-selector__prompt-actions {
       display: flex;
@@ -15756,12 +15788,18 @@ ${value2}` : value2;
       const root = createRoot(hostDocument);
       const card = hostDocument.createElement("div");
       card.className = "sn-assistant-pdf-selector__card";
+      card.setAttribute("role", "dialog");
+      card.setAttribute("aria-modal", "true");
+      card.setAttribute("aria-labelledby", `${PDF_UI_ID}-title`);
+      card.setAttribute("aria-describedby", `${PDF_UI_ID}-subtitle`);
       const title = hostDocument.createElement("div");
       title.className = "sn-assistant-pdf-selector__title";
+      title.id = `${PDF_UI_ID}-title`;
       title.textContent = "Create a PDF form";
       const subtitle = hostDocument.createElement("div");
       subtitle.className = "sn-assistant-pdf-selector__subtitle";
-      subtitle.textContent = "Choose a frequently used form or open another reception template.";
+      subtitle.id = `${PDF_UI_ID}-subtitle`;
+      subtitle.textContent = "Choose the form you want to create.";
       const closeButton = hostDocument.createElement("button");
       closeButton.type = "button";
       closeButton.className = "sn-assistant-pdf-selector__close";
@@ -15777,29 +15815,33 @@ ${value2}` : value2;
         cleanup();
         resolve(value2);
       };
-      const createButton = (label, value2, className, variant = "primary") => {
+      const createButton = (label, description, value2, className, variant = "primary") => {
         const button = hostDocument.createElement("button");
         button.type = "button";
         button.className = `sn-assistant-pdf-selector__button sn-assistant-pdf-selector__button--${variant} ${className}`;
-        button.textContent = label;
+        button.setAttribute("aria-pressed", "false");
+        button.innerHTML = `<span class="sn-assistant-pdf-selector__button-icon" aria-hidden="true">\u25A4</span><span class="sn-assistant-pdf-selector__button-copy"><span class="sn-assistant-pdf-selector__button-title"></span><span class="sn-assistant-pdf-selector__button-description"></span></span>`;
+        button.querySelector(".sn-assistant-pdf-selector__button-title").textContent = label;
+        button.querySelector(".sn-assistant-pdf-selector__button-description").textContent = description;
         button.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopPropagation();
+          button.setAttribute("aria-pressed", "true");
           finish(value2);
         });
         return button;
       };
-      buttons.appendChild(createButton("Reception equipment", "reception", "sn-assistant-pdf-selector__button--reception"));
-      buttons.appendChild(createButton("Return equipment", "return", "sn-assistant-pdf-selector__button--return"));
-      buttons.appendChild(createButton("Wi-Fi reception", "wifi", "sn-assistant-pdf-selector__button--wifi"));
+      buttons.appendChild(createButton("Reception equipment", "Standard equipment reception form.", "reception", "sn-assistant-pdf-selector__button--reception"));
+      buttons.appendChild(createButton("Return equipment", "Equipment return and hand-back form.", "return", "sn-assistant-pdf-selector__button--return"));
+      buttons.appendChild(createButton("Wi-Fi reception", "Wi-Fi equipment reception form.", "wifi", "sn-assistant-pdf-selector__button--wifi"));
       const secondaryLabel = hostDocument.createElement("div");
       secondaryLabel.className = "sn-assistant-pdf-selector__secondary-label";
       secondaryLabel.textContent = "Other reception forms";
       buttons.appendChild(secondaryLabel);
-      buttons.appendChild(createButton("Reception equipment (external)", "receptionExt", "sn-assistant-pdf-selector__button--reception", "secondary"));
+      buttons.appendChild(createButton("Reception equipment (external)", "External reception form.", "receptionExt", "sn-assistant-pdf-selector__button--reception", "secondary"));
       const hint = hostDocument.createElement("div");
       hint.className = "sn-assistant-pdf-selector__hint";
-      hint.textContent = "No selection = do nothing.";
+      hint.textContent = "Close the dialog or press Esc to cancel without creating a PDF.";
       card.appendChild(title);
       card.appendChild(subtitle);
       card.appendChild(closeButton);
@@ -15834,6 +15876,7 @@ ${value2}` : value2;
       hostDocument.addEventListener("keydown", onKeyDown, true);
       root.addEventListener("mousedown", onRootMouseDown);
       closeButton.addEventListener("click", onCloseClick);
+      buttons.querySelector("button")?.focus();
     });
   }
   function openPdfMissingCiConfirmation({ hostDocument = document } = {}) {
@@ -39175,7 +39218,7 @@ ${text3}` : text3;
     }
     function clearAutoHideTimer() {
       if (state.lifecycle.autoHideTimer) {
-        window.clearTimeout(state.lifecycle.autoHideTimer);
+        rootWindow.clearTimeout(state.lifecycle.autoHideTimer);
         state.lifecycle.autoHideTimer = 0;
       }
     }
@@ -39185,7 +39228,7 @@ ${text3}` : text3;
       if (state.ui.edgePanelPinned) return;
       const delayMs = getAutoHideDelayMs(getEffectiveSettings());
       if (!delayMs) return;
-      state.lifecycle.autoHideTimer = window.setTimeout(() => {
+      state.lifecycle.autoHideTimer = rootWindow.setTimeout(() => {
         state.lifecycle.autoHideTimer = 0;
         if (isAssistantSuppressed()) return;
         state.ui.assistantHidden = true;
@@ -39244,9 +39287,9 @@ ${text3}` : text3;
     function scheduleRecovery(reason = "manual", delayMs = TIMING.recoveryDebounceMs) {
       state.lifecycle.queuedReason = reason;
       if (state.lifecycle.recoveryTimer) {
-        window.clearTimeout(state.lifecycle.recoveryTimer);
+        rootWindow.clearTimeout(state.lifecycle.recoveryTimer);
       }
-      state.lifecycle.recoveryTimer = window.setTimeout(() => {
+      state.lifecycle.recoveryTimer = rootWindow.setTimeout(() => {
         state.lifecycle.recoveryTimer = 0;
         recover(state.lifecycle.queuedReason || reason);
       }, delayMs);
@@ -39344,7 +39387,7 @@ ${text3}` : text3;
         } else {
           playTone(660, 0.12, 0, 0.05);
         }
-        window.setTimeout(() => ctx.close?.().catch?.(() => {
+        rootWindow.setTimeout(() => ctx.close?.().catch?.(() => {
         }), 500);
       } catch {
       }
@@ -39378,7 +39421,7 @@ ${text3}` : text3;
     function startHeaderCountsPolling() {
       if (headerCountsTimer) return;
       logger?.info?.("[SN Assistant][Lifecycle] start header counts polling");
-      headerCountsTimer = window.setInterval(async () => {
+      headerCountsTimer = rootWindow.setInterval(async () => {
         if (!state.lifecycle.started) return;
         if (state.ui.assistantHidden) return;
         const previous = { ...state.ui.headerCounts || {} };
@@ -39395,7 +39438,7 @@ ${text3}` : text3;
     }
     function stopHeaderCountsPolling() {
       if (!headerCountsTimer) return;
-      window.clearInterval(headerCountsTimer);
+      rootWindow.clearInterval(headerCountsTimer);
       headerCountsTimer = 0;
       logger?.info?.("[SN Assistant][Lifecycle] stop header counts polling");
     }
@@ -39403,8 +39446,8 @@ ${text3}` : text3;
       const now = Date.now();
       if (dashboardScanInFlight) return;
       if (now - lastDashboardScanAt < 3e4 && reason !== "initial-start") return;
-      if (dashboardScanTimer) window.clearTimeout(dashboardScanTimer);
-      dashboardScanTimer = window.setTimeout(async () => {
+      if (dashboardScanTimer) rootWindow.clearTimeout(dashboardScanTimer);
+      dashboardScanTimer = rootWindow.setTimeout(async () => {
         dashboardScanTimer = 0;
         try {
           dashboardScanInFlight = true;
@@ -39428,7 +39471,7 @@ ${text3}` : text3;
         dashboardObserver = null;
       }
       if (dashboardScanTimer) {
-        window.clearTimeout(dashboardScanTimer);
+        rootWindow.clearTimeout(dashboardScanTimer);
         dashboardScanTimer = 0;
       }
     }
@@ -39459,7 +39502,7 @@ ${text3}` : text3;
         return;
       }
       if (retry && result.kind === "no-target") {
-        window.setTimeout(() => triggerCloseNoteAutoFill({ retry: false, reason: `${reason}:retry` }), 300);
+        rootWindow.setTimeout(() => triggerCloseNoteAutoFill({ retry: false, reason: `${reason}:retry` }), 300);
         return;
       }
       if (!result.ok) {
@@ -39570,12 +39613,14 @@ ${text3}` : text3;
       }
       state.lifecycle.recovering = true;
       try {
+        const previousHostDocument = state.host.document;
         const hostDocument = getHostDocument(rootWindow);
         state.host.document = hostDocument;
+        logger?.info?.("[EmailsBots][Lifecycle] ROOT_FOUND", { changed: Boolean(previousHostDocument && previousHostDocument !== hostDocument) });
         ensureStyles2(hostDocument);
         applyThemeToAll(rootWindow, getEffectiveSettings().theme, getEffectiveSettings().enableThemeSkin);
         removeUiFromOtherDocuments(hostDocument);
-        syncObservers({ state, onMutation: scheduleRecovery, logger });
+        syncObservers({ state, onMutation: scheduleRecovery, logger, rootWindow });
         const nextContext = getCurrentContext(rootWindow);
         const contextDidChange = isContextChanged(state.context, nextContext);
         const currentRecordKey = cleanText(nextContext?.recordKey || "");
@@ -39619,6 +39664,7 @@ ${text3}` : text3;
         maybeAutoFillClosedRecord(contextForState, reason);
         if (reason === "dom-mutation") {
           logger.info("re-render detected, restoring UI");
+          logger?.info?.("[EmailsBots][Lifecycle] UNMOUNT", { reason });
         }
         if (!nextContext.ready || !nextContext.supported) {
           removeLauncher(hostDocument);
@@ -39688,7 +39734,7 @@ ${text3}` : text3;
         if (!assistantSuppressed && (launcherMissing || contextDidChange || isLauncherRefreshReason(reason))) {
           const workNoteModel = buildWorkNoteModel(nextContext || {}, getEffectiveSettings(), state);
           const topWorkNoteTemplates = workNoteModel.templates.slice(0, 5).map((t) => ({ id: t.id, label: t.label || t.id }));
-          ensureLauncher({
+          const launcher = ensureLauncher({
             hostDocument,
             state,
             context: nextContext,
@@ -39696,6 +39742,7 @@ ${text3}` : text3;
             handlers,
             topWorkNoteTemplates
           });
+          logger?.info?.(`[EmailsBots][Lifecycle] ${launcherMissing ? "REMOUNT" : "MOUNT"}`, { reason, rootId: launcher?.id || UI_IDS.launcher });
         } else if (assistantSuppressed) {
           removeLauncher(hostDocument);
         }
@@ -39789,7 +39836,7 @@ ${text3}` : text3;
       state.lifecycle.focusHandler = () => scheduleRecovery("window-focus", 0);
       state.lifecycle.activityHandler = () => registerAssistantActivity("assistant-activity");
       state.lifecycle.visibilityHandler = () => {
-        if (!document.hidden) {
+        if (!rootWindow.document.hidden) {
           registerAssistantActivity("visibility-change");
         }
       };
@@ -39810,9 +39857,10 @@ ${text3}` : text3;
       rootWindow.document.addEventListener("keydown", state.lifecycle.keyboardShortcutHandler, true);
       rootWindow.document.addEventListener("focusin", state.lifecycle.activityHandler, true);
       rootWindow.document.addEventListener("visibilitychange", state.lifecycle.visibilityHandler);
-      syncObservers({ state, onMutation: scheduleRecovery, logger });
+      syncObservers({ state, onMutation: scheduleRecovery, logger, rootWindow });
       startHeartbeat({
         state,
+        rootWindow,
         onTick: () => scheduleRecovery("heartbeat", 0)
       });
       startHeaderCountsPolling();
@@ -39826,11 +39874,11 @@ ${text3}` : text3;
       if (!state.lifecycle.started) return;
       stopObserverSystem(state);
       if (state.lifecycle.recoveryTimer) {
-        window.clearTimeout(state.lifecycle.recoveryTimer);
+        rootWindow.clearTimeout(state.lifecycle.recoveryTimer);
         state.lifecycle.recoveryTimer = 0;
       }
       if (state.lifecycle.autoHideTimer) {
-        window.clearTimeout(state.lifecycle.autoHideTimer);
+        rootWindow.clearTimeout(state.lifecycle.autoHideTimer);
         state.lifecycle.autoHideTimer = 0;
       }
       stopHeaderCountsPolling();
@@ -40714,12 +40762,18 @@ ${text3}` : text3;
 
   // Assistant/assistant.js
   var GLOBAL_KEY = "__SN_ASSISTANT__";
+  function lifecycleLog(logger, phase, details = void 0) {
+    const message = `[EmailsBots][Lifecycle] ${phase}`;
+    if (details === void 0) logger?.info?.(message);
+    else logger?.info?.(message, details);
+  }
   function startAssistant() {
     initEprimeAutomation();
     initDapr2lAutomation();
     const rootWindow = getRootWindow();
     const globalStore = rootWindow[GLOBAL_KEY] = rootWindow[GLOBAL_KEY] || {};
     if (globalStore.instance?.version === VERSION) {
+      lifecycleLog(globalStore.instance.logger, "INJECT", { reused: true, version: VERSION });
       globalStore.instance.logger.info("loader already active");
       globalStore.instance.bootstrap.scheduleRecovery("duplicate-loader", 0);
       return globalStore.instance;
@@ -40728,6 +40782,8 @@ ${text3}` : text3;
       globalStore.instance.destroy("version-reload");
     }
     const logger = createLogger();
+    lifecycleLog(logger, "BOOT", { version: VERSION });
+    lifecycleLog(logger, "INJECT", { reused: false, version: VERSION });
     logger.info("loader started", { version: VERSION });
     const settings = loadSettings(rootWindow, logger);
     logger.info("settings loaded", { valid: hasRequiredSettings(settings) });
@@ -40758,6 +40814,7 @@ ${text3}` : text3;
     };
     globalStore.instance = instance;
     bootstrap.start();
+    lifecycleLog(logger, "READY", { version: VERSION });
     return instance;
   }
 
