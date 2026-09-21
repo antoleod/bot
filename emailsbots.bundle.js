@@ -15605,12 +15605,20 @@ ${value2}` : value2;
       inset: 0;
       z-index: 2147483250;
       pointer-events: auto;
-      background: rgba(15, 23, 42, 0.08);
+      background: rgba(15, 23, 42, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      box-sizing: border-box;
     }
     .sn-assistant-pdf-selector__card {
-      position: fixed;
+      position: relative;
+      width: min(440px, calc(100vw - 36px));
       min-width: 280px;
-      max-width: 330px;
+      max-width: 440px;
+      max-height: min(620px, calc(100vh - 36px));
+      overflow: auto;
       padding: 14px;
       border-radius: 18px;
       border: 1px solid rgba(22, 33, 43, 0.12);
@@ -15623,21 +15631,21 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__title {
       margin: 0 0 3px;
-      font-size: 12px;
+      font-size: 18px;
       font-weight: 800;
       letter-spacing: -0.01em;
       color: var(--sn-assistant-ink, #16212b);
     }
-    .sn-assistant-pdf-selector__subtitle { margin: 0 30px 12px 0; font-size: 10px; line-height: 1.4; color: var(--sn-assistant-muted, #5a6873); }
+    .sn-assistant-pdf-selector__subtitle { margin: 0 30px 16px 0; font-size: 13px; line-height: 1.45; color: var(--sn-assistant-muted, #5a6873); }
     .sn-assistant-pdf-selector__buttons { display: grid; gap: 8px; }
     .sn-assistant-pdf-selector__button {
       appearance: none;
       border: 0;
       border-radius: 10px;
-      min-height: 40px;
-      padding: 0 12px;
+      min-height: 48px;
+      padding: 0 14px;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 14px;
       font-weight: 800;
       cursor: pointer;
       text-align: left;
@@ -15717,13 +15725,8 @@ ${value2}` : value2;
     if (typeof activePdfSelectorResolve === "function") activePdfSelectorResolve("");
     if (typeof activePdfSelectorCleanup === "function") activePdfSelectorCleanup();
   }
-  function positionCard(card, anchorElement, hostDocument) {
-    const ownerWindow = hostDocument?.defaultView || window;
-    const rect = anchorElement?.getBoundingClientRect?.();
-    const width = 220;
-    const left = rect ? Math.min(Math.max(rect.left + rect.width - width, 10), Math.max(ownerWindow.innerWidth - width - 10, 10)) : Math.max((ownerWindow.innerWidth - width) / 2, 10);
-    const top = rect ? Math.min(rect.bottom + 10, Math.max(ownerWindow.innerHeight - 180, 10)) : Math.max((ownerWindow.innerHeight - 150) / 2, 30);
-    Object.assign(card.style, { left: `${left}px`, top: `${top}px` });
+  function positionCard(card) {
+    Object.assign(card.style, { left: "", top: "" });
   }
   function createRoot(hostDocument) {
     ensureStyles(hostDocument);
