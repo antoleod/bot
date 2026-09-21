@@ -15622,8 +15622,9 @@ ${value2}` : value2;
       padding: 14px;
       border-radius: 18px;
       border: 1px solid rgba(22, 33, 43, 0.12);
-      background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(243, 237, 229, 0.98));
-      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
+      background: var(--sn-assistant-panel, #ffffff);
+      color: var(--sn-assistant-ink, #16212b);
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
       pointer-events: auto;
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
@@ -15649,7 +15650,7 @@ ${value2}` : value2;
       font-weight: 800;
       cursor: pointer;
       text-align: left;
-      background: rgba(255, 255, 255, 0.92);
+      background: var(--sn-assistant-surface, rgba(248, 250, 252, 0.96));
       color: var(--sn-assistant-ink, #16212b);
       box-shadow: inset 0 0 0 1px rgba(22, 33, 43, 0.08);
       transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
@@ -15673,6 +15674,9 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__close {
       appearance: none;
+      position: absolute;
+      top: 14px;
+      right: 14px;
       border: 0;
       background: transparent;
       color: var(--sn-assistant-muted, #5a6873);
@@ -15683,7 +15687,7 @@ ${value2}` : value2;
       font-size: 13px;
       line-height: 1;
       font-weight: 700;
-      margin-left: auto;
+      margin: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -15825,6 +15829,61 @@ ${value2}` : value2;
       hostDocument.addEventListener("keydown", onKeyDown, true);
       root.addEventListener("mousedown", onRootMouseDown);
       closeButton.addEventListener("click", onCloseClick);
+    });
+  }
+  function openPdfMissingCiConfirmation({ hostDocument = document } = {}) {
+    return new Promise((resolve) => {
+      cancelActive();
+      const root = createRoot(hostDocument);
+      const card = hostDocument.createElement("div");
+      card.className = "sn-assistant-pdf-selector__card";
+      card.setAttribute("role", "dialog");
+      card.setAttribute("aria-modal", "true");
+      const title = hostDocument.createElement("div");
+      title.className = "sn-assistant-pdf-selector__title";
+      title.textContent = "Configuration item not found";
+      const subtitle = hostDocument.createElement("div");
+      subtitle.className = "sn-assistant-pdf-selector__subtitle";
+      subtitle.textContent = "No Configuration Item was found on this ticket. Do you want to generate the external reception PDF with that field left blank?";
+      const actions = hostDocument.createElement("div");
+      actions.className = "sn-assistant-pdf-selector__prompt-actions";
+      const cancel = hostDocument.createElement("button");
+      cancel.type = "button";
+      cancel.className = "sn-assistant-pdf-selector__button";
+      cancel.textContent = "Cancel";
+      const confirm = hostDocument.createElement("button");
+      confirm.type = "button";
+      confirm.className = "sn-assistant-pdf-selector__button sn-assistant-pdf-selector__button--reception";
+      confirm.textContent = "Generate PDF";
+      actions.append(cancel, confirm);
+      card.append(title, subtitle, actions);
+      root.appendChild(card);
+      positionCard(card);
+      let settled = false;
+      const finish = (value2) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(Boolean(value2));
+      };
+      const onCancel = () => finish(false);
+      const onConfirm = () => finish(true);
+      const onKeyDown = (event) => {
+        if (event.key === "Escape") finish(false);
+      };
+      const cleanup = () => {
+        cancel.removeEventListener("click", onCancel);
+        confirm.removeEventListener("click", onConfirm);
+        hostDocument.removeEventListener("keydown", onKeyDown, true);
+        removeExisting(hostDocument);
+        activePdfSelectorCleanup = null;
+        activePdfSelectorResolve = null;
+      };
+      activePdfSelectorCleanup = cleanup;
+      activePdfSelectorResolve = finish;
+      cancel.addEventListener("click", onCancel);
+      confirm.addEventListener("click", onConfirm);
+      hostDocument.addEventListener("keydown", onKeyDown, true);
     });
   }
 
@@ -34745,6 +34804,14 @@ Are you sure you want to download this calendar event?`
       if (!value2) continue;
       try {
         if (typeof field.setText !== "function") continue;
+        const acroField = field.acroField;
+        const flags = Number(acroField?.getFlags?.() || 0);
+        const hasRichValue = Boolean(acroField?.dict?.get?.(PDFName_default.of("RV")));
+        const isRichText = hasRichValue || Boolean(flags & 1 << 25);
+        if (isRichText) {
+          console.warn("[SN Assistant][PDF_RICH_TEXT_SKIPPED]", { fieldName });
+          continue;
+        }
         field.setText(value2);
         if (typeof field.updateAppearances === "function") field.updateAppearances(font);
       } catch (error2) {
@@ -34753,16 +34820,6 @@ Are you sure you want to download this calendar event?`
           reason: error2?.message || String(error2)
         });
       }
-    }
-    try {
-      form.updateFieldAppearances(font);
-    } catch (error2) {
-      console.warn("[SN Assistant][PDF_APPEARANCE_SKIPPED]", error2?.message || String(error2));
-    }
-    try {
-      form.flatten();
-    } catch (error2) {
-      console.warn("[SN Assistant][PDF_FLATTEN_SKIPPED]", error2?.message || String(error2));
     }
     const outputBytes = await pdfDoc.save();
     if (!outputBytes?.length) {
@@ -34948,6 +35005,18 @@ Are you sure you want to download this calendar event?`
       const message = isScTask ? "Cannot generate PDF from this SCTASK because no linked RITM or Incident was found." : "Unable to create PDF. A valid RITM, REQ or Incident is required.";
       notify?.(message, "error");
       return { ok: false, message, sourceContext: resolvedContext };
+    }
+    if (!cleanText(resolvedContext.configurationItem)) {
+      const proceedWithoutCi = await openPdfMissingCiConfirmation({
+        hostDocument: hostDocument || getHostDocument(rootWindow)
+      });
+      if (!proceedWithoutCi) {
+        const message = "PDF generation canceled: no Configuration Item found.";
+        notify?.(message, "warning");
+        return { ok: false, canceled: true, message };
+      }
+      resolvedContext.configurationItem = "";
+      resolvedContext.configurationItemDisplay = "";
     }
     const validationError = validatePdfContext(resolvedContext, templateType);
     if (validationError) {
