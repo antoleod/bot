@@ -15614,13 +15614,13 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__card {
       position: relative;
-      width: min(440px, calc(100vw - 36px));
-      min-width: 280px;
-      max-width: 440px;
-      max-height: min(620px, calc(100vh - 36px));
+      width: min(380px, calc(100vw - 32px));
+      min-width: 300px;
+      max-width: 380px;
+      max-height: min(560px, calc(100vh - 32px));
       overflow: auto;
-      padding: 14px;
-      border-radius: 18px;
+      padding: 18px;
+      border-radius: 16px;
       border: 1px solid rgba(22, 33, 43, 0.12);
       background: var(--sn-assistant-panel, #ffffff);
       color: var(--sn-assistant-ink, #16212b);
@@ -15632,24 +15632,27 @@ ${value2}` : value2;
     }
     .sn-assistant-pdf-selector__title {
       margin: 0 0 3px;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       letter-spacing: -0.01em;
       color: var(--sn-assistant-ink, #16212b);
     }
-    .sn-assistant-pdf-selector__subtitle { margin: 0 30px 16px 0; font-size: 13px; line-height: 1.45; color: var(--sn-assistant-muted, #5a6873); }
-    .sn-assistant-pdf-selector__buttons { display: grid; gap: 8px; }
+    .sn-assistant-pdf-selector__subtitle { margin: 4px 34px 16px 0; font-size: 11px; line-height: 1.45; color: var(--sn-assistant-muted, #5a6873); }
+    .sn-assistant-pdf-selector__buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .sn-assistant-pdf-selector__button {
       appearance: none;
       border: 0;
       border-radius: 10px;
-      min-height: 48px;
-      padding: 0 14px;
+      min-height: 52px;
+      padding: 10px 12px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 700;
       cursor: pointer;
       text-align: left;
+      display: flex;
+      align-items: center;
       background: var(--sn-assistant-surface, rgba(248, 250, 252, 0.96));
       color: var(--sn-assistant-ink, #16212b);
       box-shadow: inset 0 0 0 1px rgba(22, 33, 43, 0.08);
@@ -15660,14 +15663,16 @@ ${value2}` : value2;
       background: rgba(255, 255, 255, 0.98);
       box-shadow: inset 0 0 0 1px rgba(10, 99, 120, 0.18), 0 8px 16px rgba(15, 23, 42, 0.08);
     }
-    .sn-assistant-pdf-selector__button--reception { border-left: 3px solid rgba(10, 99, 120, 0.9); }
-    .sn-assistant-pdf-selector__button--return { border-left: 3px solid rgba(199, 122, 25, 0.9); }
-    .sn-assistant-pdf-selector__button--wifi { border-left: 3px solid rgba(106, 76, 147, 0.9); }
-    .sn-assistant-pdf-selector__button--primary { min-height: 46px; font-size: 12px; background: rgba(255, 255, 255, 0.98); }
-    .sn-assistant-pdf-selector__button--secondary { min-height: 34px; font-size: 10px; font-weight: 700; background: rgba(255, 255, 255, 0.72); }
-    .sn-assistant-pdf-selector__secondary-label { margin: 7px 0 1px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sn-assistant-muted, #5a6873); }
+    .sn-assistant-pdf-selector__button--reception { border-left: 3px solid var(--sn-assistant-accent, #2563eb); }
+    .sn-assistant-pdf-selector__button--return { border-left: 3px solid #14b8a6; }
+    .sn-assistant-pdf-selector__button--wifi { border-left: 3px solid #8b5cf6; }
+    .sn-assistant-pdf-selector__button--primary { background: var(--sn-assistant-surface, rgba(248, 250, 252, 0.96)); }
+    .sn-assistant-pdf-selector__button--secondary { min-height: 44px; font-size: 10px; font-weight: 700; grid-column: 1 / -1; }
+    .sn-assistant-pdf-selector__secondary-label { grid-column: 1 / -1; margin: 7px 0 1px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sn-assistant-muted, #5a6873); }
     .sn-assistant-pdf-selector__hint {
-      margin-top: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(22, 33, 43, 0.08);
       font-size: 9px;
       line-height: 1.4;
       color: var(--sn-assistant-muted, #5a6873);
@@ -15675,16 +15680,16 @@ ${value2}` : value2;
     .sn-assistant-pdf-selector__close {
       appearance: none;
       position: absolute;
-      top: 14px;
-      right: 14px;
+      top: 12px;
+      right: 12px;
       border: 0;
       background: transparent;
       color: var(--sn-assistant-muted, #5a6873);
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 16px;
       line-height: 1;
       font-weight: 700;
       margin: 0;
@@ -34751,6 +34756,27 @@ Are you sure you want to download this calendar event?`
   function normalizeFieldValue(value2) {
     return cleanText(value2).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, " ").replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
   }
+  function sanitizeRichTextFields(form) {
+    const RICH_TEXT_FLAG = 1 << 25;
+    for (const field of form.getFields()) {
+      try {
+        const acroField = field.acroField;
+        const dict = acroField?.dict;
+        if (!dict) continue;
+        const flags = Number(acroField?.getFlags?.() || 0);
+        const hasRichValue = Boolean(dict.get?.(PDFName_default.of("RV")));
+        const isRichText = hasRichValue || Boolean(flags & RICH_TEXT_FLAG);
+        if (!isRichText) continue;
+        if (typeof dict.delete === "function") dict.delete(PDFName_default.of("RV"));
+        if (typeof dict.set === "function") {
+          dict.set(PDFName_default.of("Ff"), PDFNumber_default.of(flags & ~RICH_TEXT_FLAG));
+        }
+        console.info("[SN Assistant][PDF_RICH_TEXT_SANITIZED]", { fieldName: field.getName?.() || "" });
+      } catch (error2) {
+        console.warn("[SN Assistant][PDF_RICH_TEXT_SANITIZE_FAILED]", error2?.message || String(error2));
+      }
+    }
+  }
   function stripEmbeddedJavaScript(pdfDoc) {
     try {
       const names = pdfDoc.catalog.get(PDFName_default.of("Names"));
@@ -34768,6 +34794,7 @@ Are you sure you want to download this calendar event?`
     const pdfDoc = await PDFDocument_default.load(pdfBytes);
     stripEmbeddedJavaScript(pdfDoc);
     const form = pdfDoc.getForm();
+    sanitizeRichTextFields(form);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const today = /* @__PURE__ */ new Date();
     const currentDate = [
