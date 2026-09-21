@@ -34813,7 +34813,6 @@ Are you sure you want to download this calendar event?`
           continue;
         }
         field.setText(value2);
-        if (typeof field.updateAppearances === "function") field.updateAppearances(font);
       } catch (error2) {
         console.warn("[SN Assistant][PDF_FIELD_SKIPPED]", {
           fieldName,
