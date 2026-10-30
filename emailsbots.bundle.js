@@ -6660,9 +6660,9 @@ Asset tag: ${item.equipmentAssetTag}`;
       iconKey: "notes"
     },
     [LAUNCHER_BUTTON_IDS.quickDraftTop3]: {
-      label: "Top 3",
-      sub: "Top 3",
-      title: "Choose from Top 3 email templates",
+      label: "Smart 5",
+      sub: "Smart 5",
+      title: "Choose relevant email scenarios or search all templates",
       iconKey: "draft",
       className: "sn-ep__action--active"
     },
@@ -8249,14 +8249,65 @@ ${configurationItemLine}`,
       })
     },
     {
+      // Preserve the existing ID so stored overrides and user choices survive.
+      // 80% health is not "below 80%": describe only the facts in the ticket.
       id: "iphone_battery_below_80",
       category: "email",
-      label: "iPhone Battery Below 80%",
+      label: "iPhone Battery - Assessment",
       target: "comments",
-      subject: "{{ticket_number}} - iPhone battery health review",
+      subject: "{{ticket_number}} - iPhone battery drain assessment",
       body: buildEmail({
-        context: aboutTicket("the reported iPhone battery capacity below 80%"),
-        action: "Could you please confirm whether the device is available for assessment, and whether the battery is affecting your daily use?",
+        context: aboutTicket("the reported iPhone battery drain and reduced battery autonomy"),
+        action: "Could you please confirm whether the device is available for a battery diagnostic, and whether the reduced autonomy is affecting your daily work? We will review the appropriate next steps after assessment.",
+        closing: CLOSINGS.reply
+      })
+    },
+    {
+      id: "iphone_battery_appointment",
+      category: "email",
+      label: "iPhone Battery - Appointment",
+      target: "comments",
+      subject: "{{ticket_number}} - Appointment for iPhone battery check",
+      body: buildEmail({
+        context: aboutTicket("the iPhone battery issue you reported"),
+        action: "We would like to arrange a short appointment to assess the battery performance. Could you please suggest two or three time slots when you can bring your iPhone to IT Support?",
+        closing: CLOSINGS.schedule
+      })
+    },
+    {
+      id: "iphone_battery_reminder",
+      category: "email",
+      label: "iPhone Battery - Reminder",
+      target: "comments",
+      subject: "{{ticket_number}} - Reminder: iPhone battery check",
+      body: buildEmail({
+        context: reminderAbout("your reported iPhone battery issue"),
+        action: "Could you please let us know whether you still require assistance and confirm your availability for a battery check? If the situation has changed, please let us know.",
+        closing: CLOSINGS.reply
+      })
+    },
+    {
+      id: "iphone_battery_swap",
+      category: "email",
+      label: "iPhone Battery - Possible Swap",
+      target: "comments",
+      subject: "{{ticket_number}} - iPhone battery service or replacement review",
+      body: buildEmail({
+        context: aboutTicket("the iPhone battery issue and possible device replacement"),
+        action: "Following an assessment, we can review whether battery service or a device swap is appropriate, subject to the applicable IT process. Please confirm your availability for the diagnostic and provide any relevant details about the issue.",
+        closing: CLOSINGS.schedule
+      })
+    },
+    {
+      id: "iphone_battery_closure_three_attempts",
+      category: "email",
+      label: "iPhone Battery - Closure After 3 Contact Attempts",
+      target: "comments",
+      requiresThreeContactAttempts: true,
+      subject: "{{ticket_number}} - Final follow-up: iPhone battery incident",
+      body: buildEmail({
+        context: aboutTicket("your reported iPhone battery issue"),
+        action: "We have tried to contact you on three documented occasions without receiving a reply. If you still need support, please respond so that we can continue assisting you. Otherwise, the ticket may be closed in line with the applicable support procedure.",
         closing: CLOSINGS.reply
       })
     },
@@ -12045,16 +12096,16 @@ ${value2}` : value2;
     return normalizeSearchText(value2).replace(/[^a-z0-9à-ÿ_-]+/gi, " ").split(/\s+/).map(cleanText3).filter(Boolean);
   }
   function matchesWorkNoteSearch(template, searchTerm) {
-    const tokens2 = getSearchTokens(searchTerm);
-    if (!tokens2.length) return true;
+    const tokens3 = getSearchTokens(searchTerm);
+    if (!tokens3.length) return true;
     const haystack = buildWorkNoteSearchText(template);
-    return tokens2.every((token) => haystack.includes(token));
+    return tokens3.every((token) => haystack.includes(token));
   }
   function matchesSearchCorpus(haystack, searchTerm) {
-    const tokens2 = getSearchTokens(searchTerm);
-    if (!tokens2.length) return true;
+    const tokens3 = getSearchTokens(searchTerm);
+    if (!tokens3.length) return true;
     const corpus2 = normalizeSearchText(haystack);
-    return tokens2.every((token) => corpus2.includes(token));
+    return tokens3.every((token) => corpus2.includes(token));
   }
   function uniqueTemplates(templates, preferredId) {
     const ordered = [];
@@ -14228,34 +14279,50 @@ ${value2}` : value2;
       });
     });
   }
-  function showTopTemplatesModal(hostDocument, templates = []) {
+  function showTopTemplatesModal(hostDocument, templates = [], { allTemplates = templates } = {}) {
     return new Promise((resolve) => {
       const modalId = `sn-assistant-top-templates-${Date.now()}`;
-      const cards = (Array.isArray(templates) ? templates : []).slice(0, 3).map((t, idx4) => {
-        const title = t?.label || t?.id || `Template ${idx4 + 1}`;
-        const subject = String(t?.subject || "").trim() || "(No subject)";
-        const body = String(t?.body || "").trim().slice(0, 220) || "(No preview)";
-        const rankLabel = idx4 === 0 ? "Best match" : `Option ${idx4 + 1}`;
-        const toneClass = idx4 === 0 ? "is-green" : idx4 === 1 ? "is-amber" : "is-red";
+      const recommended = (Array.isArray(templates) ? templates : []).slice(0, 5);
+      const catalog = (Array.isArray(allTemplates) ? allTemplates : []).filter((template) => template?.id && template.enabled !== false);
+      const knownIds = new Set(catalog.map((template) => template.id));
+      function card(template, index, isRecommendation = true) {
+        const title = template?.label || template?.title || template?.id || "Email template";
+        const subject = String(template?.subject || "").trim() || "(No subject)";
+        const body = String(template?.body || "").trim().slice(0, 220) || "(No preview)";
+        const rankLabel = isRecommendation ? index === 0 ? "Best match" : `Scenario ${index + 1}` : "Template";
         return `
-        <button type="button" class="sn-assistant-toptpl__card ${idx4 === 0 ? "is-best" : ""}" data-action="pick-template" data-template-id="${escapeHtml(t?.id || "")}">
-          <span class="sn-assistant-toptpl__rank ${toneClass}">${escapeHtml(rankLabel)}</span>
+        <button type="button" class="sn-assistant-toptpl__card ${isRecommendation && index === 0 ? "is-best" : ""}"
+          data-action="pick-template" data-template-id="${escapeHtml(template.id)}">
+          <span class="sn-assistant-toptpl__rank">${escapeHtml(rankLabel)}</span>
           <strong class="sn-assistant-toptpl__title">${escapeHtml(title)}</strong>
           <span class="sn-assistant-toptpl__subject">${escapeHtml(subject)}</span>
           <span class="sn-assistant-toptpl__body">${escapeHtml(body)}</span>
+          ${template?.requiresThreeContactAttempts ? '<span class="sn-assistant-toptpl__notice">Requires confirmation of three documented contact attempts</span>' : ""}
         </button>
       `;
-      }).join("");
+      }
       const modalMarkup = `
       <div class="sn-assistant-modal" id="${modalId}">
         <div class="sn-assistant-modal__backdrop"></div>
-        <div class="sn-assistant-modal__dialog" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="sn-assistant-modal__dialog" role="dialog" aria-modal="true" aria-label="Email template selection" tabindex="-1">
           <div class="sn-assistant-modal__header">
-            <div class="sn-assistant-modal__title">\u26A1 Top Email Templates</div>
+            <div class="sn-assistant-modal__title">\u26A1 Smart Email Scenarios</div>
           </div>
           <div class="sn-assistant-modal__body">
-            <div class="sn-assistant-toptpl__grid">
-              ${cards || '<div class="sn-assistant-note sn-assistant-note--empty">No templates available.</div>'}
+            <div class="sn-assistant-toptpl__toolbar">
+              <label for="${modalId}-search">Search all email templates</label>
+              <input id="${modalId}-search" type="search" class="sn-assistant-toptpl__search"
+                data-action="search-template" placeholder="Search by name, subject or content..." autocomplete="off" />
+            </div>
+            <div class="sn-assistant-toptpl__recommended" data-toptpl-recommended>
+              <p class="sn-assistant-toptpl__hint">Suggestions based on the current ticket. Choose the next action that matches the work actually done.</p>
+              <div class="sn-assistant-toptpl__grid">
+                ${recommended.map((t, idx4) => card(t, idx4)).join("") || '<div class="sn-assistant-note sn-assistant-note--empty">No confident matches. Use the search field above to browse all templates.</div>'}
+              </div>
+            </div>
+            <div class="sn-assistant-toptpl__results" data-toptpl-results hidden>
+              <p class="sn-assistant-toptpl__hint" data-toptpl-count aria-live="polite"></p>
+              <div class="sn-assistant-toptpl__grid" data-toptpl-result-list></div>
             </div>
           </div>
           <div class="sn-assistant-modal__footer">
@@ -14273,15 +14340,48 @@ ${value2}` : value2;
       const releaseFocusTrap = installModalFocusTrap(root, hostDocument);
       const backdrop = root.querySelector(".sn-assistant-modal__backdrop");
       const cancelBtn = root.querySelector('[data-action="toptpl-cancel"]');
+      const searchInput = root.querySelector('[data-action="search-template"]');
+      const recommendedSection = root.querySelector("[data-toptpl-recommended]");
+      const resultsSection = root.querySelector("[data-toptpl-results]");
+      const resultsList = root.querySelector("[data-toptpl-result-list]");
+      const countLabel = root.querySelector("[data-toptpl-count]");
+      let settled = false;
       function cleanup(value2 = "") {
+        if (settled) return;
+        settled = true;
         releaseFocusTrap();
         root.remove();
         resolve(value2);
       }
+      function filterCatalog(value2) {
+        const query = String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const searching = Boolean(query);
+        recommendedSection.hidden = searching;
+        resultsSection.hidden = !searching;
+        if (!searching) return;
+        const matches = catalog.filter((template) => {
+          const haystack = [template.id, template.label, template.title, template.subject, template.body].filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          return haystack.includes(query);
+        }).sort((a, b) => {
+          const al = String(a.label || a.title || a.id).toLowerCase();
+          const bl = String(b.label || b.title || b.id).toLowerCase();
+          return Number(bl.startsWith(query)) - Number(al.startsWith(query)) || al.localeCompare(bl);
+        });
+        countLabel.textContent = `${matches.length} matching template${matches.length === 1 ? "" : "s"}${matches.length > 40 ? " (first 40 shown)" : ""}`;
+        resultsList.innerHTML = matches.length ? matches.slice(0, 40).map((t, idx4) => card(t, idx4, false)).join("") : '<div class="sn-assistant-note sn-assistant-note--empty">No templates found. Try another keyword.</div>';
+      }
+      searchInput?.addEventListener("input", () => filterCatalog(searchInput.value));
       root.addEventListener("click", (event) => {
         const btn = event.target.closest('[data-action="pick-template"]');
         if (!btn) return;
-        cleanup(btn.getAttribute("data-template-id") || "");
+        const selectedId = btn.getAttribute("data-template-id") || "";
+        if (knownIds.has(selectedId)) cleanup(selectedId);
+      });
+      root.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          cleanup("");
+        }
       });
       cancelBtn?.addEventListener("click", () => cleanup(""));
       backdrop?.addEventListener("click", () => cleanup(""));
@@ -16423,8 +16523,8 @@ ${solution}`);
   }
   function cleanDeviceCandidate(value2 = "") {
     let candidate = cleanText(value2).replace(/\b\d{2}PI[A-Z0-9-]+\b.*$/i, "").replace(DEVICE_CONTEXT_MARKER, " __STOP__ ").split("__STOP__")[0].replace(DEVICE_TRAILING_WORDS, "").replace(/[.,;:|\-]+$/g, "").replace(/\s{2,}/g, " ").trim();
-    const tokens2 = candidate.split(/\s+/).filter(Boolean);
-    if (tokens2.length > 7) candidate = tokens2.slice(0, 7).join(" ");
+    const tokens3 = candidate.split(/\s+/).filter(Boolean);
+    if (tokens3.length > 7) candidate = tokens3.slice(0, 7).join(" ");
     return cleanText(candidate);
   }
   function extractCleanDevice(description = "") {
@@ -18836,7 +18936,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   var forms_preview_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   FORM FIELDS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-field {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-field__label {\r\n  font-size: 12px;\r\n  font-weight: 700;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-input,\r\n.sn-assistant-select,\r\n.sn-assistant-textarea {\r\n  width: 100%;\r\n  border-radius: 10px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font: inherit;\r\n  font-weight: 600;\r\n  box-sizing: border-box;\r\n  box-shadow: 0 1px 2px rgba(0,0,0,0.04);\r\n  transition: border-color 160ms ease, box-shadow 160ms ease;\r\n}\r\n\r\n.sn-assistant-input,\r\n.sn-assistant-select {\r\n  height: 40px;\r\n  padding: 0 12px;\r\n}\r\n\r\n.sn-assistant-textarea {\r\n  min-height: 80px;\r\n  padding: 10px 12px;\r\n  resize: vertical;\r\n}\r\n\r\n.sn-assistant-input::placeholder,\r\n.sn-assistant-textarea::placeholder {\r\n  color: var(--sn-assistant-muted);\r\n  font-weight: 500;\r\n}\r\n\r\n.sn-assistant-input:focus,\r\n.sn-assistant-select:focus,\r\n.sn-assistant-textarea:focus {\r\n  outline: none;\r\n  border-color: var(--sn-assistant-accent);\r\n  box-shadow: 0 0 0 3px var(--sn-assistant-accent-soft);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   PREVIEW BLOCK\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-preview {\r\n  position: relative;\r\n  border-radius: 12px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-surface);\r\n  padding: 12px;\r\n  overflow: hidden;\r\n}\r\n\r\n.sn-assistant-preview::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0 auto auto 0;\r\n  width: 100%;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--sn-assistant-accent), var(--sn-assistant-accent-warm));\r\n  opacity: 0.6;\r\n}\r\n\r\n.sn-assistant-preview__empty {\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  color: var(--sn-assistant-muted);\r\n}\r\n\r\n.sn-assistant-preview__meta {\r\n  display: grid;\r\n  grid-template-columns: repeat(2, minmax(0, 1fr));\r\n  gap: 8px;\r\n  margin-bottom: 10px;\r\n}\r\n\r\n.sn-assistant-preview__meta-block {\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-preview__meta-label {\r\n  display: block;\r\n  margin-bottom: 3px;\r\n  font-size: 8px;\r\n  font-weight: 800;\r\n  color: var(--sn-assistant-muted);\r\n  letter-spacing: 0.10em;\r\n  text-transform: uppercase;\r\n}\r\n\r\n.sn-assistant-preview__meta-value {\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  line-height: 1.45;\r\n}\r\n\r\n.sn-assistant-preview__body {\r\n  max-height: 182px;\r\n  overflow: auto;\r\n  padding: 8px;\r\n  border-radius: 8px;\r\n  background: rgba(0,0,0,0.03);\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  line-height: 1.6;\r\n  white-space: pre-wrap;\r\n}\r\n\r\n.sn-assistant-preview__warn-banner {\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  color: #c05621;\r\n  background: #fff3cd;\r\n  border: 1px solid #f6c340;\r\n  border-radius: 6px;\r\n  padding: 5px 8px;\r\n  margin-bottom: 4px;\r\n}\r\n\r\n.sn-assistant-preview__unfilled {\r\n  background: #fed7d7;\r\n  color: #c53030;\r\n  border-radius: 3px;\r\n  padding: 0 2px;\r\n  font-weight: 700;\r\n  font-style: normal;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   SUGGESTIONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-suggestions {\r\n  display: grid;\r\n  gap: 6px;\r\n  padding: 10px;\r\n  border-radius: 12px;\r\n  border: 1px solid rgba(139, 94, 20, 0.18);\r\n  background: rgba(253, 246, 230, 0.80);\r\n}\r\n\r\n.sn-assistant-suggestions__title {\r\n  font-size: 10px;\r\n  font-weight: 800;\r\n  color: #7A4A0A;\r\n  letter-spacing: 0.02em;\r\n}\r\n\r\n.sn-assistant-suggestions__list {\r\n  display: grid;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-suggestions__item {\r\n  width: 100%;\r\n  text-align: left;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 10px;\r\n  background: var(--sn-assistant-panel);\r\n  padding: 8px 10px;\r\n  color: var(--sn-assistant-ink);\r\n  cursor: pointer;\r\n  transition: border-color 140ms ease, box-shadow 140ms ease;\r\n}\r\n\r\n.sn-assistant-suggestions__item:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  box-shadow: 0 2px 8px var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-suggestions__item.is-selected {\r\n  border-color: var(--sn-assistant-accent);\r\n  box-shadow: 0 0 0 2px var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-suggestions__label {\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  line-height: 1.25;\r\n}\r\n\r\n.sn-assistant-suggestions__subject {\r\n  margin-top: 2px;\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  color: var(--sn-assistant-muted);\r\n}\r\n\r\n.sn-assistant-suggestions__body {\r\n  margin-top: 4px;\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  line-height: 1.4;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n';
 
   // Assistant/ui/styles/buttons-modals.css
-  var buttons_modals_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   BUTTONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-button {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  gap: 3px;\r\n  min-width: 96px;\r\n  height: 30px;\r\n  padding: 0 10px;\r\n  border-radius: 10px;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.01em;\r\n  box-shadow: 0 1px 3px rgba(0,0,0,0.06);\r\n}\r\n\r\n.sn-assistant-button--compact {\r\n  min-width: 0;\r\n  height: 32px;\r\n  padding: 0 12px;\r\n  border-radius: 8px;\r\n  font-size: 12px;\r\n}\r\n\r\n.sn-assistant-button--primary {\r\n  background: var(--sn-assistant-accent);\r\n  color: #FFFFFF;\r\n  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);\r\n}\r\n\r\n.sn-assistant-button--primary:hover {\r\n  background: var(--sn-assistant-accent-strong);\r\n  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);\r\n}\r\n\r\n.sn-assistant-button--secondary {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  border: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-button--secondary:hover {\r\n  background: var(--sn-assistant-surface);\r\n  border-color: var(--sn-assistant-border-strong);\r\n}\r\n\r\n.sn-assistant-button--danger {\r\n  background: var(--sn-assistant-danger-soft);\r\n  color: var(--sn-assistant-danger);\r\n  border: 1px solid rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-button--danger:hover {\r\n  background: rgba(220, 38, 38, 0.12);\r\n}\r\n\r\n.sn-assistant-button[disabled],\r\n.sn-assistant-mini-button[disabled],\r\n.sn-assistant-launcher__primary[disabled] {\r\n  cursor: not-allowed;\r\n  opacity: 0.45;\r\n  transform: none;\r\n  box-shadow: none;\r\n}\r\n\r\n.sn-assistant-mini-button {\r\n  display: inline-grid;\r\n  place-items: center;\r\n  width: 24px;\r\n  height: 24px;\r\n  border-radius: 7px;\r\n  background: var(--sn-assistant-surface);\r\n  color: var(--sn-assistant-muted);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  font-size: 11px;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-assistant-mini-button:hover {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-mini-button--danger {\r\n  color: transparent;\r\n  background: #FEF2F2;\r\n  border-color: rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--close,\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--power,\r\n.sn-assistant-launcher__icon--danger .sn-assistant-icon--close {\r\n  width: 10px;\r\n  height: 10px;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-modal {\r\n  position: fixed;\r\n  inset: 0;\r\n  z-index: 2147483200;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  padding: 16px;\r\n}\r\n\r\n.sn-assistant-modal__backdrop {\r\n  position: absolute;\r\n  inset: 0;\r\n  background: rgba(9, 13, 20, 0.50);\r\n  -webkit-backdrop-filter: blur(8px);\r\n  backdrop-filter: blur(8px);\r\n  pointer-events: none;\r\n  z-index: 0;\r\n}\r\n\r\n@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-panel {\r\n    background-image: none;\r\n  }\r\n\r\n  .sn-assistant-modal__backdrop {\r\n    background: rgba(9, 13, 20, 0.55);\r\n  }\r\n}\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-launcher__shell::before,\r\n  .sn-assistant-launcher__dot {\r\n    animation: none;\r\n  }\r\n}\r\n\r\n.sn-assistant-modal__dialog {\r\n  position: relative;\r\n  z-index: 1;\r\n  width: min(1120px, calc(100vw - 24px));\r\n  height: min(94dvh, 980px);\r\n  max-height: calc(100dvh - 24px);\r\n  min-height: 0;\r\n  overflow: hidden;\r\n  display: flex;\r\n  flex-direction: column;\r\n  border-radius: 20px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 24px 72px rgba(0,0,0,0.16);\r\n  pointer-events: auto;\r\n}\r\n\r\n.sn-assistant-modal__dialog::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0 0 auto;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--sn-assistant-accent), var(--sn-assistant-accent-warm));\r\n  pointer-events: none;\r\n}\r\n\r\n.sn-assistant-modal__header,\r\n.sn-assistant-modal__footer {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 12px;\r\n  padding: 16px 20px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-modal__header {\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n}\r\n\r\n.sn-assistant-modal__footer {\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  position: relative;\r\n  z-index: 2;\r\n}\r\n\r\n.sn-assistant-modal__footer-group {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-modal__title {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 4px;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-modal__body {\r\n  flex: 1 1 auto;\r\n  min-height: 0;\r\n  overflow-y: auto;\r\n  overflow-x: hidden;\r\n  -webkit-overflow-scrolling: touch;\r\n  overscroll-behavior: contain;\r\n  padding: 16px 20px;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n  position: relative;\r\n  z-index: 1;\r\n  background: var(--sn-assistant-surface);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   VALIDATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-validation__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-validation__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  font-weight: 500;\r\n}\r\n\r\n.sn-assistant-validation__list {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 0;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 8px;\r\n}\r\n\r\n.sn-assistant-validation__item {\r\n  display: flex;\r\n  align-items: flex-start;\r\n  gap: 8px;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: rgba(217, 119, 6, 0.08);\r\n  border: 1px solid rgba(217, 119, 6, 0.16);\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-validation__icon {\r\n  flex-shrink: 0;\r\n  display: inline-block;\r\n  font-size: 14px;\r\n  line-height: 1;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   CONFIRMATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-confirm__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-confirm__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.5;\r\n}\r\n\r\n.sn-assistant-confirm__details {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-surface);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-confirm__detail {\r\n  font-size: 12px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.4;\r\n}\r\n\r\n.sn-assistant-confirm__detail strong {\r\n  color: var(--sn-assistant-accent);\r\n  font-weight: 600;\r\n}\r\n\r\n/* Top templates picker */\r\n.sn-assistant-toptpl__grid {\r\n  display: grid;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-toptpl__card {\r\n  text-align: left;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  padding: 12px;\r\n  border-radius: 10px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  cursor: pointer;\r\n  transition: border-color 140ms ease, background 140ms ease, transform 120ms ease;\r\n}\r\n\r\n.sn-assistant-toptpl__card:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n  transform: translateY(-1px);\r\n}\r\n\r\n.sn-assistant-toptpl__card.is-best {\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 45%, var(--sn-assistant-border));\r\n  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sn-assistant-accent) 20%, transparent);\r\n}\r\n\r\n.sn-assistant-toptpl__rank {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  width: fit-content;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.02em;\r\n  color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n  padding: 2px 8px;\r\n  border-radius: 999px;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-green {\r\n  color: #166534;\r\n  background: #dcfce7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-amber {\r\n  color: #92400e;\r\n  background: #fef3c7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-red {\r\n  color: #991b1b;\r\n  background: #fee2e2;\r\n}\r\n\r\n.sn-assistant-toptpl__title {\r\n  font-size: 13px;\r\n  line-height: 1.3;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-toptpl__subject {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n\r\n.sn-assistant-toptpl__body {\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n  opacity: 0.9;\r\n}\r\n\r\n.sn-ep__inline-bolt {\r\n  margin-left: auto;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: #b45309;\r\n  border-radius: 8px;\r\n  width: 24px;\r\n  height: 24px;\r\n  line-height: 1;\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-ep__inline-bolt:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n}\r\n';
+  var buttons_modals_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   BUTTONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-button {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  gap: 3px;\r\n  min-width: 96px;\r\n  height: 30px;\r\n  padding: 0 10px;\r\n  border-radius: 10px;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.01em;\r\n  box-shadow: 0 1px 3px rgba(0,0,0,0.06);\r\n}\r\n\r\n.sn-assistant-button--compact {\r\n  min-width: 0;\r\n  height: 32px;\r\n  padding: 0 12px;\r\n  border-radius: 8px;\r\n  font-size: 12px;\r\n}\r\n\r\n.sn-assistant-button--primary {\r\n  background: var(--sn-assistant-accent);\r\n  color: #FFFFFF;\r\n  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);\r\n}\r\n\r\n.sn-assistant-button--primary:hover {\r\n  background: var(--sn-assistant-accent-strong);\r\n  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);\r\n}\r\n\r\n.sn-assistant-button--secondary {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  border: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-button--secondary:hover {\r\n  background: var(--sn-assistant-surface);\r\n  border-color: var(--sn-assistant-border-strong);\r\n}\r\n\r\n.sn-assistant-button--danger {\r\n  background: var(--sn-assistant-danger-soft);\r\n  color: var(--sn-assistant-danger);\r\n  border: 1px solid rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-button--danger:hover {\r\n  background: rgba(220, 38, 38, 0.12);\r\n}\r\n\r\n.sn-assistant-button[disabled],\r\n.sn-assistant-mini-button[disabled],\r\n.sn-assistant-launcher__primary[disabled] {\r\n  cursor: not-allowed;\r\n  opacity: 0.45;\r\n  transform: none;\r\n  box-shadow: none;\r\n}\r\n\r\n.sn-assistant-mini-button {\r\n  display: inline-grid;\r\n  place-items: center;\r\n  width: 24px;\r\n  height: 24px;\r\n  border-radius: 7px;\r\n  background: var(--sn-assistant-surface);\r\n  color: var(--sn-assistant-muted);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  font-size: 11px;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-assistant-mini-button:hover {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-mini-button--danger {\r\n  color: transparent;\r\n  background: #FEF2F2;\r\n  border-color: rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--close,\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--power,\r\n.sn-assistant-launcher__icon--danger .sn-assistant-icon--close {\r\n  width: 10px;\r\n  height: 10px;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-modal {\r\n  position: fixed;\r\n  inset: 0;\r\n  z-index: 2147483200;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  padding: 16px;\r\n}\r\n\r\n.sn-assistant-modal__backdrop {\r\n  position: absolute;\r\n  inset: 0;\r\n  background: rgba(9, 13, 20, 0.50);\r\n  -webkit-backdrop-filter: blur(8px);\r\n  backdrop-filter: blur(8px);\r\n  pointer-events: none;\r\n  z-index: 0;\r\n}\r\n\r\n@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-panel {\r\n    background-image: none;\r\n  }\r\n\r\n  .sn-assistant-modal__backdrop {\r\n    background: rgba(9, 13, 20, 0.55);\r\n  }\r\n}\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-launcher__shell::before,\r\n  .sn-assistant-launcher__dot {\r\n    animation: none;\r\n  }\r\n}\r\n\r\n.sn-assistant-modal__dialog {\r\n  position: relative;\r\n  z-index: 1;\r\n  width: min(1120px, calc(100vw - 24px));\r\n  height: min(94dvh, 980px);\r\n  max-height: calc(100dvh - 24px);\r\n  min-height: 0;\r\n  overflow: hidden;\r\n  display: flex;\r\n  flex-direction: column;\r\n  border-radius: 20px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 24px 72px rgba(0,0,0,0.16);\r\n  pointer-events: auto;\r\n}\r\n\r\n.sn-assistant-modal__dialog::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0 0 auto;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--sn-assistant-accent), var(--sn-assistant-accent-warm));\r\n  pointer-events: none;\r\n}\r\n\r\n.sn-assistant-modal__header,\r\n.sn-assistant-modal__footer {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 12px;\r\n  padding: 16px 20px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-modal__header {\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n}\r\n\r\n.sn-assistant-modal__footer {\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  position: relative;\r\n  z-index: 2;\r\n}\r\n\r\n.sn-assistant-modal__footer-group {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-modal__title {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 4px;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-modal__body {\r\n  flex: 1 1 auto;\r\n  min-height: 0;\r\n  overflow-y: auto;\r\n  overflow-x: hidden;\r\n  -webkit-overflow-scrolling: touch;\r\n  overscroll-behavior: contain;\r\n  padding: 16px 20px;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n  position: relative;\r\n  z-index: 1;\r\n  background: var(--sn-assistant-surface);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   VALIDATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-validation__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-validation__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  font-weight: 500;\r\n}\r\n\r\n.sn-assistant-validation__list {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 0;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 8px;\r\n}\r\n\r\n.sn-assistant-validation__item {\r\n  display: flex;\r\n  align-items: flex-start;\r\n  gap: 8px;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: rgba(217, 119, 6, 0.08);\r\n  border: 1px solid rgba(217, 119, 6, 0.16);\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-validation__icon {\r\n  flex-shrink: 0;\r\n  display: inline-block;\r\n  font-size: 14px;\r\n  line-height: 1;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   CONFIRMATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-confirm__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-confirm__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.5;\r\n}\r\n\r\n.sn-assistant-confirm__details {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-surface);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-confirm__detail {\r\n  font-size: 12px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.4;\r\n}\r\n\r\n.sn-assistant-confirm__detail strong {\r\n  color: var(--sn-assistant-accent);\r\n  font-weight: 600;\r\n}\r\n\r\n/* Top templates picker */\r\n/* Top template recommendation + full-library search */\r\n.sn-assistant-toptpl__toolbar {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 7px;\r\n  margin-bottom: 16px;\r\n}\r\n.sn-assistant-toptpl__toolbar label {\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n.sn-assistant-toptpl__search {\r\n  box-sizing: border-box;\r\n  width: 100%;\r\n  min-height: 40px;\r\n  padding: 10px 12px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font: inherit;\r\n}\r\n.sn-assistant-toptpl__search:focus-visible {\r\n  outline: 2px solid var(--sn-assistant-accent);\r\n  outline-offset: 2px;\r\n}\r\n.sn-assistant-toptpl__hint {\r\n  margin: 0 0 12px;\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n.sn-assistant-toptpl__notice {\r\n  color: var(--sn-assistant-ink-soft);\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n}\r\n.sn-assistant-toptpl__recommended[hidden],\r\n.sn-assistant-toptpl__results[hidden] {\r\n  display: none !important;\r\n}\r\n.sn-assistant-toptpl__card {\r\n  width: 100%;\r\n  min-width: 0;\r\n  overflow-wrap: anywhere;\r\n}\r\n@media (max-width: 650px) {\r\n  .sn-assistant-toptpl__card {\r\n    padding: 10px;\r\n  }\r\n}\r\n\r\n.sn-assistant-toptpl__grid {\r\n  display: grid;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-toptpl__card {\r\n  text-align: left;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  padding: 12px;\r\n  border-radius: 10px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  cursor: pointer;\r\n  transition: border-color 140ms ease, background 140ms ease, transform 120ms ease;\r\n}\r\n\r\n.sn-assistant-toptpl__card:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n  transform: translateY(-1px);\r\n}\r\n\r\n.sn-assistant-toptpl__card.is-best {\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 45%, var(--sn-assistant-border));\r\n  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sn-assistant-accent) 20%, transparent);\r\n}\r\n\r\n.sn-assistant-toptpl__rank {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  width: fit-content;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.02em;\r\n  color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n  padding: 2px 8px;\r\n  border-radius: 999px;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-green {\r\n  color: #166534;\r\n  background: #dcfce7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-amber {\r\n  color: #92400e;\r\n  background: #fef3c7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-red {\r\n  color: #991b1b;\r\n  background: #fee2e2;\r\n}\r\n\r\n.sn-assistant-toptpl__title {\r\n  font-size: 13px;\r\n  line-height: 1.3;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-toptpl__subject {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n\r\n.sn-assistant-toptpl__body {\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n  opacity: 0.9;\r\n}\r\n\r\n.sn-ep__inline-bolt {\r\n  margin-left: auto;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: #b45309;\r\n  border-radius: 8px;\r\n  width: 24px;\r\n  height: 24px;\r\n  line-height: 1;\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-ep__inline-bolt:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n}\r\n';
 
   // Assistant/ui/styles/notifications.css
   var notifications_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   TOAST NOTIFICATION\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-toast {\r\n  position: fixed;\r\n  bottom: 16px;\r\n  right: 16px;\r\n  max-width: 360px;\r\n  padding: 12px 14px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 10px;\r\n  box-shadow: var(--sn-assistant-shadow);\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);\r\n  z-index: 9999;\r\n}\r\n\r\n.sn-assistant-toast__content {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n  flex: 1 1 auto;\r\n}\r\n\r\n.sn-assistant-toast__icon {\r\n  flex-shrink: 0;\r\n  display: inline-block;\r\n  font-size: 16px;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-assistant-toast__message {\r\n  flex: 1 1 auto;\r\n}\r\n\r\n.sn-assistant-toast__message code {\r\n  background: var(--sn-assistant-surface);\r\n  padding: 2px 6px;\r\n  border-radius: 4px;\r\n  font-family: "Menlo", "Monaco", monospace;\r\n  font-size: 11px;\r\n  word-break: break-all;\r\n}\r\n\r\n.sn-assistant-toast--dismissing {\r\n  animation: slideOutToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;\r\n}\r\n\r\n@keyframes slideInToast {\r\n  from {\r\n    opacity: 0;\r\n    transform: translateX(24px);\r\n  }\r\n  to {\r\n    opacity: 1;\r\n    transform: translateX(0);\r\n  }\r\n}\r\n\r\n@keyframes slideOutToast {\r\n  to {\r\n    opacity: 0;\r\n    transform: translateX(24px);\r\n  }\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   PREVIEW COLLAPSIBLE\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-preview-collapsible {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\n.sn-assistant-preview__summary {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  padding: 8px 12px;\r\n  margin: 0 -8px;\r\n  cursor: pointer;\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink);\r\n  border-radius: 8px;\r\n  transition: background-color 160ms ease;\r\n  user-select: none;\r\n  -webkit-user-select: none;\r\n}\r\n\r\n.sn-assistant-preview__summary:hover {\r\n  background-color: var(--sn-assistant-surface);\r\n}\r\n\r\n.sn-assistant-preview__summary::marker {\r\n  color: var(--sn-assistant-accent);\r\n}\r\n\r\n.sn-assistant-preview-collapsible[open] .sn-assistant-preview {\r\n  margin-top: 8px;\r\n  padding-top: 12px;\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   MISSING FIELDS WARNING\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-missing-fields {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  padding: 8px;\r\n  border-radius: 8px;\r\n  background: rgba(217, 119, 6, 0.06);\r\n  border: 1px solid rgba(217, 119, 6, 0.12);\r\n}\r\n\r\n.sn-assistant-missing-field-chip {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n  padding: 6px 10px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: rgba(217, 119, 6, 0.9);\r\n  background: rgba(217, 119, 6, 0.08);\r\n  border-radius: 6px;\r\n  white-space: nowrap;\r\n}\r\n';
@@ -37827,6 +37927,129 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     return self;
   }
 
+  // Assistant/application/templates/quickRecommendations.js
+  var BATTERY_SCENARIO_IDS = Object.freeze([
+    "iphone_battery_below_80",
+    "iphone_battery_appointment",
+    "iphone_battery_reminder",
+    "iphone_battery_swap",
+    "iphone_battery_closure_three_attempts"
+  ]);
+  var DEVICE_ONLY_TOKENS = /* @__PURE__ */ new Set(["iphone", "phone", "ipad", "tablet", "laptop", "computer", "pc", "device", "equipment", "hardware", "software"]);
+  var STOP_WORDS2 = /* @__PURE__ */ new Set([
+    "the",
+    "and",
+    "for",
+    "from",
+    "with",
+    "your",
+    "this",
+    "that",
+    "about",
+    "there",
+    "request",
+    "ticket",
+    "issue",
+    "incident",
+    "support",
+    "email",
+    "follow",
+    "up",
+    "generic",
+    "initial",
+    "service",
+    "user",
+    "normal",
+    "during",
+    "even",
+    "very",
+    "please",
+    "could",
+    "would",
+    "description",
+    "test"
+  ]);
+  function normalize3(value2 = "") {
+    return String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  function canonical(token) {
+    const aliases = {
+      iphones: "iphone",
+      phones: "phone",
+      smartphone: "phone",
+      smartphones: "phone",
+      mobile: "phone",
+      battery: "battery",
+      batteries: "battery",
+      batterie: "battery",
+      bateria: "battery",
+      draining: "drain",
+      drainage: "drain",
+      drains: "drain",
+      charging: "charge",
+      charged: "charge",
+      autonomy: "battery",
+      autonomia: "battery",
+      replacement: "replace",
+      replacing: "replace",
+      swap: "replace",
+      swapping: "replace",
+      appointment: "schedule",
+      scheduling: "schedule",
+      scheduled: "schedule",
+      reminders: "reminder",
+      followup: "reminder",
+      closure: "close",
+      closing: "close",
+      damaged: "broken",
+      damage: "broken",
+      broken: "broken"
+    };
+    return aliases[token] || (token.endsWith("s") && token.length > 5 ? token.slice(0, -1) : token);
+  }
+  function tokens2(value2) {
+    return new Set(normalize3(value2).split(/\s+/).map(canonical).filter((token) => token.length >= 3 && !STOP_WORDS2.has(token)));
+  }
+  function isIphoneBatteryTicket(context = {}) {
+    const text3 = normalize3([
+      context.shortDescription || context.short_description,
+      context.description,
+      context.category,
+      context.subcategory
+    ].filter(Boolean).join(" "));
+    return /\b(iphone|smartphone|phone|mobile devices|mobile device)\b/.test(text3) && /\b(battery|batteries|batterie|bateria|battery health|drain|drains|draining|autonomy|autonomia)\b/.test(text3);
+  }
+  function recommendQuickEmailTemplates(templates = [], context = {}, selection = {}, limit = 5) {
+    const available = (Array.isArray(templates) ? templates : []).filter((template) => template?.id && template.enabled !== false);
+    const byId = new Map(available.map((template) => [template.id, template]));
+    const max = Math.max(0, Math.min(5, Number(limit) || 0));
+    if (!max) return [];
+    if (isIphoneBatteryTicket(context)) {
+      return BATTERY_SCENARIO_IDS.map((id) => byId.get(id)).filter(Boolean).slice(0, max);
+    }
+    const short = tokens2(context.shortDescription || context.short_description);
+    const description = tokens2(context.description);
+    const hasSignal = short.size || description.size;
+    if (!hasSignal) return [];
+    const scored = available.filter((template) => !template.id.startsWith("iphone_battery_")).map((template) => {
+      const matchTokens = tokens2([template.id, template.label, template.title].filter(Boolean).join(" "));
+      const shortMatches = [...matchTokens].filter((token) => short.has(token));
+      const descriptionMatches = [...matchTokens].filter((token) => description.has(token));
+      const matchingShort = shortMatches.length;
+      const score = matchingShort * 10 + descriptionMatches.length * 2;
+      const meaningfulMatch = shortMatches.some((token) => !DEVICE_ONLY_TOKENS.has(token));
+      return { template, score: meaningfulMatch ? score : 0, matchingShort };
+    }).filter(({ score }) => score >= 10).sort((a, b) => b.score - a.score || b.matchingShort - a.matchingShort || a.template.id.localeCompare(b.template.id));
+    if (selection.selectionMode !== "manual") {
+      const chosen = scored.find((entry) => entry.template.id === selection.selectedTemplateId);
+      if (chosen) {
+        scored.splice(scored.indexOf(chosen), 1);
+        scored.unshift(chosen);
+      }
+    }
+    return scored.slice(0, max).map((entry) => entry.template);
+  }
+
   // Assistant/handlers/email.js
   function resolveGeneratedEmailRecipient(context = {}) {
     return cleanText(
@@ -37867,18 +38090,46 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
       },
       onQuickDraftTop3() {
         runAction("draft-top3", async () => {
-          const groups = getTemplateGroups(getEffectiveSettings());
-          const emailTemplates = Array.isArray(groups?.email) ? groups.email.slice(0, 3) : [];
+          const settings = getEffectiveSettings();
+          const groups = getTemplateGroups(settings);
+          const emailTemplates = Array.isArray(groups?.email) ? groups.email.filter((template) => template?.id && template.enabled !== false) : [];
           if (!emailTemplates.length) {
             showToast(state.host.document, { message: "No email templates available", tone: "warning" });
             return;
           }
-          const selectedTemplateId = await showTopTemplatesModal(state.host.document, emailTemplates);
+          const resolved = await getRenderedSelection2({ categoryOverride: "email" }) || {};
+          const context = state.context || {};
+          const recommendations = recommendQuickEmailTemplates(emailTemplates, context, resolved.selection || {});
+          const preview = (template) => {
+            try {
+              const rendered = renderTemplate(template, { context, settings });
+              return { ...template, subject: rendered?.subject || template.subject, body: rendered?.body || template.body };
+            } catch (error2) {
+              logger?.warn?.("template-preview-failed", { templateId: template.id, error: String(error2) });
+              return template;
+            }
+          };
+          const selectedTemplateId = await showTopTemplatesModal(
+            state.host.document,
+            recommendations.map(preview),
+            { allTemplates: emailTemplates.map(preview) }
+          );
           if (!selectedTemplateId) return;
-          const selected = emailTemplates.find((t) => t?.id === selectedTemplateId);
+          const selected = emailTemplates.find((template) => template.id === selectedTemplateId);
           if (!selected) {
             showToast(state.host.document, { message: "Template selection invalid", tone: "warning" });
             return;
+          }
+          if (selected.requiresThreeContactAttempts) {
+            const confirmed = await showConfirmationModal(state.host.document, {
+              title: "Confirm three contact attempts",
+              description: "Only use this email when three separate attempts to contact the user are documented on this ticket. This creates a draft; it does not close the incident.",
+              details: [
+                { label: "Ticket", value: context.ticketNumber || context.recordNumber || "Current ticket" },
+                { label: "Required evidence", value: "Three documented attempts without a user response" }
+              ]
+            });
+            if (!confirmed) return;
           }
           store.dispatch(setSelectedTemplate2, { category: "email", templateId: selected.id });
           const opened = await runDraftFlow2({ categoryOverride: "email" });
@@ -38139,7 +38390,7 @@ ${completionEmail.body}`,
   function cleanText5(value2) {
     return String(value2 || "").trim();
   }
-  function normalize3(value2) {
+  function normalize4(value2) {
     return cleanText5(value2).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
   function flatten(value2) {
@@ -38148,7 +38399,7 @@ ${completionEmail.body}`,
     return cleanText5(value2);
   }
   function corpus(template = {}) {
-    return normalize3([
+    return normalize4([
       template.id,
       template.label,
       template.title,
@@ -38161,12 +38412,12 @@ ${completionEmail.body}`,
     return pattern.test(text3);
   }
   function scoreTemplate(template = {}, context = {}) {
-    const shortDescription = normalize3(context.shortDescription || context.short_description);
-    const description = normalize3(context.description || context.desc);
+    const shortDescription = normalize4(context.shortDescription || context.short_description);
+    const description = normalize4(context.description || context.desc);
     const text3 = shortDescription || description;
     if (!text3) return 0;
     const templateText = corpus(template);
-    const id = normalize3(template.id);
+    const id = normalize4(template.id);
     let score = 0;
     const futureAction = has2(text3, /\b(schedule|appointment|book|arrange|plan|prepare|preparation|ready for|coordinate|availability|deliver(?:y)? scheduled)\b/);
     const completedAction = has2(text3, /\b(delivered|handed over|collected|received|completed|installed|configured|resolved|fixed|replaced|restored|done)\b/);
