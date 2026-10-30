@@ -8249,66 +8249,64 @@ ${configurationItemLine}`,
       })
     },
     {
-      // Preserve the existing ID so stored overrides and user choices survive.
-      // 80% health is not "below 80%": describe only the facts in the ticket.
       id: "iphone_battery_below_80",
       category: "email",
-      label: "iPhone Battery - Assessment",
+      label: "iPhone Battery - Initial Visit Request",
       target: "comments",
-      subject: "{{ticket_number}} - iPhone battery drain assessment",
+      subject: "{{ticket_number}} - iPhone battery: IT Welcome Help Desk visit",
       body: buildEmail({
-        context: aboutTicket("the reported iPhone battery drain and reduced battery autonomy"),
-        action: "Could you please confirm whether the device is available for a battery diagnostic, and whether the reduced autonomy is affecting your daily work? We will review the appropriate next steps after assessment.",
-        closing: CLOSINGS.reply
+        context: "We have received your ticket {{ticket_number}} regarding your iPhone battery issue.",
+        action: "Could you please let us know when you would be available to visit the IT Welcome Help Desk?",
+        closing: "Thank you in advance."
       })
     },
     {
       id: "iphone_battery_appointment",
       category: "email",
-      label: "iPhone Battery - Appointment",
+      label: "iPhone Battery - New Phone Ready",
       target: "comments",
-      subject: "{{ticket_number}} - Appointment for iPhone battery check",
+      subject: "{{ticket_number}} - Your new phone is ready",
       body: buildEmail({
-        context: aboutTicket("the iPhone battery issue you reported"),
-        action: "We would like to arrange a short appointment to assess the battery performance. Could you please suggest two or three time slots when you can bring your iPhone to IT Support?",
-        closing: CLOSINGS.schedule
+        context: "We are contacting you regarding ticket {{ticket_number}} to let you know that your new phone is ready.",
+        action: "Could you please let us know when you could visit the IT Welcome Help Desk? Please allow approximately one hour for the installation and setup.",
+        closing: "Thank you in advance."
       })
     },
     {
       id: "iphone_battery_reminder",
       category: "email",
-      label: "iPhone Battery - Reminder",
+      label: "iPhone Battery - Collection Reminder",
       target: "comments",
-      subject: "{{ticket_number}} - Reminder: iPhone battery check",
+      subject: "{{ticket_number}} - Reminder: Your new phone is ready",
       body: buildEmail({
-        context: reminderAbout("your reported iPhone battery issue"),
-        action: "Could you please let us know whether you still require assistance and confirm your availability for a battery check? If the situation has changed, please let us know.",
-        closing: CLOSINGS.reply
+        context: "This is a friendly reminder regarding ticket {{ticket_number}}. Your new phone is ready for collection.",
+        action: "Could you please let us know when you could visit the IT Welcome Help Desk? The installation and setup take approximately one hour.",
+        closing: "Thank you in advance."
       })
     },
     {
       id: "iphone_battery_swap",
       category: "email",
-      label: "iPhone Battery - Possible Swap",
+      label: "iPhone Battery - Phone Replacement",
       target: "comments",
-      subject: "{{ticket_number}} - iPhone battery service or replacement review",
+      subject: "{{ticket_number}} - Phone replacement appointment",
       body: buildEmail({
-        context: aboutTicket("the iPhone battery issue and possible device replacement"),
-        action: "Following an assessment, we can review whether battery service or a device swap is appropriate, subject to the applicable IT process. Please confirm your availability for the diagnostic and provide any relevant details about the issue.",
-        closing: CLOSINGS.schedule
+        context: "We have received your ticket {{ticket_number}} regarding your iPhone.",
+        action: "We will replace your phone with a new one. Could you please let us know when you could visit one of our IT Welcome Help Desk offices for the exchange?",
+        closing: "Thank you in advance."
       })
     },
     {
       id: "iphone_battery_closure_three_attempts",
       category: "email",
-      label: "iPhone Battery - Closure After 3 Contact Attempts",
+      label: "iPhone Battery - Final Follow-up (3 Attempts)",
       target: "comments",
       requiresThreeContactAttempts: true,
-      subject: "{{ticket_number}} - Final follow-up: iPhone battery incident",
+      subject: "{{ticket_number}} - Final follow-up before closure",
       body: buildEmail({
-        context: aboutTicket("your reported iPhone battery issue"),
-        action: "We have tried to contact you on three documented occasions without receiving a reply. If you still need support, please respond so that we can continue assisting you. Otherwise, the ticket may be closed in line with the applicable support procedure.",
-        closing: CLOSINGS.reply
+        context: "We have tried to contact you three times regarding ticket {{ticket_number}} but have not received a response.",
+        action: "If you still need assistance, please reply to this email. Otherwise, the ticket may be closed in accordance with the applicable support procedure.",
+        closing: "Thank you."
       })
     },
     {
