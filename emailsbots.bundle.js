@@ -6042,7 +6042,7 @@ Asset tag: ${item.equipmentAssetTag}`;
     "quick-draft-top3",
     "open-work-notes",
     "incident-resolution-notes",
-    "user-info",
+    // User Info is a core ticket action and must remain visible even with legacy hidden settings.
     "user-open-tickets",
     "assign-to-my-group",
     "open-ep-links",
@@ -9934,6 +9934,40 @@ ${configurationItemLine}`,
       placeholders: [],
       notes: "Bulk import test",
       lastModified: "2026-05-05T07:07:35.604Z"
+    },
+    {
+      id: "desktop_inactivity_verify_before_removal",
+      title: "Desktop Inactivity \u2013 Verify Before Removal",
+      type: "email",
+      category: "return",
+      priority: 90,
+      enabled: true,
+      record_type: "SCTASK",
+      keywords: {
+        short_desc: "",
+        description: "no logs since some months"
+      },
+      exclusions: [
+        "delivery",
+        "new laptop",
+        "replacement"
+      ],
+      subject: "Action required \u2013 Desktop usage verification \u2013 {{ticket_number}}",
+      body: "Dear {{requested_for}},\n\nWe are contacting you regarding the desktop computer registered at {{location}}.\n\nTicket: {{ticket_number}}\nComputer / Configuration item: {{configuration_item}}\n\nOur records indicate that this computer may not have been used for some time. Before any further action is taken, could you please confirm whether you still use or require this computer?\n\nIf you no longer need it, please let us know so that we can coordinate the next steps with the relevant logistics team. No removal will be arranged without the necessary confirmation.\n\nThank you for your feedback.\n\nKind regards,\n{{assigned_to}}",
+      work_note: "Usage verification requested from {{requested_for}} for desktop {{configuration_item}} at {{location}} under {{ticket_number}}. Awaiting confirmation of whether the equipment is still required. No removal approved or performed at this stage.",
+      close_note: "",
+      event_title: "",
+      event_desc: "",
+      pdf_block: "",
+      placeholders: [
+        "requested_for",
+        "location",
+        "ticket_number",
+        "configuration_item",
+        "assigned_to"
+      ],
+      notes: "For SCTASK requests concerning desktops reportedly inactive for months. Confirm actual use with the requester before coordinating removal. Do not imply inactivity was independently verified or removal authorized. Exact match relies on description because the catalog short description is generic.",
+      lastModified: "2026-11-03T00:00:00.000Z"
     }
   ];
 
@@ -11318,6 +11352,7 @@ word-wrap:break-word'>\r
     const hasScTask = /^SCTASK\d{4,}$/.test(sctask);
     if (preference === "ritm") return hasRitm ? ritm : validTicket || sctask;
     if (preference === "sctask") return hasScTask ? sctask : validTicket || ritm;
+    if (hasScTask) return sctask;
     if (hasRitm) return ritm;
     return validTicket || sctask || ritm;
   }
@@ -13338,7 +13373,7 @@ ${value2}` : value2;
     const hidden = Array.isArray(hiddenButtons) ? hiddenButtons : [];
     const colors = buttonColors && typeof buttonColors === "object" ? buttonColors : {};
     const visibleIds = order.concat(PINNED_LAUNCHER_BUTTON_IDS).filter((buttonId) => {
-      if (hidden.includes(buttonId)) return false;
+      if (buttonId !== LAUNCHER_BUTTON_IDS.userInfo && hidden.includes(buttonId)) return false;
       if (buttonId === LAUNCHER_BUTTON_IDS.incidentResolutionNotes && cleanText(context?.table) !== "incident") return false;
       return true;
     });
@@ -17771,6 +17806,7 @@ ${assignedTo}`
   function applySmartShortDescriptionOverride(selection = {}, context = {}) {
     if (!selection || selection.selectionMode === "manual") return selection;
     if (!["email", "reminder"].includes(selection.activeCategory)) return selection;
+    if (String(selection.selectionSource || "").startsWith("studio-")) return selection;
     const baseTemplates = selection.activeCategory === "reminder" ? (selection.templates || []).map((template) => ({
       ...template,
       id: template.baseTemplateId || String(template.id || "").replace(/^reminder_/, "")
@@ -18007,7 +18043,7 @@ ${list}` : "According to our records, IT equipment assigned to you should be ret
   }
   function normalizeRenderedSubject(renderedTemplate, context = {}) {
     if (!renderedTemplate) return renderedTemplate;
-    const ticket = [context.validTicketNumber, context.customerTicketNumber, context.requestItem, context.ticketNumber, context.recordNumber].map((value2) => cleanText(value2).toUpperCase()).find((value2) => /^(?:RITM|INC|REQ|SCTASK)\d{4,}$/.test(value2)) || "";
+    const ticket = [context.sourceTaskNumber, context.source_task_number, context.validTicketNumber, context.customerTicketNumber, context.requestItem, context.ticketNumber, context.recordNumber].map((value2) => cleanText(value2).toUpperCase()).find((value2) => /^(?:RITM|INC|REQ|SCTASK)\d{4,}$/.test(value2)) || "";
     let subject = cleanText(renderedTemplate.subject).replace(/\bfollow\s*-\s*up\b/gi, "follow-up").replace(/\s{2,}/g, " ").trim();
     if (ticket) {
       subject = subject.replace(new RegExp(`\\b${ticket}\\b`, "ig"), "").replace(/^\s*(?:[-–—:|]\s*)+/, "").replace(/(?:\s*[-–—:|])+\s*$/, "").replace(/\s{2,}/g, " ").trim();
@@ -38042,6 +38078,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     if (isIphoneBatteryTicket(context)) {
       return BATTERY_SCENARIO_IDS.map((id) => byId.get(id)).filter(Boolean).slice(0, max);
     }
+    const metadataMatch = selectTemplateByStudioMetadata(available, context).template;
     const short = tokens2(context.shortDescription || context.short_description);
     const description = tokens2(context.description);
     const hasSignal = short.size || description.size;
@@ -38062,7 +38099,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
         scored.unshift(chosen);
       }
     }
-    return scored.slice(0, max).map((entry) => entry.template);
+    const recommended = scored.map((entry) => entry.template);
+    if (metadataMatch) recommended.unshift(metadataMatch);
+    return [...new Map(recommended.map((template) => [template.id, template])).values()].slice(0, max);
   }
 
   // Assistant/handlers/email.js
