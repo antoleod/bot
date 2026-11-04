@@ -9937,7 +9937,7 @@ ${configurationItemLine}`,
     },
     {
       id: "desktop_inactivity_verify_before_removal",
-      title: "Desktop Inactivity \u2013 Verify Before Removal",
+      title: "Desktop Location and Usage Verification Before Collection",
       type: "email",
       category: "return",
       priority: 90,
@@ -9952,22 +9952,20 @@ ${configurationItemLine}`,
         "new laptop",
         "replacement"
       ],
-      subject: "Action required \u2013 Desktop usage verification \u2013 {{ticket_number}}",
-      body: "Dear {{requested_for}},\n\nWe are contacting you regarding the desktop computer registered at {{location}}.\n\nTicket: {{ticket_number}}\nComputer / Configuration item: {{configuration_item}}\n\nOur records indicate that this computer may not have been used for some time. Before any further action is taken, could you please confirm whether you still use or require this computer?\n\nIf you no longer need it, please let us know so that we can coordinate the next steps with the relevant logistics team. No removal will be arranged without the necessary confirmation.\n\nThank you for your feedback.\n\nKind regards,\n{{assigned_to}}",
-      work_note: "Usage verification requested from {{requested_for}} for desktop {{configuration_item}} at {{location}} under {{ticket_number}}. Awaiting confirmation of whether the equipment is still required. No removal approved or performed at this stage.",
+      subject: "{{request_item}} \u2013 Desktop usage and location confirmation",
+      body: "Dear {{requested_for}},\n\nWe have noticed that the following desktop computer appears not to have been used for some time, and our Logistics team would like to arrange its removal if it is no longer required.\n\nComputer: {{configuration_item}}\nReference: {{request_item}}\n\nBefore proceeding, could you please confirm whether you are still using this computer and whether it is still located in the office indicated in the request?\n\nIf the computer has been moved, please let us know its current location and where our Logistics team could collect it, should removal be necessary.\n\nYour confirmation will help us determine the appropriate next steps.\n\nThank you in advance for your cooperation.\n\nKind regards,\nIT Support",
+      work_note: "Contacted {{requested_for}} under {{request_item}} regarding desktop {{configuration_item}}, which appears inactive; Logistics requests confirmation before any possible removal. Asked whether the desktop is still needed, whether it remains in the office indicated in the request, and for a current collection location if moved. Awaiting reply; no collection approved.",
       close_note: "",
       event_title: "",
       event_desc: "",
       pdf_block: "",
       placeholders: [
         "requested_for",
-        "location",
-        "ticket_number",
-        "configuration_item",
-        "assigned_to"
+        "request_item",
+        "configuration_item"
       ],
-      notes: "For SCTASK requests concerning desktops reportedly inactive for months. Confirm actual use with the requester before coordinating removal. Do not imply inactivity was independently verified or removal authorized. Exact match relies on description because the catalog short description is generic.",
-      lastModified: "2026-11-03T00:00:00.000Z"
+      notes: "For investigation and potential collection of inactive desktops. Use the parent RITM reference, confirm whether the equipment remains in the office listed on the task and ask for an updated collection point if relocated. Avoid {{location}} because current context extraction may incorrectly return SCTASK. Do not imply that equipment is unused or its collection authorized.",
+      lastModified: "2026-11-04T09:20:00.000Z"
     }
   ];
 
@@ -12248,7 +12246,7 @@ ${value2}` : value2;
       data-action="work-notes-select-template"
       data-template-id="${escapeHtml(template.id)}"
       data-template-search="${escapeHtml(buildWorkNoteSearchText(template))}"
-      title="${escapeHtml(template.label)}"
+      title="Replace the current unposted ServiceNow Work Notes draft with ${escapeHtml(template.label)}"
     >
       ${escapeHtml(template.label)}
       ${isRecommended ? '<span class="sn-assistant-worknotes__chip-badge">Top</span>' : ""}
@@ -12443,19 +12441,6 @@ ${value2}` : value2;
         event.stopPropagation();
         handlers.onRemoveQuickPhrase?.(phrase);
       }
-    });
-    root.addEventListener("pointerdown", (event) => {
-      const button = event.target.closest('[data-action="work-notes-select-template"]');
-      if (!button || !root.contains(button)) return;
-      root.__snWorkNotesSnapshot = root.querySelector('[name="workNotesText"]')?.value || state.ui.workNotesText || "";
-    });
-    root.addEventListener("dblclick", (event) => {
-      const button = event.target.closest('[data-action="work-notes-select-template"]');
-      if (!button || !root.contains(button)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      handlers.onAppendWorkNoteTemplate(button.dataset.templateId, root.__snWorkNotesSnapshot || "");
-      root.__snWorkNotesSnapshot = "";
     });
     root.addEventListener("input", (event) => {
       const field = event.target.closest('[name="workNotesText"]');
@@ -38603,10 +38588,13 @@ ${completionEmail.body}`,
         if (!selectedTemplate) throw new Error("Work note template not found");
         const renderedSelected = renderTemplate(selectedTemplate, { context: currentContext, settings }), templateText = cleanText(renderedSelected?.body || "");
         if (!templateText) throw new Error("Work note template rendered empty");
+        const result = writeWorkNoteToField(templateText, currentContext, { append: false });
+        if (!result.ok || result.verified === false) throw new Error(`Work notes could not be verified (${result.kind || "write-unverified"})`);
         store.dispatch(applyWorkNoteTemplate, { templateId: selectedId, text: templateText, generatedTemplateId: selectedId });
         state.ui.workNotesSource = "template";
+        noteWorkNoteTemplateUsage(state, rootWindow, selectedId);
         logger.info("work-notes:template-selected", { ticketNumber: currentContext?.ticketNumber || currentContext?.recordNumber || "", selectedTemplateId: selectedId, previousTemplateId, source: "template-click" });
-        showToast(state.host.document, { message: `Work note template selected: ${selectedTemplate.label || selectedId}`, tone: "info" });
+        showToast(state.host.document, { message: `Work note draft replaced: ${selectedTemplate.label || selectedId}`, tone: "info" });
         scheduleRecovery("work-notes-template", 0);
       },
       onAppendWorkNoteTemplate(templateId, baseText = "") {
@@ -39136,13 +39124,11 @@ ${text3}` : text3;
         scheduleRecovery("launcher-pin", 0);
       },
       onEdgePanelToggle() {
-        const isOpen = state.ui.edgePanelMode === "expanded" || state.ui.edgePanelMode === "icons";
-        const next = isOpen ? "tab" : "expanded";
-        if (next === "tab" && state.ui.edgePanelPinned) return;
+        const next = state.ui.edgePanelMode === "expanded" ? "icons" : "expanded";
         state.ui.edgePanelMode = next;
         state.ui.assistantHidden = false;
         if (state.ui.edgePanelPinned) {
-          savePinState(rootWindow, { pinned: true, lastOpenState: next !== "tab", mode: next });
+          savePinState(rootWindow, { pinned: true, lastOpenState: true, mode: next });
         }
         scheduleRecovery("launcher-mode", 0);
       },
@@ -39164,7 +39150,7 @@ ${text3}` : text3;
           store.dispatch(setEdgePanelPinned, false);
           savePinState(rootWindow, { pinned: false, lastOpenState: false, mode: "tab" });
         }
-        state.ui.edgePanelMode = "tab";
+        state.ui.edgePanelMode = "icons";
         state.ui.assistantHidden = false;
         scheduleAutoHideTimer();
         scheduleRecovery("ep-close", 0);
@@ -39801,6 +39787,7 @@ ${text3}` : text3;
       clearAutoHideTimer();
       if (isAssistantSuppressed()) return;
       if (state.ui.edgePanelPinned) return;
+      if (["icons", "expanded"].includes(state.ui.edgePanelMode)) return;
       const delayMs = getAutoHideDelayMs(getEffectiveSettings());
       if (!delayMs) return;
       state.lifecycle.autoHideTimer = rootWindow.setTimeout(() => {
