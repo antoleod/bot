@@ -8950,7 +8950,31 @@ ${configurationItemLine}`,
       label: "MDM - Personal device removed",
       target: "work_notes",
       keywords: ["MDM", "BYOD", "Intune", "personal device", "unenrolled", "device removed", "remove enrollment"],
-      body: "The personal device previously associated with {{requested_for}} has been removed from MDM/BYOD management as requested.\nThis note documents the completed MDM removal; it does not indicate physical collection or disposal of the device."
+      body: "The personal device previously associated with the user has been removed from MDM /BYOD management as requested."
+    },
+    {
+      id: "leaving_request_under_review",
+      category: "work_note",
+      label: "Leaving - Request under review",
+      target: "work_notes",
+      keywords: ["leaving", "exit", "end of contract", "offboarding", "private data", "personal data"],
+      body: "Leaving-related request reviewed. The user has requested guidance or assistance concerning personal files at the end of their contract. Awaiting confirmation of the applicable procedure before advising on data extraction or transfer."
+    },
+    {
+      id: "leaving_second_strike_sent",
+      category: "work_note",
+      label: "Leaving - 2nd strike sent",
+      target: "work_notes",
+      keywords: ["leaving", "exit", "second strike", "second follow-up", "offboarding"],
+      body: "Second follow-up sent to the requester regarding the leaving-related request. Awaiting their response before proceeding; the ticket remains open."
+    },
+    {
+      id: "leaving_closure_after_confirmation",
+      category: "work_note",
+      label: "Leaving - Closure after confirmation",
+      target: "work_notes",
+      keywords: ["leaving", "exit", "closure", "confirmed", "offboarding"],
+      body: "Leaving-related request completed and the outcome confirmed with the requester. The necessary steps have been documented in the ticket, which may now proceed to closure."
     },
     {
       id: "mdm_no_device_found",
@@ -10002,6 +10026,93 @@ ${configurationItemLine}`,
       ],
       notes: "Automatically eligible only for generic catalog SCTASK tickets whose description contains structured device inventory metadata without an explicit action or inactivity/removal evidence.",
       lastModified: "2026-11-04T09:45:00.000Z"
+    },
+    {
+      id: "leaving_personal_data_initial_followup",
+      title: "Leaving \u2013 Personal Data Request Follow-up",
+      type: "email",
+      category: "leaving",
+      priority: 70,
+      enabled: true,
+      record_type: "SCTASK",
+      keywords: {
+        short_desc: "request private data on exit",
+        description: ""
+      },
+      exclusions: [],
+      subject: "{{request_item}} \u2013 Personal data request on leaving",
+      body: "Dear {{requested_for}},\n\nWe are following up on your request concerning personal files and documents before the end of your contract.\n\nCould you please confirm the information you need and the date by which you require an answer?\n\nThe handling and transfer of personal data must follow the applicable internal procedure. We will confirm the authorized steps rather than assume that all files in Desktop or Documents may be copied.\n\nThank you for your reply.\n\nKind regards,\nIT Support",
+      work_note: "",
+      close_note: "",
+      event_title: "",
+      event_desc: "",
+      pdf_block: "",
+      placeholders: [
+        "requested_for",
+        "request_item"
+      ],
+      notes: "Leaving/exit data request: initial follow-up. Do not promise unrestricted copies or disclose personal data; route to the authorized data/privacy process.",
+      requiresPreviousContact: false,
+      requiresClosureConfirmation: false,
+      lastModified: "2026-11-04T10:30:00.000Z"
+    },
+    {
+      id: "leaving_personal_data_second_strike",
+      title: "Leaving \u2013 2nd Strike (Second Follow-up)",
+      type: "email",
+      category: "leaving",
+      priority: 70,
+      enabled: true,
+      record_type: "SCTASK",
+      keywords: {
+        short_desc: "",
+        description: ""
+      },
+      exclusions: [],
+      subject: "{{request_item}} \u2013 Second follow-up on leaving request",
+      body: "Dear {{requested_for}},\n\nThis is a second follow-up regarding your request for assistance with personal files before the end of your contract.\n\nWe are still awaiting the information needed to proceed. Could you please reply to confirm whether assistance is still required and any relevant deadline?\n\nPlease note that any copy or transfer of data must follow the applicable internal procedure.\n\nThank you for your response.\n\nKind regards,\nIT Support",
+      work_note: "",
+      close_note: "",
+      event_title: "",
+      event_desc: "",
+      pdf_block: "",
+      placeholders: [
+        "requested_for",
+        "request_item"
+      ],
+      notes: "Manual second strike only when a previous documented contact exists. No unsupported claim of earlier reminders; never auto-select from the request title alone. Manual selection only: no automatic recommendation on ticket creation.",
+      requiresPreviousContact: true,
+      requiresClosureConfirmation: false,
+      lastModified: "2026-11-04T10:30:00.000Z"
+    },
+    {
+      id: "leaving_personal_data_closure",
+      title: "Leaving \u2013 Ticket Closure Confirmation",
+      type: "email",
+      category: "leaving",
+      priority: 70,
+      enabled: true,
+      record_type: "SCTASK",
+      keywords: {
+        short_desc: "",
+        description: ""
+      },
+      exclusions: [],
+      subject: "{{request_item}} \u2013 Confirmation before ticket closure",
+      body: "Dear {{requested_for}},\n\nWe are following up on your request concerning personal files before the end of your contract.\n\nCould you please confirm whether your request has been addressed and no further assistance is required?\n\nOnce the outcome is confirmed and the applicable procedure has been completed, we can proceed with closure of the ticket.\n\nKind regards,\nIT Support",
+      work_note: "",
+      close_note: "",
+      event_title: "",
+      event_desc: "",
+      pdf_block: "",
+      placeholders: [
+        "requested_for",
+        "request_item"
+      ],
+      notes: "Manual closure-confirmation email. Do not claim completion, consent, or a three-contact history without evidence; do not close the ticket automatically. Manual selection only: no automatic recommendation on ticket creation.",
+      requiresPreviousContact: false,
+      requiresClosureConfirmation: true,
+      lastModified: "2026-11-04T10:30:00.000Z"
     }
   ];
 
