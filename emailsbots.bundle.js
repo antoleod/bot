@@ -8945,6 +8945,14 @@ ${configurationItemLine}`,
       body: "User has a personal device enrolled in MDM. The device remains associated with the user profile at this stage and is scheduled to be removed at the end of the contract."
     },
     {
+      id: "mdm_personal_device_removed",
+      category: "work_note",
+      label: "MDM - Personal device removed",
+      target: "work_notes",
+      keywords: ["MDM", "BYOD", "Intune", "personal device", "unenrolled", "device removed", "remove enrollment"],
+      body: "The personal device previously associated with {{requested_for}} has been removed from MDM/BYOD management as requested.\nThis note documents the completed MDM removal; it does not indicate physical collection or disposal of the device."
+    },
+    {
       id: "mdm_no_device_found",
       category: "work_note",
       label: "MDM - No device found",
@@ -38541,6 +38549,10 @@ ${completionEmail.body}`,
       if (/equipment_prepared/.test(id) && /\b(prepare|preparation|ready)\b/.test(text3)) score += 20;
       if (/smartphone_delivery/.test(id) && /\b(smartphone|phone|iphone|mobile)\b/.test(text3)) score += 18;
       if (/device_delivered|worknote_device_delivered|device_collected/.test(id)) score -= 25;
+    }
+    if (/mdm_personal_device_removed/.test(id)) {
+      const removalCompleted = /\b(?:removed|unenrolled|unenrolled successfully|removal completed|deleted from mdm)\b/.test(text3);
+      score += removalCompleted ? 45 : -35;
     }
     if (completedAction) {
       if (/device_delivered|worknote_device_delivered/.test(id) && /\b(delivered|handed over|received)\b/.test(text3)) score += 24;
