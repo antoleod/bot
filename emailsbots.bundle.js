@@ -9966,6 +9966,34 @@ ${configurationItemLine}`,
       ],
       notes: "For investigation and potential collection of inactive desktops. Use the parent RITM reference, confirm whether the equipment remains in the office listed on the task and ask for an updated collection point if relocated. Avoid {{location}} because current context extraction may incorrectly return SCTASK. Do not imply that equipment is unused or its collection authorized.",
       lastModified: "2026-11-04T09:20:00.000Z"
+    },
+    {
+      id: "desktop_inventory_location_and_action_confirmation",
+      title: "Desktop Inventory \u2013 Confirm Location and Required Action",
+      type: "email",
+      category: "return",
+      priority: 85,
+      enabled: true,
+      record_type: "SCTASK",
+      keywords: {
+        short_desc: "",
+        description: ""
+      },
+      exclusions: [],
+      subject: "{{request_item}} \u2013 Desktop inventory and location confirmation",
+      body: "Dear {{requested_for}},\n\nWe are contacting you regarding request {{request_item}} to verify the details of the following computer listed in our equipment inventory:\n\nComputer / Configuration item: {{configuration_item}}\n\nCould you please confirm whether this computer is still located in the office indicated in the request and whether you currently use or need it?\n\nIf the computer has been moved, please let us know its current location. If a collection is required, please confirm where it could be collected.\n\nYour confirmation will help us determine the appropriate next steps. No collection has been arranged at this stage.\n\nThank you in advance for your cooperation.\n\nKind regards,\nIT Support",
+      work_note: "Requested confirmation of current usage, location and possible collection point for computer {{configuration_item}} under {{request_item}}. Inventory information alone does not establish that equipment is unused or that a collection is authorized.",
+      close_note: "",
+      event_title: "",
+      event_desc: "",
+      pdf_block: "",
+      placeholders: [
+        "requested_for",
+        "request_item",
+        "configuration_item"
+      ],
+      notes: "Automatically eligible only for generic catalog SCTASK tickets whose description contains structured device inventory metadata without an explicit action or inactivity/removal evidence.",
+      lastModified: "2026-11-04T09:45:00.000Z"
     }
   ];
 
@@ -17226,6 +17254,26 @@ ${assignedTo}`
     };
   }
 
+  // Assistant/application/templates/inventoryRecognition.js
+  function isInventoryOnlyCatalogTask(context = {}) {
+    const title = String(context.shortDescription || context.short_description || "").toLowerCase().trim();
+    if (!/^(?:all other it equipment request can be made here|other it equipment request|it equipment request)$/.test(title)) return false;
+    const description = String(context.description || "");
+    const text3 = description.toLowerCase();
+    const headers = [
+      /user\s*name/i,
+      /(?:site\s+)?location/i,
+      /product\s*type/i,
+      /product\s*desc/i,
+      /mac\s*ad(?:d)?ress/i,
+      /keyboard\s*type/i
+    ].filter((pattern) => pattern.test(text3)).length;
+    const hasAsset = /\b(?:\d{2}PI\d{6,}|MUSTBRUC\d{5,})\b/i.test(description);
+    const hasDesktop = /\b(?:desktop|pc|computer|prodesk|optiplex|thinkcentre)\b/i.test(description);
+    const action = /\b(?:no logs since|not in use|unused|remove|removal|collect|collection|return|deliver|delivery|replace|replacement|broken|repair|install|investigation requested)\b/i.test(description);
+    return headers >= 3 && hasAsset && hasDesktop && !action;
+  }
+
   // Assistant/application/templates/selection.js
   function isDraftCapableCategory(category = "") {
     return ["email", "appointment"].includes(cleanText(category));
@@ -17501,6 +17549,25 @@ ${assignedTo}`
       state.ui.templateSelectionMode[activeCategory] = "auto";
     }
     const fullContext = state.context || {};
+    if (activeCategory === "email" && isInventoryOnlyCatalogTask(fullContext)) {
+      const inventory = templates.find(
+        (item) => item.id === "desktop_inventory_location_and_action_confirmation" && item.enabled !== false
+      );
+      if (inventory) {
+        setSelectedTemplate(state, activeCategory, inventory.id, "auto");
+        return {
+          groups,
+          categories,
+          activeCategory,
+          templates,
+          selectedTemplateId: inventory.id,
+          selectedTemplate: inventory,
+          emailSelection: { template: inventory, templateId: inventory.id, score: 1e4, ambiguous: false, candidates: [], metadata: true },
+          selectionMode: "auto",
+          selectionSource: "structured-inventory"
+        };
+      }
+    }
     const metadataSelection = getMetadataSelection(templates, fullContext);
     const contextualBuiltinOverride = activeCategory === "email" ? getContextualBuiltinOverride(groups.email || [], fullContext) : null;
     const builtinShortSelection = ["email", "reminder"].includes(activeCategory) ? selectTemplateByShortDescription(groups.email || [], fullContext) : null;
@@ -17791,7 +17858,7 @@ ${assignedTo}`
   function applySmartShortDescriptionOverride(selection = {}, context = {}) {
     if (!selection || selection.selectionMode === "manual") return selection;
     if (!["email", "reminder"].includes(selection.activeCategory)) return selection;
-    if (String(selection.selectionSource || "").startsWith("studio-")) return selection;
+    if (String(selection.selectionSource || "").startsWith("studio-") || selection.selectionSource === "structured-inventory") return selection;
     const baseTemplates = selection.activeCategory === "reminder" ? (selection.templates || []).map((template) => ({
       ...template,
       id: template.baseTemplateId || String(template.id || "").replace(/^reminder_/, "")
@@ -18030,7 +18097,7 @@ ${list}` : "According to our records, IT equipment assigned to you should be ret
     if (!renderedTemplate) return renderedTemplate;
     const ticket = [context.sourceTaskNumber, context.source_task_number, context.validTicketNumber, context.customerTicketNumber, context.requestItem, context.ticketNumber, context.recordNumber].map((value2) => cleanText(value2).toUpperCase()).find((value2) => /^(?:RITM|INC|REQ|SCTASK)\d{4,}$/.test(value2)) || "";
     let subject = cleanText(renderedTemplate.subject).replace(/\bfollow\s*-\s*up\b/gi, "follow-up").replace(/\s{2,}/g, " ").trim();
-    if (ticket) {
+    if (ticket && !/^(?:RITM|SCTASK|INC|REQ)\d{4,}\b/i.test(subject)) {
       subject = subject.replace(new RegExp(`\\b${ticket}\\b`, "ig"), "").replace(/^\s*(?:[-–—:|]\s*)+/, "").replace(/(?:\s*[-–—:|])+\s*$/, "").replace(/\s{2,}/g, " ").trim();
       subject = subject ? `${ticket} - ${subject}` : ticket;
     }
@@ -38062,6 +38129,10 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     if (!max) return [];
     if (isIphoneBatteryTicket(context)) {
       return BATTERY_SCENARIO_IDS.map((id) => byId.get(id)).filter(Boolean).slice(0, max);
+    }
+    if (isInventoryOnlyCatalogTask(context)) {
+      const inventory = byId.get("desktop_inventory_location_and_action_confirmation");
+      return inventory ? [inventory] : [];
     }
     const metadataMatch = selectTemplateByStudioMetadata(available, context).template;
     const short = tokens2(context.shortDescription || context.short_description);
