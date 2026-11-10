@@ -7723,7 +7723,13 @@ Asset tag: ${item.equipmentAssetTag}`;
   function enforceWorkNoteContract(note2 = "") {
     return String(note2 || "").replace(/\bDear\s+[^\n,]+,?/gi, "").replace(/\bKind regards,?[\s\S]*$/i, "").replace(/\bBest regards,?[\s\S]*$/i, "").replace(/\n{3,}/g, "\n\n").trim();
   }
-  function buildWorkNoteForEmailAction(renderedTemplate = null, context = {}, settings = {}) {
+  function buildWorkNoteForEmailAction(renderedTemplate = null, context = {}, settings = {}, options = {}) {
+    if (options.draftOnly) {
+      if (renderedTemplate?.draftWorkNote) {
+        return enforceWorkNoteContract(renderTemplateText(renderedTemplate.draftWorkNote, context, settings));
+      }
+      return "Email draft prepared for the user.";
+    }
     if (renderedTemplate?.isReminder && renderedTemplate?.reminderWorkNote) {
       return enforceWorkNoteContract(renderTemplateText(renderedTemplate.reminderWorkNote, context, settings));
     }
@@ -8307,6 +8313,74 @@ ${configurationItemLine}`,
         context: "We have tried to contact you three times regarding ticket {{ticket_number}} but have not received a response.",
         action: "If you still need assistance, please reply to this email. Otherwise, the ticket may be closed in accordance with the applicable support procedure.",
         closing: "Thank you."
+      })
+    },
+    {
+      id: "iphone_cable_missing_acknowledgement",
+      category: "email",
+      draftWorkNote: "iPhone cable reported missing. Email draft prepared. Awaiting update.",
+      label: "iPhone Cable - Missing Cable Report",
+      target: "comments",
+      subject: "{{ticket_number}} - Missing iPhone cable request",
+      body: buildEmail({
+        context: "We have received your report regarding the missing iPhone cable under ticket {{ticket_number}}.",
+        action: "We will keep you informed about the next step for a replacement cable. If you need a specific connector type, please let us know.",
+        closing: CLOSINGS.info
+      })
+    },
+    {
+      id: "iphone_cable_ready_for_collection",
+      category: "email",
+      draftWorkNote: "iPhone cable ready for collection. Email draft prepared for the user. Awaiting user confirmation.",
+      label: "iPhone Cable - Replacement Ready for Collection",
+      target: "comments",
+      requiresReadyForCollectionConfirmation: true,
+      subject: "{{ticket_number}} - Your replacement iPhone cable is ready",
+      body: buildEmail({
+        context: "We are contacting you regarding ticket {{ticket_number}} to let you know that your replacement iPhone cable is ready for collection.",
+        action: "You can collect it from the IT Welcome Desk. Please let us know when you expect to visit, or confirm if you have already collected it.",
+        closing: CLOSINGS.confirm
+      })
+    },
+    {
+      id: "iphone_cable_collection_confirmation",
+      category: "email",
+      draftWorkNote: "iPhone cable collection confirmation email drafted. Awaiting user reply.",
+      label: "iPhone Cable - Confirm Cable Was Collected",
+      target: "comments",
+      subject: "{{ticket_number}} - Please confirm collection of your replacement cable",
+      body: buildEmail({
+        context: aboutTicket("the replacement cable for your iPhone"),
+        action: "Could you please confirm whether you have received or collected the replacement cable? If you have not yet collected it, please let us know so we can coordinate the next step.",
+        closing: CLOSINGS.reply
+      })
+    },
+    {
+      id: "iphone_cable_second_reminder",
+      category: "email",
+      draftWorkNote: "Second reminder about the iPhone cable drafted. Awaiting user reply.",
+      label: "iPhone Cable - Second Contact / Reminder",
+      target: "comments",
+      requiresPreviousContactAttempt: true,
+      subject: "{{ticket_number}} - Second reminder: iPhone cable request",
+      body: buildEmail({
+        context: "This is our second follow-up regarding ticket {{ticket_number}} and your missing iPhone cable.",
+        action: "We have not yet received your reply. Could you please confirm whether you still need the replacement cable or have already collected it?",
+        closing: CLOSINGS.reply
+      })
+    },
+    {
+      id: "iphone_cable_final_followup_three_attempts",
+      category: "email",
+      draftWorkNote: "Final reminder about the iPhone cable drafted. Awaiting user response before closure.",
+      label: "iPhone Cable - Final Follow-up (3 Attempts)",
+      target: "comments",
+      requiresThreeContactAttempts: true,
+      subject: "{{ticket_number}} - Final follow-up before possible closure",
+      body: buildEmail({
+        context: "We have attempted to contact you three times regarding ticket {{ticket_number}} about the missing iPhone cable without receiving a response.",
+        action: "If you still need assistance, please reply to this email. Otherwise, the ticket may be closed in accordance with the applicable support procedure.",
+        closing: CLOSINGS.reply
       })
     },
     {
@@ -11608,7 +11682,7 @@ word-wrap:break-word'>\r
     });
   }
   function cleanupRenderedText(value2 = "") {
-    return String(value2 || "").replace(/\bDear\s+,/g, "Dear,").replace(/\s+\n/g, "\n").replace(/\(\s*\)/g, "").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n");
+    return String(value2 || "").replace(/\bDear\s+,/g, "Dear,").replace(/[ \t]+\n/g, "\n").replace(/\(\s*\)/g, "").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n");
   }
   function normalizeScTaskSubject(subject, context = {}) {
     const pageType = cleanText(context?.pageType || context?.table).toLowerCase();
@@ -11661,7 +11735,7 @@ word-wrap:break-word'>\r
     });
     const isOutbound = ["email", "reminder", "appointment"].includes(String(template.category || "").trim());
     let body = rawBody;
-    body = body.replace(/\bundefined\b/gi, "").replace(/\bnull\b/gi, "").replace(/on your \./gi, "on your request.").replace(/about the \./gi, "about the reported issue.").replace(/\s{2,}/g, " ").trim();
+    body = body.replace(/\bundefined\b/gi, "").replace(/\bnull\b/gi, "").replace(/on your \./gi, "on your request.").replace(/about the \./gi, "about the reported issue.").replace(/[ \t]{2,}/g, " ").trim();
     const htmlBody = isOutbound ? buildEmailHtmlBody(body, {
       ticketNumber: placeholders.ticket_number,
       userName: placeholders.user_name,
@@ -14463,6 +14537,8 @@ ${value2}` : value2;
           <span class="sn-assistant-toptpl__subject">${escapeHtml(subject)}</span>
           <span class="sn-assistant-toptpl__body">${escapeHtml(body)}</span>
           ${template?.requiresThreeContactAttempts ? '<span class="sn-assistant-toptpl__notice">Requires confirmation of three documented contact attempts</span>' : ""}
+          ${template?.requiresPreviousContactAttempt ? '<span class="sn-assistant-toptpl__notice">Requires a documented previous contact attempt</span>' : ""}
+          ${template?.requiresReadyForCollectionConfirmation ? '<span class="sn-assistant-toptpl__notice">Confirm the replacement is ready before drafting</span>' : ""}
         </button>
       `;
       }
@@ -14486,9 +14562,11 @@ ${value2}` : value2;
                 ${recommended.map((t, idx4) => card(t, idx4)).join("") || '<div class="sn-assistant-note sn-assistant-note--empty">No confident matches. Use the search field above to browse all templates.</div>'}
               </div>
             </div>
-            <div class="sn-assistant-toptpl__results" data-toptpl-results hidden>
+            <div class="sn-assistant-toptpl__results" data-toptpl-results>
+              <p class="sn-assistant-toptpl__hint">All available email templates</p>
               <p class="sn-assistant-toptpl__hint" data-toptpl-count aria-live="polite"></p>
               <div class="sn-assistant-toptpl__grid" data-toptpl-result-list></div>
+              <button type="button" class="sn-assistant-button sn-assistant-button--secondary" data-action="toptpl-show-more" hidden>Show more templates</button>
             </div>
           </div>
           <div class="sn-assistant-modal__footer">
@@ -14511,6 +14589,8 @@ ${value2}` : value2;
       const resultsSection = root.querySelector("[data-toptpl-results]");
       const resultsList = root.querySelector("[data-toptpl-result-list]");
       const countLabel = root.querySelector("[data-toptpl-count]");
+      const showMoreBtn = root.querySelector('[data-action="toptpl-show-more"]');
+      let visibleLimit = 40;
       let settled = false;
       function cleanup(value2 = "") {
         if (settled) return;
@@ -14523,8 +14603,7 @@ ${value2}` : value2;
         const query = String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const searching = Boolean(query);
         recommendedSection.hidden = searching;
-        resultsSection.hidden = !searching;
-        if (!searching) return;
+        resultsSection.hidden = false;
         const matches = catalog.filter((template) => {
           const haystack = [template.id, template.label, template.title, template.subject, template.body].filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
           return haystack.includes(query);
@@ -14533,10 +14612,20 @@ ${value2}` : value2;
           const bl = String(b.label || b.title || b.id).toLowerCase();
           return Number(bl.startsWith(query)) - Number(al.startsWith(query)) || al.localeCompare(bl);
         });
-        countLabel.textContent = `${matches.length} matching template${matches.length === 1 ? "" : "s"}${matches.length > 40 ? " (first 40 shown)" : ""}`;
-        resultsList.innerHTML = matches.length ? matches.slice(0, 40).map((t, idx4) => card(t, idx4, false)).join("") : '<div class="sn-assistant-note sn-assistant-note--empty">No templates found. Try another keyword.</div>';
+        countLabel.textContent = searching ? `${matches.length} matching template${matches.length === 1 ? "" : "s"}` : `${matches.length} available templates`;
+        resultsList.innerHTML = matches.length ? matches.slice(0, visibleLimit).map((t, idx4) => card(t, idx4, false)).join("") : '<div class="sn-assistant-note sn-assistant-note--empty">No templates found. Try another keyword.</div>';
+        showMoreBtn.hidden = matches.length <= visibleLimit;
+        showMoreBtn.textContent = `Show more templates (${Math.min(40, matches.length - visibleLimit)} next)`;
       }
-      searchInput?.addEventListener("input", () => filterCatalog(searchInput.value));
+      searchInput?.addEventListener("input", () => {
+        visibleLimit = 40;
+        filterCatalog(searchInput.value);
+      });
+      showMoreBtn?.addEventListener("click", () => {
+        visibleLimit += 40;
+        filterCatalog(searchInput?.value || "");
+      });
+      filterCatalog("");
       root.addEventListener("click", (event) => {
         const btn = event.target.closest('[data-action="pick-template"]');
         if (!btn) return;
@@ -17393,6 +17482,16 @@ ${assignedTo}`
     return headers >= 3 && hasAsset && hasDesktop && !action;
   }
 
+  // Assistant/application/templates/accessoryRecognition.js
+  function normalize(value2 = "") {
+    return String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  function isMobileCableMissingTicket(context = {}) {
+    const short = normalize(context.shortDescription || context.short_description);
+    const metadata = normalize([context.category, context.subcategory, context.description].filter(Boolean).join(" "));
+    return /\b(cable|cord|charging lead|usb c lead|lightning lead)\b/.test(short) && /\b(missing|lost|stolen|misplaced|perdu|perdido|perdida)\b/.test(short) && /\b(iphone|ipad|smartphone|mobile|phone)\b/.test(short + " " + metadata) && !/\b(laptop|desktop|computer|pc)\b/.test(short);
+  }
+
   // Assistant/application/templates/selection.js
   function isDraftCapableCategory(category = "") {
     return ["email", "appointment"].includes(cleanText(category));
@@ -17618,6 +17717,16 @@ ${assignedTo}`
         };
       }
     }
+    if (isMobileCableMissingTicket(context)) {
+      const template = find("iphone_cable_missing_acknowledgement");
+      if (template) return {
+        template,
+        templateId: template.id,
+        source: "mobile-missing-cable",
+        score: 3e4,
+        candidates: []
+      };
+    }
     const networkCategory = /\b(network|connectivity|telecom|telecommunications)\b/.test(categoryText) || /\b(wifi|wi fi|wireless|network|vpn|ethernet|wired|lan)\b/.test(subcategoryText);
     const wifiClassification = /\b(wifi|wi fi|wireless)\b/.test(subcategoryText);
     const connectivityText = /\b(wifi|wi fi|wireless|network|vpn|ethernet|wired|connection|connectivity|disconnect|loss of access|cannot connect|unable to connect|no connection)\b/.test(text3);
@@ -17794,11 +17903,11 @@ ${assignedTo}`
   }
 
   // Assistant/application/templates/smartShortDescription.js
-  function normalize(value2 = "") {
+  function normalize2(value2 = "") {
     return String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[\s_/:|()\[\],.;]+/g, " ").replace(/\s*-\s*/g, " ").replace(/\s{2,}/g, " ").trim();
   }
   function has(text3, pattern) {
-    return pattern.test(normalize(text3));
+    return pattern.test(normalize2(text3));
   }
   var RULES = [
     {
@@ -17895,7 +18004,7 @@ ${assignedTo}`
     "device"
   ]);
   function stem(token = "") {
-    let value2 = normalize(token).replace(/[^a-z0-9]+/g, "");
+    let value2 = normalize2(token).replace(/[^a-z0-9]+/g, "");
     if (/^remov(?:e|al|ed|ing)$/.test(value2)) return "remove";
     if (/^enrol+l?(?:ment|ed|ing)?$/.test(value2) || value2 === "enrollment") return "enrolment";
     if (value2.endsWith("ies") && value2.length > 5) value2 = `${value2.slice(0, -3)}y`;
@@ -17904,7 +18013,7 @@ ${assignedTo}`
   }
   function tokens(value2 = "") {
     return Array.from(new Set(
-      normalize(value2).split(/[^a-z0-9]+/).map(stem).filter((token) => token.length >= 3 && !STOP_WORDS.has(token))
+      normalize2(value2).split(/[^a-z0-9]+/).map(stem).filter((token) => token.length >= 3 && !STOP_WORDS.has(token))
     ));
   }
   var CONFLICT_GROUPS = [
@@ -17933,7 +18042,7 @@ ${assignedTo}`
   }
   function selectSmartShortDescriptionTemplate(templates = [], context = {}) {
     const shortDescription = context.shortDescription || context.short_description || "";
-    const normalized = normalize(shortDescription);
+    const normalized = normalize2(shortDescription);
     if (!normalized || normalized.split(" ").length < 2) return null;
     for (const rule of RULES) {
       if (!has(normalized, rule.pattern)) continue;
@@ -18018,7 +18127,7 @@ ${assignedTo}`
   // Assistant/application/email/smartEmailComposer.js
   var SMART_COMPOSABLE_TEMPLATE_IDS = /* @__PURE__ */ new Set(["generic_ticket_follow_up", "generic_clarification", "incident_follow_up", "incident_software_issue", "incident_hardware_issue", "incident_connectivity_issue", "it_equipment_retrieval", "it_equipment_retrieval_reminder", "it_equipment_retrieval_confirmed"]);
   var SHORT_DESCRIPTION_PREFIXES = [/^access\s+(?:and\s*\/\s*or|and|or|&)\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i, /^access\s+and\/or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i, /^access\s+or\s+update\s+to\s+application\s*\/\s*software\s*[:\-–—]\s*/i, /^application\s*\/\s*software\s*(?:access|update|access\s+and\/or\s+update)\s*[:\-–—]\s*/i, /^request\s+(?:for\s+)?(?:access|installation|install|update)\s+(?:to|of)\s+application\s*\/\s*software\s*[:\-–—]\s*/i];
-  function normalize2(v = "") {
+  function normalize3(v = "") {
     return cleanText(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
   }
   function humanizeShortDescription(value2 = "") {
@@ -18070,7 +18179,7 @@ ${description}`) };
     return a.map((x) => `Asset tag: ${x.assetTag}${x.model ? ` \u2014 ${x.model}` : ""}`).join("\n");
   }
   function incidentClosureState(c = {}) {
-    const number = getTicketNumber2(c), table2 = normalize2(c.table), closeCode = normalize2(c.closeCode || c.close_code), state = normalize2(c.stateDisplay || c.state), resolvedAt = cleanText(c.resolvedAt || c.resolved_at), isInc = table2 === "incident" || /^INC\d+$/i.test(number), closing = Boolean(closeCode || resolvedAt || /resolved|closed|cancelled|canceled/.test(state));
+    const number = getTicketNumber2(c), table2 = normalize3(c.table), closeCode = normalize3(c.closeCode || c.close_code), state = normalize3(c.stateDisplay || c.state), resolvedAt = cleanText(c.resolvedAt || c.resolved_at), isInc = table2 === "incident" || /^INC\d+$/i.test(number), closing = Boolean(closeCode || resolvedAt || /resolved|closed|cancelled|canceled/.test(state));
     return { isInc, closing, closeCode, state };
   }
   function composeIncidentClosure(c = {}) {
@@ -18083,7 +18192,7 @@ ${work}`, confirmed = /\b(user|caller|end user).{0,45}\b(confirm(?:ed|s)?|workin
   function classifyContext(c = {}) {
     const closure = incidentClosureState(c);
     if (closure.isInc && closure.closing) return { family: "incident-closure", confidence: 1 };
-    const short = cleanText(c.shortDescription || c.short_description), description = cleanText(c.description), text3 = normalize2([short, description, c.category, c.subcategory, c.applicationSoftware, c.application].filter(Boolean).join(" ")), hold = normalize2(c.onHoldReason || c.on_hold_reason), state = normalize2(c.state), shortText = normalize2(short), descriptionText = normalize2(description);
+    const short = cleanText(c.shortDescription || c.short_description), description = cleanText(c.description), text3 = normalize3([short, description, c.category, c.subcategory, c.applicationSoftware, c.application].filter(Boolean).join(" ")), hold = normalize3(c.onHoldReason || c.on_hold_reason), state = normalize3(c.state), shortText = normalize3(short), descriptionText = normalize3(description);
     if (/recover.*(?:it material|equipment)|equipment retrieval|return.*(?:equipment|material)/.test(text3)) return { family: "equipment-retrieval", confidence: 0.99 };
     if (/awaiting vendor|waiting vendor|vendor/.test(hold) && /on hold|hold|pending/.test(state)) return { family: "waiting-vendor", confidence: 0.98 };
     if (/\b(slow|slowness|performance|lag|freeze)\b/.test(text3) && /\b(laptop|computer|pc)\b/.test(text3)) return { family: "device-performance", confidence: 0.96 };
@@ -18128,7 +18237,7 @@ ${list}` : "According to our records, IT equipment assigned to you should be ret
       reason: "Software troubleshooting."
     };
     if (family === "device-performance") {
-      const evidence = normalize2(c.description);
+      const evidence = normalize3(c.description);
       const facts = [];
       if (/reboot|restart/.test(evidence)) facts.push("restarted the device");
       if (/speed test|network|line/.test(evidence)) facts.push("network connection has already been checked");
@@ -18341,21 +18450,28 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   }
 
   // Assistant/application/email/logArtifacts.js
-  function logGeneratedArtifacts(renderedTemplate, context, settings, logger) {
+  function logGeneratedArtifacts(renderedTemplate, context, settings, logger, options = {}) {
     if (!renderedTemplate || !isDraftCapableCategory(renderedTemplate.category)) {
       return;
     }
-    const commentResult = insertEmailComment(renderedTemplate, context);
-    if (!commentResult.ok) {
-      logger?.warn("email comment could not be written", {
-        templateId: renderedTemplate?.id || ""
-      });
+    if (!options.draftOnly) {
+      const commentResult = insertEmailComment(renderedTemplate, context);
+      if (!commentResult.ok) {
+        logger?.warn("email comment could not be written", {
+          templateId: renderedTemplate?.id || ""
+        });
+      }
     }
-    const workNote = buildWorkNoteForEmailAction(renderedTemplate, context, settings);
+    const workNote = buildWorkNoteForEmailAction(
+      renderedTemplate,
+      context,
+      settings,
+      options.draftOnly ? { draftOnly: true } : {}
+    );
     logger?.info("work note generated", {
       ticketNumber: context?.ticketNumber || context?.recordNumber || "",
       templateId: renderedTemplate?.id || "",
-      source: "email-action"
+      source: options.draftOnly ? "email-draft" : "email-action"
     });
     const workNoteResult = insertWorkNote(workNote, context);
     if (!workNoteResult.ok) {
@@ -18403,7 +18519,6 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
         hostDocument: state.host.document
       });
     }
-    logGeneratedArtifacts(emailTemplate, state.context, settings, logger);
     const validationIssues = validateDraftComposeTemplate(emailTemplate);
     if (validationIssues.length > 0) {
       cacheDraftContent?.(emailTemplate, "", true);
@@ -18423,6 +18538,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
       notify?.("Draft created. Open it manually from the panel.", "info");
       return false;
     }
+    logGeneratedArtifacts(emailTemplate, state.context, settings, logger, { draftOnly: true });
     logger?.info("template rendered successfully", { templateId: selection.selectedTemplateId });
     return true;
   }
@@ -19158,7 +19274,7 @@ ${cleanText(renderedTemplate.body)}` : renderedTemplate.clipboardText;
   var forms_preview_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   FORM FIELDS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-field {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-field__label {\r\n  font-size: 12px;\r\n  font-weight: 700;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-input,\r\n.sn-assistant-select,\r\n.sn-assistant-textarea {\r\n  width: 100%;\r\n  border-radius: 10px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font: inherit;\r\n  font-weight: 600;\r\n  box-sizing: border-box;\r\n  box-shadow: 0 1px 2px rgba(0,0,0,0.04);\r\n  transition: border-color 160ms ease, box-shadow 160ms ease;\r\n}\r\n\r\n.sn-assistant-input,\r\n.sn-assistant-select {\r\n  height: 40px;\r\n  padding: 0 12px;\r\n}\r\n\r\n.sn-assistant-textarea {\r\n  min-height: 80px;\r\n  padding: 10px 12px;\r\n  resize: vertical;\r\n}\r\n\r\n.sn-assistant-input::placeholder,\r\n.sn-assistant-textarea::placeholder {\r\n  color: var(--sn-assistant-muted);\r\n  font-weight: 500;\r\n}\r\n\r\n.sn-assistant-input:focus,\r\n.sn-assistant-select:focus,\r\n.sn-assistant-textarea:focus {\r\n  outline: none;\r\n  border-color: var(--sn-assistant-accent);\r\n  box-shadow: 0 0 0 3px var(--sn-assistant-accent-soft);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   PREVIEW BLOCK\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-preview {\r\n  position: relative;\r\n  border-radius: 12px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-surface);\r\n  padding: 12px;\r\n  overflow: hidden;\r\n}\r\n\r\n.sn-assistant-preview::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0 auto auto 0;\r\n  width: 100%;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--sn-assistant-accent), var(--sn-assistant-accent-warm));\r\n  opacity: 0.6;\r\n}\r\n\r\n.sn-assistant-preview__empty {\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  color: var(--sn-assistant-muted);\r\n}\r\n\r\n.sn-assistant-preview__meta {\r\n  display: grid;\r\n  grid-template-columns: repeat(2, minmax(0, 1fr));\r\n  gap: 8px;\r\n  margin-bottom: 10px;\r\n}\r\n\r\n.sn-assistant-preview__meta-block {\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-preview__meta-label {\r\n  display: block;\r\n  margin-bottom: 3px;\r\n  font-size: 8px;\r\n  font-weight: 800;\r\n  color: var(--sn-assistant-muted);\r\n  letter-spacing: 0.10em;\r\n  text-transform: uppercase;\r\n}\r\n\r\n.sn-assistant-preview__meta-value {\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  line-height: 1.45;\r\n}\r\n\r\n.sn-assistant-preview__body {\r\n  max-height: 182px;\r\n  overflow: auto;\r\n  padding: 8px;\r\n  border-radius: 8px;\r\n  background: rgba(0,0,0,0.03);\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  line-height: 1.6;\r\n  white-space: pre-wrap;\r\n}\r\n\r\n.sn-assistant-preview__warn-banner {\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  color: #c05621;\r\n  background: #fff3cd;\r\n  border: 1px solid #f6c340;\r\n  border-radius: 6px;\r\n  padding: 5px 8px;\r\n  margin-bottom: 4px;\r\n}\r\n\r\n.sn-assistant-preview__unfilled {\r\n  background: #fed7d7;\r\n  color: #c53030;\r\n  border-radius: 3px;\r\n  padding: 0 2px;\r\n  font-weight: 700;\r\n  font-style: normal;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   SUGGESTIONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-suggestions {\r\n  display: grid;\r\n  gap: 6px;\r\n  padding: 10px;\r\n  border-radius: 12px;\r\n  border: 1px solid rgba(139, 94, 20, 0.18);\r\n  background: rgba(253, 246, 230, 0.80);\r\n}\r\n\r\n.sn-assistant-suggestions__title {\r\n  font-size: 10px;\r\n  font-weight: 800;\r\n  color: #7A4A0A;\r\n  letter-spacing: 0.02em;\r\n}\r\n\r\n.sn-assistant-suggestions__list {\r\n  display: grid;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-suggestions__item {\r\n  width: 100%;\r\n  text-align: left;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 10px;\r\n  background: var(--sn-assistant-panel);\r\n  padding: 8px 10px;\r\n  color: var(--sn-assistant-ink);\r\n  cursor: pointer;\r\n  transition: border-color 140ms ease, box-shadow 140ms ease;\r\n}\r\n\r\n.sn-assistant-suggestions__item:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  box-shadow: 0 2px 8px var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-suggestions__item.is-selected {\r\n  border-color: var(--sn-assistant-accent);\r\n  box-shadow: 0 0 0 2px var(--sn-assistant-accent-soft);\r\n}\r\n\r\n.sn-assistant-suggestions__label {\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  line-height: 1.25;\r\n}\r\n\r\n.sn-assistant-suggestions__subject {\r\n  margin-top: 2px;\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  color: var(--sn-assistant-muted);\r\n}\r\n\r\n.sn-assistant-suggestions__body {\r\n  margin-top: 4px;\r\n  font-size: 10px;\r\n  font-weight: 500;\r\n  line-height: 1.4;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n';
 
   // Assistant/ui/styles/buttons-modals.css
-  var buttons_modals_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   BUTTONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-button {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  gap: 3px;\r\n  min-width: 96px;\r\n  height: 30px;\r\n  padding: 0 10px;\r\n  border-radius: 10px;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.01em;\r\n  box-shadow: 0 1px 3px rgba(0,0,0,0.06);\r\n}\r\n\r\n.sn-assistant-button--compact {\r\n  min-width: 0;\r\n  height: 32px;\r\n  padding: 0 12px;\r\n  border-radius: 8px;\r\n  font-size: 12px;\r\n}\r\n\r\n.sn-assistant-button--primary {\r\n  background: var(--sn-assistant-accent);\r\n  color: #FFFFFF;\r\n  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);\r\n}\r\n\r\n.sn-assistant-button--primary:hover {\r\n  background: var(--sn-assistant-accent-strong);\r\n  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);\r\n}\r\n\r\n.sn-assistant-button--secondary {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  border: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-button--secondary:hover {\r\n  background: var(--sn-assistant-surface);\r\n  border-color: var(--sn-assistant-border-strong);\r\n}\r\n\r\n.sn-assistant-button--danger {\r\n  background: var(--sn-assistant-danger-soft);\r\n  color: var(--sn-assistant-danger);\r\n  border: 1px solid rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-button--danger:hover {\r\n  background: rgba(220, 38, 38, 0.12);\r\n}\r\n\r\n.sn-assistant-button[disabled],\r\n.sn-assistant-mini-button[disabled],\r\n.sn-assistant-launcher__primary[disabled] {\r\n  cursor: not-allowed;\r\n  opacity: 0.45;\r\n  transform: none;\r\n  box-shadow: none;\r\n}\r\n\r\n.sn-assistant-mini-button {\r\n  display: inline-grid;\r\n  place-items: center;\r\n  width: 24px;\r\n  height: 24px;\r\n  border-radius: 7px;\r\n  background: var(--sn-assistant-surface);\r\n  color: var(--sn-assistant-muted);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  font-size: 11px;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-assistant-mini-button:hover {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-mini-button--danger {\r\n  color: transparent;\r\n  background: #FEF2F2;\r\n  border-color: rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--close,\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--power,\r\n.sn-assistant-launcher__icon--danger .sn-assistant-icon--close {\r\n  width: 10px;\r\n  height: 10px;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-modal {\r\n  position: fixed;\r\n  inset: 0;\r\n  z-index: 2147483200;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  padding: 16px;\r\n}\r\n\r\n.sn-assistant-modal__backdrop {\r\n  position: absolute;\r\n  inset: 0;\r\n  background: rgba(9, 13, 20, 0.50);\r\n  -webkit-backdrop-filter: blur(8px);\r\n  backdrop-filter: blur(8px);\r\n  pointer-events: none;\r\n  z-index: 0;\r\n}\r\n\r\n@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-panel {\r\n    background-image: none;\r\n  }\r\n\r\n  .sn-assistant-modal__backdrop {\r\n    background: rgba(9, 13, 20, 0.55);\r\n  }\r\n}\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-launcher__shell::before,\r\n  .sn-assistant-launcher__dot {\r\n    animation: none;\r\n  }\r\n}\r\n\r\n.sn-assistant-modal__dialog {\r\n  position: relative;\r\n  z-index: 1;\r\n  width: min(1120px, calc(100vw - 24px));\r\n  height: min(94dvh, 980px);\r\n  max-height: calc(100dvh - 24px);\r\n  min-height: 0;\r\n  overflow: hidden;\r\n  display: flex;\r\n  flex-direction: column;\r\n  border-radius: 20px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 24px 72px rgba(0,0,0,0.16);\r\n  pointer-events: auto;\r\n}\r\n\r\n.sn-assistant-modal__dialog::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0 0 auto;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--sn-assistant-accent), var(--sn-assistant-accent-warm));\r\n  pointer-events: none;\r\n}\r\n\r\n.sn-assistant-modal__header,\r\n.sn-assistant-modal__footer {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 12px;\r\n  padding: 16px 20px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-modal__header {\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n}\r\n\r\n.sn-assistant-modal__footer {\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  position: relative;\r\n  z-index: 2;\r\n}\r\n\r\n.sn-assistant-modal__footer-group {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-modal__title {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 4px;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-modal__body {\r\n  flex: 1 1 auto;\r\n  min-height: 0;\r\n  overflow-y: auto;\r\n  overflow-x: hidden;\r\n  -webkit-overflow-scrolling: touch;\r\n  overscroll-behavior: contain;\r\n  padding: 16px 20px;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n  position: relative;\r\n  z-index: 1;\r\n  background: var(--sn-assistant-surface);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   VALIDATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-validation__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-validation__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  font-weight: 500;\r\n}\r\n\r\n.sn-assistant-validation__list {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 0;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 8px;\r\n}\r\n\r\n.sn-assistant-validation__item {\r\n  display: flex;\r\n  align-items: flex-start;\r\n  gap: 8px;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: rgba(217, 119, 6, 0.08);\r\n  border: 1px solid rgba(217, 119, 6, 0.16);\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-validation__icon {\r\n  flex-shrink: 0;\r\n  display: inline-block;\r\n  font-size: 14px;\r\n  line-height: 1;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   CONFIRMATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-confirm__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-confirm__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.5;\r\n}\r\n\r\n.sn-assistant-confirm__details {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-surface);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-confirm__detail {\r\n  font-size: 12px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.4;\r\n}\r\n\r\n.sn-assistant-confirm__detail strong {\r\n  color: var(--sn-assistant-accent);\r\n  font-weight: 600;\r\n}\r\n\r\n/* Top templates picker */\r\n/* Top template recommendation + full-library search */\r\n.sn-assistant-toptpl__close {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  flex: 0 0 36px;\r\n  width: 36px;\r\n  height: 36px;\r\n  padding: 0;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 9px;\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font-size: 24px;\r\n  line-height: 1;\r\n  cursor: pointer;\r\n}\r\n.sn-assistant-toptpl__close:hover {\r\n  background: var(--sn-assistant-accent-soft);\r\n  color: var(--sn-assistant-accent);\r\n}\r\n.sn-assistant-toptpl__close:focus-visible {\r\n  outline: 2px solid var(--sn-assistant-accent);\r\n  outline-offset: 2px;\r\n}\r\n\r\n.sn-assistant-toptpl__toolbar {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 7px;\r\n  margin-bottom: 16px;\r\n}\r\n.sn-assistant-toptpl__toolbar label {\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n.sn-assistant-toptpl__search {\r\n  box-sizing: border-box;\r\n  width: 100%;\r\n  min-height: 40px;\r\n  padding: 10px 12px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font: inherit;\r\n}\r\n.sn-assistant-toptpl__search:focus-visible {\r\n  outline: 2px solid var(--sn-assistant-accent);\r\n  outline-offset: 2px;\r\n}\r\n.sn-assistant-toptpl__hint {\r\n  margin: 0 0 12px;\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n.sn-assistant-toptpl__notice {\r\n  color: var(--sn-assistant-ink-soft);\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n}\r\n.sn-assistant-toptpl__recommended[hidden],\r\n.sn-assistant-toptpl__results[hidden] {\r\n  display: none !important;\r\n}\r\n.sn-assistant-toptpl__card {\r\n  width: 100%;\r\n  min-width: 0;\r\n  overflow-wrap: anywhere;\r\n}\r\n@media (max-width: 650px) {\r\n  .sn-assistant-toptpl__card {\r\n    padding: 10px;\r\n  }\r\n}\r\n\r\n.sn-assistant-toptpl__grid {\r\n  display: grid;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-toptpl__card {\r\n  text-align: left;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  padding: 12px;\r\n  border-radius: 10px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  cursor: pointer;\r\n  transition: border-color 140ms ease, background 140ms ease, transform 120ms ease;\r\n}\r\n\r\n.sn-assistant-toptpl__card:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n  transform: translateY(-1px);\r\n}\r\n\r\n.sn-assistant-toptpl__card.is-best {\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 45%, var(--sn-assistant-border));\r\n  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sn-assistant-accent) 20%, transparent);\r\n}\r\n\r\n.sn-assistant-toptpl__rank {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  width: fit-content;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.02em;\r\n  color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n  padding: 2px 8px;\r\n  border-radius: 999px;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-green {\r\n  color: #166534;\r\n  background: #dcfce7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-amber {\r\n  color: #92400e;\r\n  background: #fef3c7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-red {\r\n  color: #991b1b;\r\n  background: #fee2e2;\r\n}\r\n\r\n.sn-assistant-toptpl__title {\r\n  font-size: 13px;\r\n  line-height: 1.3;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-toptpl__subject {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n\r\n.sn-assistant-toptpl__body {\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n  opacity: 0.9;\r\n}\r\n\r\n.sn-ep__inline-bolt {\r\n  margin-left: auto;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: #b45309;\r\n  border-radius: 8px;\r\n  width: 24px;\r\n  height: 24px;\r\n  line-height: 1;\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-ep__inline-bolt:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n}\r\n';
+  var buttons_modals_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   BUTTONS\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-button {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  gap: 3px;\r\n  min-width: 96px;\r\n  height: 30px;\r\n  padding: 0 10px;\r\n  border-radius: 10px;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.01em;\r\n  box-shadow: 0 1px 3px rgba(0,0,0,0.06);\r\n}\r\n\r\n.sn-assistant-button--compact {\r\n  min-width: 0;\r\n  height: 32px;\r\n  padding: 0 12px;\r\n  border-radius: 8px;\r\n  font-size: 12px;\r\n}\r\n\r\n.sn-assistant-button--primary {\r\n  background: var(--sn-assistant-accent);\r\n  color: #FFFFFF;\r\n  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);\r\n}\r\n\r\n.sn-assistant-button--primary:hover {\r\n  background: var(--sn-assistant-accent-strong);\r\n  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);\r\n}\r\n\r\n.sn-assistant-button--secondary {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  border: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n.sn-assistant-button--secondary:hover {\r\n  background: var(--sn-assistant-surface);\r\n  border-color: var(--sn-assistant-border-strong);\r\n}\r\n\r\n.sn-assistant-button--danger {\r\n  background: var(--sn-assistant-danger-soft);\r\n  color: var(--sn-assistant-danger);\r\n  border: 1px solid rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-button--danger:hover {\r\n  background: rgba(220, 38, 38, 0.12);\r\n}\r\n\r\n.sn-assistant-button[disabled],\r\n.sn-assistant-mini-button[disabled],\r\n.sn-assistant-launcher__primary[disabled] {\r\n  cursor: not-allowed;\r\n  opacity: 0.45;\r\n  transform: none;\r\n  box-shadow: none;\r\n}\r\n\r\n.sn-assistant-mini-button {\r\n  display: inline-grid;\r\n  place-items: center;\r\n  width: 24px;\r\n  height: 24px;\r\n  border-radius: 7px;\r\n  background: var(--sn-assistant-surface);\r\n  color: var(--sn-assistant-muted);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  font-size: 11px;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-assistant-mini-button:hover {\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-mini-button--danger {\r\n  color: transparent;\r\n  background: #FEF2F2;\r\n  border-color: rgba(220, 38, 38, 0.16);\r\n}\r\n\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--close,\r\n.sn-assistant-mini-button--danger .sn-assistant-icon--power,\r\n.sn-assistant-launcher__icon--danger .sn-assistant-icon--close {\r\n  width: 10px;\r\n  height: 10px;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-modal {\r\n  position: fixed;\r\n  inset: 0;\r\n  z-index: 2147483200;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  padding: 16px;\r\n}\r\n\r\n.sn-assistant-modal__backdrop {\r\n  position: absolute;\r\n  inset: 0;\r\n  background: rgba(9, 13, 20, 0.50);\r\n  -webkit-backdrop-filter: blur(8px);\r\n  backdrop-filter: blur(8px);\r\n  pointer-events: none;\r\n  z-index: 0;\r\n}\r\n\r\n@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-panel {\r\n    background-image: none;\r\n  }\r\n\r\n  .sn-assistant-modal__backdrop {\r\n    background: rgba(9, 13, 20, 0.55);\r\n  }\r\n}\r\n\r\n@media (prefers-reduced-motion: reduce) {\r\n  .sn-assistant-launcher__shell,\r\n  .sn-assistant-launcher__shell::before,\r\n  .sn-assistant-launcher__dot {\r\n    animation: none;\r\n  }\r\n}\r\n\r\n.sn-assistant-modal__dialog {\r\n  position: relative;\r\n  z-index: 1;\r\n  width: min(1120px, calc(100vw - 24px));\r\n  height: min(94dvh, 980px);\r\n  max-height: calc(100dvh - 24px);\r\n  min-height: 0;\r\n  overflow: hidden;\r\n  display: flex;\r\n  flex-direction: column;\r\n  border-radius: 20px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 24px 72px rgba(0,0,0,0.16);\r\n  pointer-events: auto;\r\n}\r\n\r\n.sn-assistant-modal__dialog::before {\r\n  content: "";\r\n  position: absolute;\r\n  inset: 0 0 auto;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--sn-assistant-accent), var(--sn-assistant-accent-warm));\r\n  pointer-events: none;\r\n}\r\n\r\n.sn-assistant-modal__header,\r\n.sn-assistant-modal__footer {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 12px;\r\n  padding: 16px 20px;\r\n  flex-shrink: 0;\r\n}\r\n\r\n.sn-assistant-modal__header {\r\n  border-bottom: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n}\r\n\r\n.sn-assistant-modal__footer {\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  position: relative;\r\n  z-index: 2;\r\n}\r\n\r\n.sn-assistant-modal__footer-group {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-modal__title {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 4px;\r\n  min-width: 0;\r\n}\r\n\r\n.sn-assistant-modal__body {\r\n  flex: 1 1 auto;\r\n  min-height: 0;\r\n  overflow-y: auto;\r\n  overflow-x: hidden;\r\n  -webkit-overflow-scrolling: touch;\r\n  overscroll-behavior: contain;\r\n  padding: 16px 20px;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n  position: relative;\r\n  z-index: 1;\r\n  background: var(--sn-assistant-surface);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   VALIDATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-validation__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-validation__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  font-weight: 500;\r\n}\r\n\r\n.sn-assistant-validation__list {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 0;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 8px;\r\n}\r\n\r\n.sn-assistant-validation__item {\r\n  display: flex;\r\n  align-items: flex-start;\r\n  gap: 8px;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: rgba(217, 119, 6, 0.08);\r\n  border: 1px solid rgba(217, 119, 6, 0.16);\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-validation__icon {\r\n  flex-shrink: 0;\r\n  display: inline-block;\r\n  font-size: 14px;\r\n  line-height: 1;\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   CONFIRMATION MODAL\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-confirm__container {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\r\n}\r\n\r\n.sn-assistant-confirm__description {\r\n  margin: 0;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.5;\r\n}\r\n\r\n.sn-assistant-confirm__details {\r\n  list-style: none;\r\n  margin: 0;\r\n  padding: 8px 10px;\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-surface);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n}\r\n\r\n.sn-assistant-confirm__detail {\r\n  font-size: 12px;\r\n  color: var(--sn-assistant-ink);\r\n  line-height: 1.4;\r\n}\r\n\r\n.sn-assistant-confirm__detail strong {\r\n  color: var(--sn-assistant-accent);\r\n  font-weight: 600;\r\n}\r\n\r\n/* Top templates picker */\r\n/* Top template recommendation + full-library search */\r\n.sn-assistant-toptpl__close {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  flex: 0 0 36px;\r\n  width: 36px;\r\n  height: 36px;\r\n  padding: 0;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 9px;\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font-size: 24px;\r\n  line-height: 1;\r\n  cursor: pointer;\r\n}\r\n.sn-assistant-toptpl__close:hover {\r\n  background: var(--sn-assistant-accent-soft);\r\n  color: var(--sn-assistant-accent);\r\n}\r\n.sn-assistant-toptpl__close:focus-visible {\r\n  outline: 2px solid var(--sn-assistant-accent);\r\n  outline-offset: 2px;\r\n}\r\n\r\n.sn-assistant-toptpl__toolbar {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 7px;\r\n  margin-bottom: 16px;\r\n}\r\n.sn-assistant-toptpl__toolbar label {\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n.sn-assistant-toptpl__search {\r\n  box-sizing: border-box;\r\n  width: 100%;\r\n  min-height: 40px;\r\n  padding: 10px 12px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 8px;\r\n  background: var(--sn-assistant-panel);\r\n  color: var(--sn-assistant-ink);\r\n  font: inherit;\r\n}\r\n.sn-assistant-toptpl__search:focus-visible {\r\n  outline: 2px solid var(--sn-assistant-accent);\r\n  outline-offset: 2px;\r\n}\r\n.sn-assistant-toptpl__hint {\r\n  margin: 0 0 12px;\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n.sn-assistant-toptpl__notice {\r\n  color: var(--sn-assistant-ink-soft);\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n}\r\n.sn-assistant-toptpl__recommended[hidden],\r\n.sn-assistant-toptpl__results[hidden],\r\n.sn-assistant-modal [data-action="toptpl-show-more"][hidden] {\r\n  display: none !important;\r\n}\r\n.sn-assistant-toptpl__card {\r\n  width: 100%;\r\n  min-width: 0;\r\n  overflow-wrap: anywhere;\r\n}\r\n@media (max-width: 650px) {\r\n  .sn-assistant-toptpl__card {\r\n    padding: 10px;\r\n  }\r\n}\r\n\r\n.sn-assistant-toptpl__grid {\r\n  display: grid;\r\n  gap: 10px;\r\n}\r\n\r\n.sn-assistant-toptpl__card {\r\n  text-align: left;\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  padding: 12px;\r\n  border-radius: 10px;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  cursor: pointer;\r\n  transition: border-color 140ms ease, background 140ms ease, transform 120ms ease;\r\n}\r\n\r\n.sn-assistant-toptpl__card:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n  transform: translateY(-1px);\r\n}\r\n\r\n.sn-assistant-toptpl__card.is-best {\r\n  border-color: color-mix(in srgb, var(--sn-assistant-accent) 45%, var(--sn-assistant-border));\r\n  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sn-assistant-accent) 20%, transparent);\r\n}\r\n\r\n.sn-assistant-toptpl__rank {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  width: fit-content;\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  letter-spacing: 0.02em;\r\n  color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-accent-soft);\r\n  padding: 2px 8px;\r\n  border-radius: 999px;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-green {\r\n  color: #166534;\r\n  background: #dcfce7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-amber {\r\n  color: #92400e;\r\n  background: #fef3c7;\r\n}\r\n\r\n.sn-assistant-toptpl__rank.is-red {\r\n  color: #991b1b;\r\n  background: #fee2e2;\r\n}\r\n\r\n.sn-assistant-toptpl__title {\r\n  font-size: 13px;\r\n  line-height: 1.3;\r\n  color: var(--sn-assistant-ink);\r\n}\r\n\r\n.sn-assistant-toptpl__subject {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink-soft);\r\n}\r\n\r\n.sn-assistant-toptpl__body {\r\n  font-size: 12px;\r\n  line-height: 1.45;\r\n  color: var(--sn-assistant-ink-soft);\r\n  opacity: 0.9;\r\n}\r\n\r\n.sn-ep__inline-bolt {\r\n  margin-left: auto;\r\n  border: 1px solid var(--sn-assistant-border);\r\n  background: var(--sn-assistant-panel);\r\n  color: #b45309;\r\n  border-radius: 8px;\r\n  width: 24px;\r\n  height: 24px;\r\n  line-height: 1;\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  cursor: pointer;\r\n}\r\n\r\n.sn-ep__inline-bolt:hover {\r\n  border-color: var(--sn-assistant-accent);\r\n  background: var(--sn-assistant-surface);\r\n}\r\n';
 
   // Assistant/ui/styles/notifications.css
   var notifications_default = '/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   TOAST NOTIFICATION\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-toast {\r\n  position: fixed;\r\n  bottom: 16px;\r\n  right: 16px;\r\n  max-width: 360px;\r\n  padding: 12px 14px;\r\n  background: var(--sn-assistant-panel);\r\n  border: 1px solid var(--sn-assistant-border);\r\n  border-radius: 10px;\r\n  box-shadow: var(--sn-assistant-shadow);\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n  font-size: 13px;\r\n  color: var(--sn-assistant-ink);\r\n  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);\r\n  z-index: 9999;\r\n}\r\n\r\n.sn-assistant-toast__content {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 10px;\r\n  flex: 1 1 auto;\r\n}\r\n\r\n.sn-assistant-toast__icon {\r\n  flex-shrink: 0;\r\n  display: inline-block;\r\n  font-size: 16px;\r\n  line-height: 1;\r\n}\r\n\r\n.sn-assistant-toast__message {\r\n  flex: 1 1 auto;\r\n}\r\n\r\n.sn-assistant-toast__message code {\r\n  background: var(--sn-assistant-surface);\r\n  padding: 2px 6px;\r\n  border-radius: 4px;\r\n  font-family: "Menlo", "Monaco", monospace;\r\n  font-size: 11px;\r\n  word-break: break-all;\r\n}\r\n\r\n.sn-assistant-toast--dismissing {\r\n  animation: slideOutToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;\r\n}\r\n\r\n@keyframes slideInToast {\r\n  from {\r\n    opacity: 0;\r\n    transform: translateX(24px);\r\n  }\r\n  to {\r\n    opacity: 1;\r\n    transform: translateX(0);\r\n  }\r\n}\r\n\r\n@keyframes slideOutToast {\r\n  to {\r\n    opacity: 0;\r\n    transform: translateX(24px);\r\n  }\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   PREVIEW COLLAPSIBLE\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-preview-collapsible {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\n.sn-assistant-preview__summary {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  padding: 8px 12px;\r\n  margin: 0 -8px;\r\n  cursor: pointer;\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--sn-assistant-ink);\r\n  border-radius: 8px;\r\n  transition: background-color 160ms ease;\r\n  user-select: none;\r\n  -webkit-user-select: none;\r\n}\r\n\r\n.sn-assistant-preview__summary:hover {\r\n  background-color: var(--sn-assistant-surface);\r\n}\r\n\r\n.sn-assistant-preview__summary::marker {\r\n  color: var(--sn-assistant-accent);\r\n}\r\n\r\n.sn-assistant-preview-collapsible[open] .sn-assistant-preview {\r\n  margin-top: 8px;\r\n  padding-top: 12px;\r\n  border-top: 1px solid var(--sn-assistant-border);\r\n}\r\n\r\n/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n   MISSING FIELDS WARNING\r\n   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r\n.sn-assistant-missing-fields {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  padding: 8px;\r\n  border-radius: 8px;\r\n  background: rgba(217, 119, 6, 0.06);\r\n  border: 1px solid rgba(217, 119, 6, 0.12);\r\n}\r\n\r\n.sn-assistant-missing-field-chip {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n  padding: 6px 10px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: rgba(217, 119, 6, 0.9);\r\n  background: rgba(217, 119, 6, 0.08);\r\n  border-radius: 6px;\r\n  white-space: nowrap;\r\n}\r\n';
@@ -38150,6 +38266,13 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
   }
 
   // Assistant/application/templates/quickRecommendations.js
+  var MOBILE_CABLE_SCENARIO_IDS = Object.freeze([
+    "iphone_cable_missing_acknowledgement",
+    "iphone_cable_ready_for_collection",
+    "iphone_cable_collection_confirmation",
+    "iphone_cable_second_reminder",
+    "iphone_cable_final_followup_three_attempts"
+  ]);
   var BATTERY_SCENARIO_IDS = Object.freeze([
     "iphone_battery_below_80",
     "iphone_battery_appointment",
@@ -38191,7 +38314,7 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     "description",
     "test"
   ]);
-  function normalize3(value2 = "") {
+  function normalize4(value2 = "") {
     return String(value2 || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   }
   function canonical(token) {
@@ -38230,10 +38353,10 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     return aliases[token] || (token.endsWith("s") && token.length > 5 ? token.slice(0, -1) : token);
   }
   function tokens2(value2) {
-    return new Set(normalize3(value2).split(/\s+/).map(canonical).filter((token) => token.length >= 3 && !STOP_WORDS2.has(token)));
+    return new Set(normalize4(value2).split(/\s+/).map(canonical).filter((token) => token.length >= 3 && !STOP_WORDS2.has(token)));
   }
   function isIphoneBatteryTicket(context = {}) {
-    const text3 = normalize3([
+    const text3 = normalize4([
       context.shortDescription || context.short_description,
       context.description,
       context.category,
@@ -38246,6 +38369,9 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
     const byId = new Map(available.map((template) => [template.id, template]));
     const max = Math.max(0, Math.min(5, Number(limit) || 0));
     if (!max) return [];
+    if (isMobileCableMissingTicket(context)) {
+      return MOBILE_CABLE_SCENARIO_IDS.map((id) => byId.get(id)).filter(Boolean).slice(0, max);
+    }
     if (isIphoneBatteryTicket(context)) {
       return BATTERY_SCENARIO_IDS.map((id) => byId.get(id)).filter(Boolean).slice(0, max);
     }
@@ -38349,13 +38475,34 @@ Verification completed with ${requestedFor}. Ticket moved to Resolved.`;
             showToast(state.host.document, { message: "Template selection invalid", tone: "warning" });
             return;
           }
-          if (selected.requiresThreeContactAttempts) {
-            const confirmed = await showConfirmationModal(state.host.document, {
+          const evidenceChecks = [
+            {
+              required: selected.requiresReadyForCollectionConfirmation,
+              title: "Confirm replacement cable is ready",
+              description: "Only use this email once the replacement cable is confirmed ready for collection.",
+              evidence: "Replacement cable physically available for the user"
+            },
+            {
+              required: selected.requiresPreviousContactAttempt,
+              title: "Confirm previous contact attempt",
+              description: "Only use the second reminder if the first contact attempt is documented on this ticket.",
+              evidence: "Previous documented attempt to contact the user"
+            },
+            {
+              required: selected.requiresThreeContactAttempts,
               title: "Confirm three contact attempts",
               description: "Only use this email when three separate attempts to contact the user are documented on this ticket. This creates a draft; it does not close the incident.",
+              evidence: "Three documented attempts without a user response"
+            }
+          ];
+          for (const check of evidenceChecks) {
+            if (!check.required) continue;
+            const confirmed = await showConfirmationModal(state.host.document, {
+              title: check.title,
+              description: check.description,
               details: [
                 { label: "Ticket", value: context.ticketNumber || context.recordNumber || "Current ticket" },
-                { label: "Required evidence", value: "Three documented attempts without a user response" }
+                { label: "Required evidence", value: check.evidence }
               ]
             });
             if (!confirmed) return;
@@ -38624,7 +38771,7 @@ ${completionEmail.body}`,
   function cleanText5(value2) {
     return String(value2 || "").trim();
   }
-  function normalize4(value2) {
+  function normalize5(value2) {
     return cleanText5(value2).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
   function flatten(value2) {
@@ -38633,7 +38780,7 @@ ${completionEmail.body}`,
     return cleanText5(value2);
   }
   function corpus(template = {}) {
-    return normalize4([
+    return normalize5([
       template.id,
       template.label,
       template.title,
@@ -38646,12 +38793,12 @@ ${completionEmail.body}`,
     return pattern.test(text3);
   }
   function scoreTemplate(template = {}, context = {}) {
-    const shortDescription = normalize4(context.shortDescription || context.short_description);
-    const description = normalize4(context.description || context.desc);
+    const shortDescription = normalize5(context.shortDescription || context.short_description);
+    const description = normalize5(context.description || context.desc);
     const text3 = shortDescription || description;
     if (!text3) return 0;
     const templateText = corpus(template);
-    const id = normalize4(template.id);
+    const id = normalize5(template.id);
     let score = 0;
     const futureAction = has2(text3, /\b(schedule|appointment|book|arrange|plan|prepare|preparation|ready for|coordinate|availability|deliver(?:y)? scheduled)\b/);
     const completedAction = has2(text3, /\b(delivered|handed over|collected|received|completed|installed|configured|resolved|fixed|replaced|restored|done)\b/);
