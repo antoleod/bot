@@ -1,10 +1,13 @@
-/* EmailsBots FMS overlay v2: durable button mounting for legacy public bundle.
+/* EmailsBots FMS overlay v3: durable button mounting for legacy public bundle.
    Standalone browser script. The source FMS dialog is kept in EmailsBots.
    No SAP write actions. CI always read live; PI may be different.
 */
 (function(){
 "use strict";
-if(window.SNFMSOverlay?.version==="2.0.0"){window.SNFMSOverlay.refresh();return;}
+// Use the same root-window strategy as the EmailsBots runtime.
+const existing = window.SNFMSOverlay;
+if(existing?.version==="3.0.0"){existing.refresh();return;}
+if(existing?.stop) existing.stop();
 /* Read-only ServiceNow CI -> FMS PI lookup. Never change ServiceNow's CI. */
 const FMS_ORIGIN="https://www.fms.ep.parl.union.eu";
 const FMS_URL=FMS_ORIGIN+"/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html#FixedAsset-change?sap-ui-tech-hint=GUI&sap-ie=edge&sap-touch=0";
@@ -110,15 +113,37 @@ function openFmsDialog(doc,rawCi){
 const installedDocs=new WeakSet();
 let timer=null,buttonCount=0,stopped=false;
 function allDocs(){
-  const docs=[],visited=new Set();
-  function walk(doc,depth){
-    if(!doc || depth>5 || visited.has(doc))return;
-    visited.add(doc);docs.push(doc);
-    for(const frame of doc.querySelectorAll("iframe,frame")){
-      try {walk(frame.contentDocument,depth+1);} catch {}
+  // The bookmarklet may run inside a task iframe while SN Assistant lives
+  // in a sibling/ancestor frame. A document-descendant scan misses that UI.
+  const docs=[],visitedWindows=new Set(),visitedDocs=new Set(),queue=[];
+  const addWindow=w=>{if(w&&!visitedWindows.has(w)){visitedWindows.add(w);queue.push(w);}};
+  try{addWindow(window.top);}catch{}
+  addWindow(window);
+  try{
+    let current=window;
+    for(let depth=0;depth<8&&current.parent!==current;depth++){
+      current=current.parent;addWindow(current);
     }
+  }catch{}
+  while(queue.length){
+    const w=queue.shift();
+    try{
+      const doc=w.document;
+      if(doc&&!visitedDocs.has(doc)){
+        visitedDocs.add(doc);docs.push(doc);
+      }
+    }catch{}
+    try{
+      for(let i=0;i<w.frames.length;i++)addWindow(w.frames[i]);
+    }catch{}
   }
-  walk(document,0);
+  // Also include the exact DOM elected by the EmailsBots bootstrap.
+  for(const w of [window,window.top]){
+    try{
+      const host=w.__SN_ASSISTANT__?.instance?.state?.host?.document;
+      if(host&&!visitedDocs.has(host)){visitedDocs.add(host);docs.push(host);}
+    }catch{}
+  }
   return docs;
 }
 function readLiveCI(){
@@ -158,7 +183,7 @@ function attach(doc){
   }
   const native=doc.querySelector('[data-action="open-fms"]');
   if(native)return;
-  const anchors=doc.querySelectorAll('.sn-ep__actions button[data-action="open-ep-links"],.sn-ep__actions button[data-action="open-pdf"]');
+  const anchors=doc.querySelectorAll('button[data-action="open-ep-links"],button[data-action="open-pdf"]');
   const anchor=anchors[0];
   if(!anchor)return;
   const button=anchor.cloneNode(true);
@@ -182,22 +207,40 @@ function attach(doc){
     wrapper.insertAdjacentElement("afterend",newWrapper);
   }else anchor.insertAdjacentElement("afterend",button);
   buttonCount++;
-  console.info("[SN FMS] Open in FMS added", {ci:readLiveCI()||"(not detected)"});
+  console.info("[SN FMS] Open in FMS added", {host:doc.location?.pathname||"document",total:buttonCount});
 }
 function refresh(){
   if(stopped)return;
-  for(const doc of allDocs())attach(doc);
+  const docs=allDocs();
+  for(const doc of docs)attach(doc);
+  // Publish the diagnostic API to accessible frames, so DevTools can read it
+  // regardless of which frame context is selected.
+  for(const doc of docs){
+    try{doc.defaultView.SNFMSOverlay=api;}catch{}
+  }
 }
-window.SNFMSOverlay={
-  version:"2.0.0",
+const api={
+  version:"3.0.0",
   refresh,
-  open:()=>openFmsDialog(document,readLiveCI()),
-  status:()=>({version:"2.0.0",buttonCountMounted:buttonCount,
-    visibleButtons:allDocs().reduce((n,d)=>n+d.querySelectorAll('[data-action="open-fms"]').length,0),
-    ci:readLiveCI()||"",running:!stopped}),
+  open:()=>{
+    const host=allDocs().find(d=>d.querySelector('[data-action="open-fms"]')) || document;
+    return openFmsDialog(host,readLiveCI());
+  },
+  status:()=>{
+    const docs=allDocs();
+    const found=docs.map((d,i)=>({frame:i,
+      origin:(()=>{try{return d.location.origin;}catch{return "restricted"}})(),
+      hasAssistant:!!d.querySelector("#sn-assistant-launcher"),
+      fmsButtons:d.querySelectorAll('button[data-action="open-fms"]').length
+    }));
+    return {version:"3.0.0",buttonCountMounted:buttonCount,
+      visibleButtons:found.reduce((n,x)=>n+x.fmsButtons,0),
+      documentsInspected:docs.length,frames:found,running:!stopped};
+  },
   stop(){stopped=true;if(timer!==null)clearInterval(timer);}
 };
+window.SNFMSOverlay=api;
 refresh();
 timer=setInterval(refresh,800);
-console.info("[SN FMS] Overlay v2 installed",window.SNFMSOverlay.status());
+console.info("[SN FMS] Overlay v3 installed",api.status());
 })();
