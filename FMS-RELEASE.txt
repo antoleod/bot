@@ -1,0 +1,7 @@
+# EmailsBots FMS integration (direct distribution)
+Source: antoleod/EmailsBots, commit 37679781acabb8be6f6536d8b6f45e107480770d
+Public bundle: existing published bundle + compatibility overlay to expose "Open in FMS".
+Companion: fms-lookup.user.js — install separately using an organization-approved userscript manager.
+The original published core is unchanged before the appended overlay.
+No build/test pipeline run was available from this session; syntax parsing passed in V8.
+This is a transitional release: next verified npm build in EmailsBots should replace the overlay.
