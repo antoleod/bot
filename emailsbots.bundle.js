@@ -6838,6 +6838,7 @@ Asset tag: ${item.equipmentAssetTag}`;
 
   // Assistant/application/persistence/panelPositionState.js
   var STORAGE_KEY = "sn_assistant_panel_position_v1";
+  var POSITION_LAYOUT_MIGRATION_KEY = "sn_assistant_position_layout_v2";
   var EDGES = /* @__PURE__ */ new Set(["left", "right"]);
   var MIN_SAFE_TOP = 72;
   var VIEWPORT_BOTTOM_GUTTER = 12;
@@ -6856,6 +6857,11 @@ Asset tag: ${item.equipmentAssetTag}`;
     const storage = getStorage(rootWindow);
     if (!storage) return null;
     try {
+      if (storage.getItem(POSITION_LAYOUT_MIGRATION_KEY) !== "1") {
+        storage.removeItem(STORAGE_KEY);
+        storage.setItem(POSITION_LAYOUT_MIGRATION_KEY, "1");
+        return null;
+      }
       const parsed = JSON.parse(storage.getItem(STORAGE_KEY) || "null");
       const edge = String(parsed?.edge || "");
       const top = Number(parsed?.top);
