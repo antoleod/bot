@@ -13454,7 +13454,7 @@ ${value2}` : value2;
     }
   }
   var SNAP_STORAGE_KEY = "sn_assistant_snap_position";
-  var POSITION_RESTORE_KEY = "sn_assistant_ui_position_restored_v3";
+  var POSITION_RESTORE_KEY = "sn_assistant_ui_position_restored_v4";
   function restoreOriginalLauncherPlacement(ownerWindow, state) {
     try {
       const storage = ownerWindow.localStorage;
@@ -13492,19 +13492,19 @@ ${value2}` : value2;
       shell.classList.add(`sn-ep--snap-${snapPos}`);
       shell.style.left = "";
       shell.style.right = "";
-      shell.style.top = "";
+      shell.style.removeProperty("top");
       shell.style.bottom = "";
-      shell.style.transform = "";
+      shell.style.removeProperty("transform");
       return;
     }
     const top = state.ui.edgePanelTop;
     const edge = state.ui.edgePanelEdge || "right";
     if (top !== null && top !== void 0) {
-      shell.style.top = `${top}px`;
-      shell.style.transform = "none";
+      shell.style.setProperty("top", `${top}px`, "important");
+      shell.style.setProperty("transform", "none", "important");
     } else {
-      shell.style.top = "50%";
-      shell.style.transform = "translateY(-50%)";
+      shell.style.setProperty("top", "50%", "important");
+      shell.style.setProperty("transform", "translateY(-50%)", "important");
     }
     shell.classList.toggle("sn-ep--left", edge === "left");
   }
@@ -13542,8 +13542,8 @@ ${value2}` : value2;
       const maxTop = ownerWindow.innerHeight - drag.height - 8;
       shell.style.left = `${clamp(event.clientX - drag.offsetX, 0, maxLeft)}px`;
       shell.style.right = "auto";
-      shell.style.top = `${clamp(event.clientY - drag.offsetY, 8, maxTop)}px`;
-      shell.style.transform = "none";
+      shell.style.setProperty("top", `${clamp(event.clientY - drag.offsetY, 8, maxTop)}px`, "important");
+      shell.style.setProperty("transform", "none", "important");
     }
     function onUp() {
       ownerWindow.removeEventListener("pointermove", onMove);
