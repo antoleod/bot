@@ -8400,6 +8400,18 @@ ${configurationItemLine}`,
       })
     },
     {
+      id: "functional_mailbox_sent_items_follow_up",
+      category: "email",
+      label: "Functional Mailbox - Sent Items Follow-up",
+      target: "comments",
+      subject: "{{ticket_number}} - Functional mailbox Sent Items issue",
+      body: buildEmail({
+        context: aboutTicket("emails sent from your functional mailbox being saved in your personal Sent Items folder instead of the functional mailbox's Sent Items"),
+        action: "Could you please confirm whether the issue is still occurring? If so, please specify the functional mailbox concerned and whether you send messages using Outlook desktop or Outlook on the web.",
+        closing: CLOSINGS.reply
+      })
+    },
+    {
       id: "outlook_email_calendar_support",
       category: "email",
       label: "Outlook Email and Calendar Support",
@@ -17809,6 +17821,29 @@ ${assignedTo}`
       state.ui.templateSelectionMode[activeCategory] = "auto";
     }
     const fullContext = state.context || {};
+    const mailboxShort = normalizeMatchText(fullContext.shortDescription || fullContext.short_description);
+    const mailboxDescription = normalizeMatchText(fullContext.description || "");
+    const mailboxText = mailboxShort + " " + mailboxDescription;
+    const isFunctionalSentItemsIssue = /\b(fmb|functional mailbox|shared mailbox|boite fonctionnelle)\b/.test(mailboxText) && /\b(sent items|sent folder|sent emails|sent messages|elements envoyes)\b/.test(mailboxText) && /\b(personal|user|own|instead|wrong|not saved|appearing|appear|stored|saved|go to|goes to)\b/.test(mailboxText);
+    if (activeCategory === "email" && isFunctionalSentItemsIssue) {
+      const matched = templates.find(
+        (item) => item.id === "functional_mailbox_sent_items_follow_up" && item.enabled !== false
+      );
+      if (matched) {
+        setSelectedTemplate(state, activeCategory, matched.id, "auto");
+        return {
+          groups,
+          categories,
+          activeCategory,
+          templates,
+          selectedTemplateId: matched.id,
+          selectedTemplate: matched,
+          emailSelection: { template: matched, templateId: matched.id, score: 3e4, ambiguous: false, candidates: [], metadata: false },
+          selectionMode: "auto",
+          selectionSource: "functional-mailbox-sent-items"
+        };
+      }
+    }
     if (activeCategory === "email" && isInventoryOnlyCatalogTask(fullContext)) {
       const inventory = templates.find(
         (item) => item.id === "desktop_inventory_location_and_action_confirmation" && item.enabled !== false
